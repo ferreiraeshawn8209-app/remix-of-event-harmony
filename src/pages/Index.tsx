@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ServicesSection } from "@/components/ServicesSection";
+import { PackagesSection } from "@/components/PackagesSection";
+import { EquipmentShowcase } from "@/components/EquipmentShowcase";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Footer } from "@/components/Footer";
@@ -28,7 +30,11 @@ const Index = () => {
           <>
             <HeroSection onGetQuote={() => setCurrentPage("quote")} />
             <ServicesSection />
-            <QuoteCalculator />
+            <PackagesSection />
+            <EquipmentShowcase />
+            <div id="quote-calculator">
+              <QuoteCalculator />
+            </div>
             <Footer />
           </>
         );
