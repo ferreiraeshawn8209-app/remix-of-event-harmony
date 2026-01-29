@@ -1,7 +1,10 @@
-import { Music, Menu, X } from "lucide-react";
+import { Music, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
@@ -10,11 +13,18 @@ interface HeaderProps {
 
 export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, profile, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const navItems = [
     { id: "home", label: "Home" },
     { id: "quote", label: "Get Quote" },
-    { id: "admin", label: "Admin" },
+    ...(isAdmin ? [{ id: "admin", label: "Admin" }] : []),
   ];
 
   return (
@@ -47,6 +57,31 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                 {item.label}
               </Button>
             ))}
+
+            {/* Auth Section */}
+            {user ? (
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-border">
+                {isAdmin && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Shield className="w-3 h-3" />
+                    Admin
+                  </Badge>
+                )}
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/dashboard">
+                    <User className="w-4 h-4 mr-1" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="hero" size="sm" className="ml-4" asChild>
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
           </nav>
 
           {/* Mobile Menu Toggle */}
@@ -84,6 +119,35 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   {item.label}
                 </Button>
               ))}
+              
+              {/* Mobile Auth Section */}
+              {user ? (
+                <>
+                  <Button variant="ghost" className="justify-start" asChild>
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <User className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start" 
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button variant="hero" className="justify-start" asChild>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    Sign In
+                  </Link>
+                </Button>
+              )}
             </nav>
           </motion.div>
         )}

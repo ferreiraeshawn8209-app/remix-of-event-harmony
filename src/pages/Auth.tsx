@@ -1,0 +1,280 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
+import { Music, Loader2 } from "lucide-react";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
+  fullName: z.string().trim().min(1, { message: "Name is required" }).max(100),
+  phone: z.string().optional(),
+});
+
+const signInSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+});
+
+export default function Auth() {
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, signUp, signIn } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [tab, setTab] = useState<"login" | "signup">("login");
+
+  // Form states
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate("/dashboard");
+    }
+  }, [user, authLoading, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const validated = signInSchema.parse({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      const { error } = await signIn(validated.email, validated.password);
+
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome Back!",
+          description: "You have successfully logged in.",
+        });
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const validated = signUpSchema.parse({
+        email: signupEmail,
+        password: signupPassword,
+        fullName: signupName,
+        phone: signupPhone || undefined,
+      });
+
+      const { error } = await signUp(
+        validated.email,
+        validated.password,
+        validated.fullName,
+        validated.phone
+      );
+
+      if (error) {
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Welcome to BEATKULTURE! You can now access your dashboard.",
+        });
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <Music className="w-8 h-8 text-primary" />
+            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE</span>
+          </div>
+          <p className="text-muted-foreground">Access your quotes and event planning</p>
+        </div>
+
+        <Card variant="glass">
+          <CardHeader className="text-center pb-4">
+            <CardTitle>Welcome</CardTitle>
+            <CardDescription>Sign in or create an account to continue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signup")}>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : (
+                      "Sign In"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Your full name"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone (Optional)</Label>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      placeholder="+27 XX XXX XXXX"
+                      value={signupPhone}
+                      onChange={(e) => setSignupPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        <p className="text-center mt-6 text-sm text-muted-foreground">
+          <a href="/" className="text-primary hover:underline">
+            ← Back to Home
+          </a>
+        </p>
+      </motion.div>
+    </div>
+  );
+}
