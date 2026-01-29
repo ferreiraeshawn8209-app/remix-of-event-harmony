@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { 
   EQUIPMENT_CATALOG, 
   EVENT_TYPES, 
@@ -17,7 +18,7 @@ import {
   DJ_HOURLY_RATE,
   DEPOSIT_PERCENT
 } from "@/lib/pricing";
-import { Plus, Minus, FileText, Send } from "lucide-react";
+import { Plus, Minus, FileText, Send, Lightbulb } from "lucide-react";
 
 interface QuoteCalculatorProps {
   isAdmin?: boolean;
@@ -29,6 +30,80 @@ const groupedEquipment = EQUIPMENT_CATALOG.reduce((acc, item) => {
   acc[item.category].push(item);
   return acc;
 }, {} as Record<string, typeof EQUIPMENT_CATALOG>);
+
+// Equipment recommendations with reasons
+const EQUIPMENT_RECOMMENDATIONS: Record<string, { recommended: number; reason: string }> = {
+  partyrocker: { recommended: 2, reason: "Two speakers provide balanced stereo sound coverage for your venue" },
+  boothSpeaker: { recommended: 1, reason: "One booth speaker lets the DJ monitor the mix clearly" },
+  subwoofer: { recommended: 1, reason: "One subwoofer adds powerful bass for a full, immersive sound" },
+  mixer: { recommended: 1, reason: "One professional mixer is essential for seamless track transitions" },
+  amplifier: { recommended: 1, reason: "Required to power passive speakers and subwoofers effectively" },
+  rgbStrobe: { recommended: 1, reason: "Creates exciting visual impact on the dance floor" },
+  uvBar: { recommended: 2, reason: "Two UV bars create an even glow across your venue" },
+  spiderHead: { recommended: 1, reason: "One moving head provides dynamic sweeping light effects" },
+  washHead: { recommended: 2, reason: "Two wash lights blend colors beautifully across the space" },
+  rgbLaser: { recommended: 1, reason: "One laser creates stunning patterns and adds wow factor" },
+  disco21: { recommended: 1, reason: "One disco light fills the room with colorful effects" },
+  moodLight: { recommended: 4, reason: "Four uplighters create ambient décor lighting around your venue" },
+  laserBall: { recommended: 1, reason: "One disco ball adds classic party vibes" },
+  wirelessMic: { recommended: 1, reason: "One wireless mic is perfect for speeches and announcements" },
+  wiredMic: { recommended: 1, reason: "A backup mic ensures your event runs smoothly" },
+  twoWayRadio: { recommended: 2, reason: "Two radios allow DJ and coordinator to communicate seamlessly" },
+  smokeMachine: { recommended: 1, reason: "Smoke enhances all lighting effects dramatically" },
+  lowFog: { recommended: 1, reason: "Creates magical floor-hugging fog for first dance moments" },
+  bubbleBlaster: { recommended: 1, reason: "Bubbles add a fun, whimsical touch to celebrations" },
+};
+
+// Dynamic suggestions based on current selections
+function getContextualSuggestions(equipment: Record<string, number>): { id: string; message: string }[] {
+  const suggestions: { id: string; message: string }[] = [];
+  
+  // If they have subwoofers but no amplifier
+  if ((equipment.subwoofer || 0) > 0 && (equipment.amplifier || 0) === 0) {
+    suggestions.push({ 
+      id: 'amplifier', 
+      message: "💡 You've selected subwoofers - we strongly recommend adding an amplifier to power them properly!" 
+    });
+  }
+  
+  // If they have any lighting but no smoke machine
+  const hasLighting = ['rgbStrobe', 'uvBar', 'spiderHead', 'washHead', 'rgbLaser', 'disco21', 'laserBall'].some(
+    id => (equipment[id] || 0) > 0
+  );
+  if (hasLighting && (equipment.smokeMachine || 0) === 0) {
+    suggestions.push({ 
+      id: 'smokeMachine', 
+      message: "💡 Smoke machines make lighting effects 10x better - light beams become visible!" 
+    });
+  }
+  
+  // If they have speakers but no mixer
+  const hasSpeakers = (equipment.partyrocker || 0) > 0 || (equipment.boothSpeaker || 0) > 0;
+  if (hasSpeakers && (equipment.mixer || 0) === 0) {
+    suggestions.push({ 
+      id: 'mixer', 
+      message: "💡 A professional mixer ensures smooth transitions between songs" 
+    });
+  }
+  
+  // If they have moving heads, suggest more for better effect
+  if ((equipment.spiderHead || 0) === 1 && (equipment.washHead || 0) === 0) {
+    suggestions.push({ 
+      id: 'washHead', 
+      message: "💡 Pair your spider head with wash lights for a complete professional lighting setup" 
+    });
+  }
+  
+  // If it's a wedding-style setup, suggest low fog
+  if ((equipment.moodLight || 0) > 0 && (equipment.lowFog || 0) === 0) {
+    suggestions.push({ 
+      id: 'lowFog', 
+      message: "💡 Low fog creates a magical atmosphere for first dances and special moments" 
+    });
+  }
+
+  return suggestions;
+}
 
 export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculatorProps) {
   const [quoteData, setQuoteData] = useState<QuoteData>({
@@ -197,6 +272,23 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
               </CardContent>
             </Card>
 
+            {/* Contextual Suggestions Banner */}
+            {getContextualSuggestions(quoteData.equipment).length > 0 && (
+              <Card variant="glow" className="border-secondary/50 bg-secondary/10">
+                <CardContent className="py-4">
+                  <div className="flex items-start gap-3">
+                    <Lightbulb className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
+                    <div className="space-y-2">
+                      <p className="font-semibold text-secondary text-sm">Pro Tips for Your Event</p>
+                      {getContextualSuggestions(quoteData.equipment).map((suggestion, idx) => (
+                        <p key={idx} className="text-sm text-muted-foreground">{suggestion.message}</p>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Equipment Selection */}
             {Object.entries(groupedEquipment).map(([category, items]) => (
               <Card key={category} variant="glass">
@@ -204,35 +296,54 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
                   <CardTitle className="text-lg">{category}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{item.name}</div>
-                        <div className="text-xs text-muted-foreground">{item.description}</div>
-                        <div className="text-sm text-primary font-semibold mt-1">{formatCurrency(item.price)}</div>
+                  {items.map((item) => {
+                    const recommendation = EQUIPMENT_RECOMMENDATIONS[item.id];
+                    const currentQty = quoteData.equipment[item.id] || 0;
+                    const showRecommendation = recommendation && currentQty < recommendation.recommended;
+                    
+                    return (
+                      <div key={item.id} className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{item.name}</div>
+                            <div className="text-xs text-muted-foreground">{item.description}</div>
+                            <div className="text-sm text-primary font-semibold mt-1">{formatCurrency(item.price)}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateEquipment(item.id, -1)}
+                              disabled={currentQty === 0}
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">{currentQty}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateEquipment(item.id, 1)}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        {showRecommendation && (
+                          <div className="mt-2 flex items-start gap-2 p-2 rounded-md bg-primary/10 border border-primary/20">
+                            <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                            <div className="text-xs">
+                              <Badge variant="secondary" className="mb-1 text-xs">
+                                We recommend: {recommendation.recommended}
+                              </Badge>
+                              <p className="text-muted-foreground">{recommendation.reason}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateEquipment(item.id, -1)}
-                          disabled={(quoteData.equipment[item.id] || 0) === 0}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </Button>
-                        <span className="w-8 text-center font-medium">{quoteData.equipment[item.id] || 0}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateEquipment(item.id, 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             ))}
