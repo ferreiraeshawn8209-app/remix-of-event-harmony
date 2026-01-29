@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,10 @@ import {
   DJ_HOURLY_RATE,
   DEPOSIT_PERCENT
 } from "@/lib/pricing";
-import { Plus, Minus, FileText, Send, Lightbulb } from "lucide-react";
+import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuotes } from "@/hooks/useQuotes";
+import { toast } from "@/hooks/use-toast";
 
 interface QuoteCalculatorProps {
   isAdmin?: boolean;
@@ -106,6 +110,13 @@ function getContextualSuggestions(equipment: Record<string, number>): { id: stri
 }
 
 export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculatorProps) {
+  const navigate = useNavigate();
+  const { user, profile, isAdmin: userIsAdmin } = useAuth();
+  const { createQuote, isCreating } = useQuotes();
+  
+  // Use isAdmin prop if passed, otherwise use the user's actual admin status
+  const effectiveIsAdmin = isAdmin || userIsAdmin;
+
   const [quoteData, setQuoteData] = useState<QuoteData>({
     clientName: "",
     contactNo: "",
@@ -123,6 +134,18 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
     discountPercent: 0,
   });
 
+  // Pre-fill user data if logged in
+  useEffect(() => {
+    if (profile && !quoteData.clientName) {
+      setQuoteData(prev => ({
+        ...prev,
+        clientName: profile.full_name || prev.clientName,
+        email: profile.email || prev.email,
+        contactNo: profile.phone || prev.contactNo,
+      }));
+    }
+  }, [profile]);
+
   const calculations = useMemo(() => calculateQuote(quoteData), [quoteData]);
 
   const updateEquipment = (id: string, delta: number) => {
@@ -135,9 +158,61 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // If callback provided, use it
     if (onSaveQuote) {
       onSaveQuote(quoteData, calculations);
+      return;
+    }
+
+    // Otherwise, save to database
+    if (!user || !profile) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to save your quote.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!quoteData.clientName.trim() || !quoteData.email.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in at least your name and email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createQuote({
+        quoteData,
+        calculations,
+        clientProfileId: profile.id,
+      });
+
+      // Reset form after successful save
+      setQuoteData({
+        clientName: profile.full_name || "",
+        contactNo: profile.phone || "",
+        email: profile.email || "",
+        venue: "",
+        eventDate: "",
+        startTime: "18:00",
+        endTime: "00:00",
+        eventType: "",
+        djName: DJ_LIST[0],
+        equipment: {},
+        kidsCorner: false,
+        kidsHours: 0,
+        travelDistance: 0,
+        discountPercent: 0,
+      });
+
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error saving quote:", error);
     }
   };
 
@@ -379,7 +454,7 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
             </Card>
 
             {/* Admin-only Discount */}
-            {isAdmin && (
+            {effectiveIsAdmin && (
               <Card variant="glow">
                 <CardHeader>
                   <CardTitle className="text-lg text-secondary">Admin: Discount</CardTitle>
@@ -477,10 +552,39 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
                     </div>
                   </div>
 
-                  <Button variant="hero" className="w-full" size="lg" onClick={handleSubmit}>
-                    <Send className="w-4 h-4" />
-                    {isAdmin ? "Save Quote" : "Request Quote"}
-                  </Button>
+                  {user ? (
+                    <Button 
+                      variant="hero" 
+                      className="w-full" 
+                      size="lg" 
+                      onClick={handleSubmit}
+                      disabled={isCreating}
+                    >
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          {effectiveIsAdmin ? "Save Quote" : "Save Quote"}
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <Button variant="hero" className="w-full" size="lg" asChild>
+                        <Link to="/auth">
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Sign In to Save Quote
+                        </Link>
+                      </Button>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Create an account to save and track your quotes
+                      </p>
+                    </div>
+                  )}
 
                   <p className="text-xs text-center text-muted-foreground">
                     Quote valid for 7 days. Setup & take-down (1.5 hrs) free.
