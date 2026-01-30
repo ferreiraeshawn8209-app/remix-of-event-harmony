@@ -225,12 +225,42 @@ export function useQuotes() {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ quoteId, status }: { quoteId: string; status: string }) => {
+      const { data, error } = await supabase
+        .from("quotes")
+        .update({ status })
+        .eq("id", quoteId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating status:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     quotes: quotesQuery.data || [],
     isLoading: quotesQuery.isLoading,
     error: quotesQuery.error,
     createQuote: createQuoteMutation.mutateAsync,
     updateQuote: updateQuoteMutation.mutateAsync,
+    updateQuoteStatus: (quoteId: string, status: string) => 
+      updateStatusMutation.mutateAsync({ quoteId, status }),
     deleteQuote: deleteQuoteMutation.mutateAsync,
     isCreating: createQuoteMutation.isPending,
     isUpdating: updateQuoteMutation.isPending,
