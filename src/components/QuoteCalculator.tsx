@@ -35,6 +35,35 @@ const groupedEquipment = EQUIPMENT_CATALOG.reduce((acc, item) => {
   return acc;
 }, {} as Record<string, typeof EQUIPMENT_CATALOG>);
 
+// Category-level suggestions to guide users
+const CATEGORY_SUGGESTIONS: Record<string, { icon: string; title: string; description: string }> = {
+  "Sound System": {
+    icon: "🔊",
+    title: "How many speakers will you need?",
+    description: "For most venues, we recommend at least 2 party rocker speakers for balanced stereo sound. Larger venues (150+ guests) may need 4 speakers. Adding a subwoofer brings that powerful bass your guests will feel!"
+  },
+  "Lighting": {
+    icon: "💡",
+    title: "Create the perfect atmosphere",
+    description: "Professional lighting transforms any venue! We suggest starting with RGB strobes for energy, wash heads for color ambiance, and mood lights (uplighters) around the venue for a complete look."
+  },
+  "Effects": {
+    icon: "✨",
+    title: "Make magical moments",
+    description: "Smoke machines make lights visible and dramatic. Low fog creates stunning first-dance moments. Bubbles add fun for all ages! These extras make events truly memorable."
+  },
+  "Audio Equipment": {
+    icon: "🎤",
+    title: "Communication essentials",
+    description: "A wireless microphone is essential for speeches and announcements. Two-way radios help coordinate with venue staff. We recommend at least one wireless mic for any event."
+  },
+  "DJ Equipment": {
+    icon: "🎧",
+    title: "Professional DJ setup",
+    description: "Our DJ brings professional-grade controllers, but adding a mixer ensures seamless transitions. If you have passive speakers or subwoofers, you'll need an amplifier to power them."
+  }
+};
+
 // Equipment recommendations with reasons
 const EQUIPMENT_RECOMMENDATIONS: Record<string, { recommended: number; reason: string }> = {
   partyrocker: { recommended: 2, reason: "Two speakers provide balanced stereo sound coverage for your venue" },
@@ -365,10 +394,28 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
             )}
 
             {/* Equipment Selection */}
-            {Object.entries(groupedEquipment).map(([category, items]) => (
+            {Object.entries(groupedEquipment).map(([category, items]) => {
+              const categorySuggestion = CATEGORY_SUGGESTIONS[category];
+              
+              return (
               <Card key={category} variant="glass">
                 <CardHeader>
-                  <CardTitle className="text-lg">{category}</CardTitle>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {categorySuggestion && <span className="text-xl">{categorySuggestion.icon}</span>}
+                    {category}
+                  </CardTitle>
+                  {/* Category-level suggestion */}
+                  {categorySuggestion && (
+                    <div className="mt-3 p-4 rounded-lg bg-secondary/10 border border-secondary/30">
+                      <div className="flex items-start gap-3">
+                        <Lightbulb className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-secondary text-sm mb-1">{categorySuggestion.title}</p>
+                          <p className="text-sm text-muted-foreground">{categorySuggestion.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {items.map((item) => {
@@ -421,7 +468,8 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
                   })}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
 
             {/* Additional Services */}
             <Card variant="glass">
