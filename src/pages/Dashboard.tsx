@@ -82,7 +82,7 @@ function QuoteCard({ quote }: { quote: DatabaseQuote }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
+  const { user, profile, isAdmin, isLoading: authLoading, signOut, refreshProfile } = useAuth();
   const { quotes, isLoading: quotesLoading } = useQuotes();
 
   useEffect(() => {
@@ -104,8 +104,35 @@ export default function Dashboard() {
     );
   }
 
-  if (!user || !profile) {
-    return null;
+  if (!user) return null;
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card variant="glass" className="max-w-lg w-full mx-4">
+          <CardHeader>
+            <CardTitle>Setting up your account…</CardTitle>
+            <CardDescription>
+              We’re preparing your dashboard. If this takes longer than a few seconds, try again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Creating/fetching your profile
+            </div>
+            <div className="flex gap-2">
+              <Button variant="hero" onClick={refreshProfile}>
+                Retry
+              </Button>
+              <Button variant="outline" onClick={handleSignOut}>
+                Sign out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
