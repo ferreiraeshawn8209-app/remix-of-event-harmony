@@ -38,6 +38,7 @@ import {
   Mail
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { AdminAccountsTab } from "@/components/admin/AdminAccountsTab";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -350,9 +351,38 @@ export default function Admin() {
     );
   }
 
-  if (!user || !profile || !isAdmin) {
-    return null;
+  if (!user) return null;
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card variant="glass" className="max-w-lg w-full mx-4">
+          <CardHeader>
+            <CardTitle>Setting up your account…</CardTitle>
+            <CardDescription>
+              We’re preparing your admin access. If this takes longer than a few seconds, sign out and sign in again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Creating/fetching your profile
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleSignOut}>
+                Sign out
+              </Button>
+              <Button variant="hero" asChild>
+                <Link to="/auth">Sign in</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
+
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -476,6 +506,7 @@ export default function Admin() {
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
+              <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
 
             <TabsContent value="quotes">
@@ -657,6 +688,10 @@ export default function Admin() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="admins">
+              <AdminAccountsTab />
             </TabsContent>
           </Tabs>
         </motion.div>

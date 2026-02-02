@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface Profile {
   id: string;
@@ -34,27 +35,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const clearLocalAuthState = async () => {
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        return;
+      // Clear local session to recover from corrupted/invalid refresh tokens
+      // (prevents the app from getting stuck on a blank screen)
+      await supabase.auth.signOut({ scope: "local" });
+    } catch (e) {
+      // As a last resort, nuke any Supabase auth tokens in localStorage
+      try {
+        const keys = Object.keys(localStorage);
+        for (const key of keys) {
+          if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+            localStorage.removeItem(key);
+          }
+        }
+      } catch {
+        // ignore
       }
+    }
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setIsAdmin(false);
+  };
 
+  const ensureProfileExists = async (u: User) => {
+    // Some projects can end up without profile rows (e.g. after earlier schema/config changes).
+    // We self-heal by creating the profile on first login.
+    const userId = u.id;
+    const email = u.email || "";
+    const meta = (u.user_metadata || {}) as Record<string, unknown>;
+    const fullNameRaw =
+      (typeof meta.full_name === "string" && meta.full_name) ||
+      (email ? email.split("@")[0] : "User");
+    const phoneRaw = typeof meta.phone === "string" ? meta.phone : null;
+
+    const { data: existing, error: existingError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // If multiple rows exist, .limit(1) prevents the "multiple rows" error.
+    if (existingError) {
+      console.error("Error fetching profile:", existingError);
+      return existing;
+    }
+
+    if (existing) return existing;
+
+    const { data: created, error: createError } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: userId,
+        full_name: fullNameRaw,
+        email,
+        phone: phoneRaw,
+      })
+      .select("*")
+      .single();
+
+    if (createError) {
+      console.error("Error creating profile:", createError);
+      return null;
+    }
+
+    return created;
+  };
+
+  const fetchProfile = async (u: User) => {
+    try {
+      const profileData = await ensureProfileExists(u);
       setProfile(profileData);
 
       // Check if user is admin
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
+        .eq("user_id", u.id)
         .eq("role", "admin")
+        .limit(1)
         .maybeSingle();
 
       if (roleError) {
@@ -70,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user);
     }
   };
 
@@ -78,32 +140,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        try {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
 
-        if (currentSession?.user) {
-          // Use setTimeout to avoid potential deadlocks
-          setTimeout(() => fetchProfile(currentSession.user.id), 0);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
+          if (currentSession?.user) {
+            // Use setTimeout to avoid potential deadlocks
+            setTimeout(() => fetchProfile(currentSession.user), 0);
+          } else {
+            setProfile(null);
+            setIsAdmin(false);
+          }
+        } catch (e: any) {
+          console.error("Auth state change error:", e);
+        } finally {
+          setIsLoading(false);
         }
-
-        setIsLoading(false);
       }
     );
 
     // THEN get the initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      
-      if (initialSession?.user) {
-        fetchProfile(initialSession.user.id);
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          // Common when a refresh token was revoked or missing.
+          if ((error as any)?.code === "refresh_token_not_found") {
+            await clearLocalAuthState();
+            toast({
+              title: "Session expired",
+              description: "Please sign in again.",
+              variant: "destructive",
+            });
+          } else {
+            console.error("Error getting session:", error);
+          }
+          return;
+        }
+
+        const initialSession = data.session;
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        if (initialSession?.user) {
+          await fetchProfile(initialSession.user);
+        }
+      } catch (e: any) {
+        const code = e?.code;
+        if (code === "refresh_token_not_found") {
+          await clearLocalAuthState();
+          toast({
+            title: "Session expired",
+            description: "Please sign in again.",
+            variant: "destructive",
+          });
+        } else {
+          console.error("Error initializing auth:", e);
+        }
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    });
+    })();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -123,14 +221,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) return { error };
-
-      // Update profile with phone if provided
-      if (phone && user) {
-        await supabase
-          .from("profiles")
-          .update({ phone })
-          .eq("user_id", user.id);
-      }
 
       return { error: null };
     } catch (error) {
