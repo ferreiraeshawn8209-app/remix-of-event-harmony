@@ -2,29 +2,39 @@ import { Music, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
-interface HeaderProps {
-  onNavigate: (page: string) => void;
-  currentPage: string;
+type NavItem = {
+  id: "home" | "quote" | "admin";
+  label: string;
+  to: string;
+};
+
+function getActiveNavId(pathname: string, hash: string): NavItem["id"] {
+  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname === "/" && hash === "#quote-calculator") return "quote";
+  return "home";
 }
 
-export function Header({ onNavigate, currentPage }: HeaderProps) {
+export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  const navItems = [
-    { id: "home", label: "Home" },
-    { id: "quote", label: "Get Quote" },
-    ...(isAdmin ? [{ id: "admin", label: "Admin" }] : []),
+  const activeNavId = getActiveNavId(location.pathname, location.hash);
+
+  const navItems: NavItem[] = [
+    { id: "home", label: "Home", to: "/" },
+    { id: "quote", label: "Get Quote", to: "/#quote-calculator" },
+    ...(isAdmin ? ([{ id: "admin", label: "Admin", to: "/admin" }] as NavItem[]) : []),
   ];
 
   return (
@@ -32,9 +42,10 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <button 
-            onClick={() => onNavigate("home")}
+          <Link
+            to="/"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
           >
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <Music className="w-5 h-5 text-primary-foreground" />
@@ -43,18 +54,18 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               <span className="font-display font-bold text-lg leading-tight">BEATKULTURE</span>
               <span className="text-xs text-muted-foreground">Premium DJ Services</span>
             </div>
-          </button>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Button
                 key={item.id}
-                variant={currentPage === item.id ? "default" : "ghost"}
-                onClick={() => onNavigate(item.id)}
+                variant={activeNavId === item.id ? "default" : "ghost"}
                 className="px-4"
+                asChild
               >
-                {item.label}
+                <Link to={item.to}>{item.label}</Link>
               </Button>
             ))}
 
@@ -109,14 +120,13 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               {navItems.map((item) => (
                 <Button
                   key={item.id}
-                  variant={currentPage === item.id ? "default" : "ghost"}
-                  onClick={() => {
-                    onNavigate(item.id);
-                    setMobileMenuOpen(false);
-                  }}
+                  variant={activeNavId === item.id ? "default" : "ghost"}
                   className="justify-start"
+                  asChild
                 >
-                  {item.label}
+                  <Link to={item.to} onClick={() => setMobileMenuOpen(false)}>
+                    {item.label}
+                  </Link>
                 </Button>
               ))}
               

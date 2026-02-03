@@ -95,7 +95,7 @@ export function PackagesSection() {
   };
 
   return (
-    <section className="py-20 bg-muted/30" id="packages">
+    <section className="py-20 bg-muted/30 scroll-mt-24" id="packages">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
