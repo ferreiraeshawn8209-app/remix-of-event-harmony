@@ -1,50 +1,39 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ServicesSection } from "@/components/ServicesSection";
 import { PackagesSection } from "@/components/PackagesSection";
 import { EquipmentShowcase } from "@/components/EquipmentShowcase";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Footer } from "@/components/Footer";
 
-type Page = "home" | "quote" | "admin";
-
 const Index = () => {
-  const [currentPage, setCurrentPage] = useState<Page>("home");
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case "admin":
-        return <AdminDashboard />;
-      case "quote":
-        return (
-          <div className="pt-20">
-            <QuoteCalculator />
-            <Footer />
-          </div>
-        );
-      case "home":
-      default:
-        return (
-          <>
-            <HeroSection onGetQuote={() => setCurrentPage("quote")} />
-            <ServicesSection />
-            <PackagesSection />
-            <EquipmentShowcase />
-            <div id="quote-calculator">
-              <QuoteCalculator />
-            </div>
-            <Footer />
-          </>
-        );
-    }
-  };
+  useEffect(() => {
+    if (!location.hash) return;
+
+    // Wait a tick so layout is committed before scrolling.
+    const id = location.hash.slice(1);
+    window.setTimeout(() => {
+      const el = document.getElementById(id);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  }, [location.hash]);
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onNavigate={(page) => setCurrentPage(page as Page)} currentPage={currentPage} />
-      {renderPage()}
+      <Header />
+      <HeroSection onGetQuote={() => navigate("/#quote-calculator")} />
+      <ServicesSection />
+      <PackagesSection />
+      <EquipmentShowcase />
+      <div id="quote-calculator" className="scroll-mt-24">
+        <QuoteCalculator />
+      </div>
+      <Footer />
     </div>
   );
 };
