@@ -119,8 +119,10 @@ function QuoteListItem({
           </Select>
         </div>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={onView} title="View Details">
-            <Eye className="w-4 h-4" />
+          <Button variant="ghost" size="icon" onClick={onView} title="View Details" asChild>
+            <Link to={`/quote/${quote.id}`}>
+              <Eye className="w-4 h-4" />
+            </Link>
           </Button>
           <Button variant="ghost" size="icon" title="Send Quote">
             <Send className="w-4 h-4" />
