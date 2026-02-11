@@ -31,52 +31,54 @@ function QuoteCard({ quote }: { quote: DatabaseQuote }) {
   };
 
   return (
-    <Card variant="glass" className="hover:border-primary/30 transition-colors">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{quote.event_type || "Event"}</CardTitle>
-            <CardDescription>{quote.venue || "Venue TBD"}</CardDescription>
-          </div>
-          <Badge className={statusColors[quote.status] || statusColors.draft}>
-            {quote.status}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          {quote.event_date && (
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {new Date(quote.event_date).toLocaleDateString()}
+    <Link to={`/quote/${quote.id}`}>
+      <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-lg">{quote.event_type || "Event"}</CardTitle>
+              <CardDescription>{quote.venue || "Venue TBD"}</CardDescription>
             </div>
-          )}
-          {quote.start_time && quote.end_time && (
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {quote.start_time.slice(0, 5)} - {quote.end_time.slice(0, 5)}
+            <Badge className={statusColors[quote.status] || statusColors.draft}>
+              {quote.status}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {quote.event_date && (
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {new Date(quote.event_date).toLocaleDateString()}
+              </div>
+            )}
+            {quote.start_time && quote.end_time && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {quote.start_time.slice(0, 5)} - {quote.end_time.slice(0, 5)}
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Quote</p>
+              <p className="text-xl font-bold text-primary">{formatCurrency(Number(quote.total))}</p>
             </div>
-          )}
-        </div>
-
-        <Separator />
-
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Total Quote</p>
-            <p className="text-xl font-bold text-primary">{formatCurrency(Number(quote.total))}</p>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Deposit (30%)</p>
+              <p className="font-semibold">{formatCurrency(Number(quote.deposit))}</p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Deposit (30%)</p>
-            <p className="font-semibold">{formatCurrency(Number(quote.deposit))}</p>
-          </div>
-        </div>
 
-        <p className="text-xs text-muted-foreground">
-          Created: {new Date(quote.created_at).toLocaleDateString()}
-        </p>
-      </CardContent>
-    </Card>
+          <p className="text-xs text-muted-foreground">
+            Created: {new Date(quote.created_at).toLocaleDateString()}
+          </p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 

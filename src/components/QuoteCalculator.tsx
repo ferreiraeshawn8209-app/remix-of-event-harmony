@@ -26,6 +26,8 @@ import { toast } from "@/hooks/use-toast";
 
 interface QuoteCalculatorProps {
   isAdmin?: boolean;
+  initialData?: QuoteData;
+  editQuoteId?: string;
   onSaveQuote?: (quote: QuoteData, calculations: ReturnType<typeof calculateQuote>) => void;
 }
 
@@ -138,7 +140,7 @@ function getContextualSuggestions(equipment: Record<string, number>): { id: stri
   return suggestions;
 }
 
-export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculatorProps) {
+export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onSaveQuote }: QuoteCalculatorProps) {
   const navigate = useNavigate();
   const { user, profile, isAdmin: userIsAdmin } = useAuth();
   const { createQuote, isCreating } = useQuotes();
@@ -146,26 +148,28 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
   // Use isAdmin prop if passed, otherwise use the user's actual admin status
   const effectiveIsAdmin = isAdmin || userIsAdmin;
 
-  const [quoteData, setQuoteData] = useState<QuoteData>({
-    clientName: "",
-    contactNo: "",
-    email: "",
-    venue: "",
-    eventDate: "",
-    startTime: "18:00",
-    endTime: "00:00",
-    eventType: "",
-    djName: DJ_LIST[0],
-    equipment: {},
-    kidsCorner: false,
-    kidsHours: 0,
-    travelDistance: 0,
-    discountPercent: 0,
-  });
+  const [quoteData, setQuoteData] = useState<QuoteData>(
+    initialData || {
+      clientName: "",
+      contactNo: "",
+      email: "",
+      venue: "",
+      eventDate: "",
+      startTime: "18:00",
+      endTime: "00:00",
+      eventType: "",
+      djName: DJ_LIST[0],
+      equipment: {},
+      kidsCorner: false,
+      kidsHours: 0,
+      travelDistance: 0,
+      discountPercent: 0,
+    }
+  );
 
-  // Pre-fill user data if logged in
+  // Pre-fill user data if logged in and not editing
   useEffect(() => {
-    if (profile && !quoteData.clientName) {
+    if (!initialData && profile && !quoteData.clientName) {
       setQuoteData(prev => ({
         ...prev,
         clientName: profile.full_name || prev.clientName,
@@ -616,7 +620,7 @@ export function QuoteCalculator({ isAdmin = false, onSaveQuote }: QuoteCalculato
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          {effectiveIsAdmin ? "Save Quote" : "Save Quote"}
+                          {editQuoteId ? "Update Quote" : "Save Quote"}
                         </>
                       )}
                     </Button>
