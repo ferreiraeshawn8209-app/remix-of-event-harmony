@@ -53,12 +53,16 @@ export type Database = {
       quotes: {
         Row: {
           balance: number | null
+          balance_paid: boolean
+          balance_paid_at: string | null
           client_id: string
           client_name: string
           contact_no: string | null
           created_at: string
           created_by: string | null
           deposit: number | null
+          deposit_paid: boolean
+          deposit_paid_at: string | null
           discount_amount: number | null
           discount_percent: number | null
           dj_cost: number | null
@@ -85,12 +89,16 @@ export type Database = {
         }
         Insert: {
           balance?: number | null
+          balance_paid?: boolean
+          balance_paid_at?: string | null
           client_id: string
           client_name: string
           contact_no?: string | null
           created_at?: string
           created_by?: string | null
           deposit?: number | null
+          deposit_paid?: boolean
+          deposit_paid_at?: string | null
           discount_amount?: number | null
           discount_percent?: number | null
           dj_cost?: number | null
@@ -117,12 +125,16 @@ export type Database = {
         }
         Update: {
           balance?: number | null
+          balance_paid?: boolean
+          balance_paid_at?: string | null
           client_id?: string
           client_name?: string
           contact_no?: string | null
           created_at?: string
           created_by?: string | null
           deposit?: number | null
+          deposit_paid?: boolean
+          deposit_paid_at?: string | null
           discount_amount?: number | null
           discount_percent?: number | null
           dj_cost?: number | null
