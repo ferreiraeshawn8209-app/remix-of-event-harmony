@@ -32,6 +32,10 @@ export interface DatabaseQuote {
   balance: number;
   hours: number;
   status: string;
+  deposit_paid: boolean;
+  deposit_paid_at: string | null;
+  balance_paid: boolean;
+  balance_paid_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

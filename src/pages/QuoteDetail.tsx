@@ -19,15 +19,19 @@ import {
   Edit,
   Receipt,
   Send,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import { generateInvoicePdf } from "@/lib/generateInvoicePdf";
+import { toast } from "@/hooks/use-toast";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useAuth();
-  const { quotes, isLoading: quotesLoading } = useQuotes();
+  const { user, isLoading: authLoading, profile } = useAuth();
+  const { quotes, isLoading: quotesLoading, updateQuote } = useQuotes();
   const [quote, setQuote] = useState<DatabaseQuote | null>(null);
+  const [markingPayment, setMarkingPayment] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -232,14 +236,48 @@ export default function QuoteDetail() {
               </div>
 
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-3">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>30% Non-Refundable Booking Deposit</span>
-                  <span className="text-primary">{formatCurrency(Number(quote.deposit))}</span>
+                <div className="flex justify-between items-center text-sm font-semibold">
+                  <div className="flex items-center gap-2">
+                    {quote.deposit_paid ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span>30% Non-Refundable Deposit</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-primary">{formatCurrency(Number(quote.deposit))}</span>
+                    {quote.deposit_paid ? (
+                      <Badge className="bg-green-500/20 text-green-400 text-xs" variant="outline">PAID</Badge>
+                    ) : (
+                      <Badge className="bg-yellow-500/20 text-yellow-400 text-xs" variant="outline">UNPAID</Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Remaining Balance</span>
-                  <span>{formatCurrency(Number(quote.balance))}</span>
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2">
+                    {quote.balance_paid ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span>Remaining Balance</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>{formatCurrency(Number(quote.balance))}</span>
+                    {quote.balance_paid ? (
+                      <Badge className="bg-green-500/20 text-green-400 text-xs" variant="outline">PAID</Badge>
+                    ) : (
+                      <Badge className="bg-yellow-500/20 text-yellow-400 text-xs" variant="outline">UNPAID</Badge>
+                    )}
+                  </div>
                 </div>
+                {quote.deposit_paid_at && (
+                  <p className="text-xs text-muted-foreground">Deposit paid: {new Date(quote.deposit_paid_at).toLocaleDateString()}</p>
+                )}
+                {quote.balance_paid_at && (
+                  <p className="text-xs text-muted-foreground">Balance paid: {new Date(quote.balance_paid_at).toLocaleDateString()}</p>
+                )}
                 <Separator className="bg-primary/20" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   ⚠️ A <strong>30% non-refundable deposit</strong> is required to secure your booking. 
@@ -251,7 +289,86 @@ export default function QuoteDetail() {
             </CardContent>
           </Card>
 
-          {/* Actions */}
+          {/* Payment Actions (Admin only) */}
+          {profile && (
+            <Card variant="glass" className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-lg">Payment Tracking</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                <Button
+                  variant={quote.deposit_paid ? "outline" : "default"}
+                  size="sm"
+                  disabled={markingPayment}
+                  onClick={async () => {
+                    setMarkingPayment(true);
+                    try {
+                      const newVal = !quote.deposit_paid;
+                      await updateQuote({
+                        quoteId: quote.id,
+                        quoteData: {
+                          deposit_paid: newVal,
+                          deposit_paid_at: newVal ? new Date().toISOString() : null,
+                        } as any,
+                      });
+                      toast({
+                        title: newVal ? "Deposit Marked as Paid" : "Deposit Marked as Unpaid",
+                        description: newVal ? "The 30% booking deposit has been recorded." : "Deposit payment status has been reset.",
+                      });
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setMarkingPayment(false);
+                    }
+                  }}
+                >
+                  {quote.deposit_paid ? (
+                    <><CheckCircle2 className="w-4 h-4 mr-2" /> Deposit Paid ✓</>
+                  ) : (
+                    <><Circle className="w-4 h-4 mr-2" /> Mark Deposit Paid</>
+                  )}
+                </Button>
+                <Button
+                  variant={quote.balance_paid ? "outline" : "default"}
+                  size="sm"
+                  disabled={markingPayment || !quote.deposit_paid}
+                  onClick={async () => {
+                    setMarkingPayment(true);
+                    try {
+                      const newVal = !quote.balance_paid;
+                      await updateQuote({
+                        quoteId: quote.id,
+                        quoteData: {
+                          balance_paid: newVal,
+                          balance_paid_at: newVal ? new Date().toISOString() : null,
+                          status: newVal ? "paid" : quote.status,
+                        } as any,
+                      });
+                      toast({
+                        title: newVal ? "Balance Marked as Paid" : "Balance Marked as Unpaid",
+                        description: newVal 
+                          ? "Full payment confirmed. Performance is cleared to proceed." 
+                          : "Balance payment status has been reset.",
+                      });
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setMarkingPayment(false);
+                    }
+                  }}
+                >
+                  {quote.balance_paid ? (
+                    <><CheckCircle2 className="w-4 h-4 mr-2" /> Balance Paid ✓</>
+                  ) : (
+                    <><Circle className="w-4 h-4 mr-2" /> Mark Balance Paid</>
+                  )}
+                </Button>
+                {!quote.deposit_paid && (
+                  <p className="text-xs text-muted-foreground w-full">Deposit must be paid before balance can be marked.</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
           <div className="flex flex-wrap gap-3">
             <Button variant="hero" asChild>
               <Link to={`/quote/${quote.id}/edit`}>
