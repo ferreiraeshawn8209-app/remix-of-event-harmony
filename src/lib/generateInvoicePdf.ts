@@ -141,15 +141,30 @@ export function generateInvoicePdf(quote: DatabaseQuote) {
   addTotal("TOTAL", formatCurrency(Number(quote.total)), true);
   doc.setFontSize(9);
   y += 2;
-  addTotal("30% Booking Deposit", formatCurrency(Number(quote.deposit)), true, [0, 100, 200]);
-  addTotal("Balance Due", formatCurrency(Number(quote.balance)));
+  addTotal("30% Non-Refundable Deposit", formatCurrency(Number(quote.deposit)), true, [0, 100, 200]);
+  addTotal("Remaining Balance", formatCurrency(Number(quote.balance)));
+
+  // Payment terms box
+  y += 6;
+  doc.setFillColor(255, 248, 230);
+  doc.setDrawColor(200, 160, 50);
+  doc.roundedRect(20, y - 3, pageWidth - 40, 22, 2, 2, "FD");
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(120, 80, 0);
+  doc.text("PAYMENT TERMS & CONDITIONS", 24, y + 3);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.text("1. A 30% non-refundable deposit is required to confirm and secure your booking.", 24, y + 9);
+  doc.text("2. The remaining balance must be paid IN FULL before the scheduled performance begins.", 24, y + 13.5);
+  doc.text("3. No performance will take place without full payment confirmation.", 24, y + 18);
+  doc.setTextColor(0);
 
   // Footer
   y = 270;
   doc.setFontSize(8);
   doc.setTextColor(130);
   doc.text("Thank you for choosing BeatKulture Entertainment!", pageWidth / 2, y, { align: "center" });
-  doc.text("Payment is due within 7 days of invoice date.", pageWidth / 2, y + 4, { align: "center" });
 
   // Save
   const fileName = `BK-Invoice-${quote.client_name.replace(/\s+/g, "-")}-${quote.id.slice(0, 8)}.pdf`;

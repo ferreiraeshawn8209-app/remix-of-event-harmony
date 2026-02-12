@@ -231,15 +231,22 @@ export default function QuoteDetail() {
                 <span className="text-primary">{formatCurrency(Number(quote.total))}</span>
               </div>
 
-              <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>30% Booking Deposit</span>
-                  <span className="font-semibold text-primary">{formatCurrency(Number(quote.deposit))}</span>
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-3">
+                <div className="flex justify-between text-sm font-semibold">
+                  <span>30% Non-Refundable Booking Deposit</span>
+                  <span className="text-primary">{formatCurrency(Number(quote.deposit))}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Balance Due</span>
+                  <span>Remaining Balance</span>
                   <span>{formatCurrency(Number(quote.balance))}</span>
                 </div>
+                <Separator className="bg-primary/20" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  ⚠️ A <strong>30% non-refundable deposit</strong> is required to secure your booking. 
+                  The remaining balance of <strong>{formatCurrency(Number(quote.balance))}</strong> must be paid 
+                  in full <strong>before the scheduled performance begins</strong>. No performance will take place 
+                  without full payment confirmation.
+                </p>
               </div>
             </CardContent>
           </Card>
