@@ -20,6 +20,7 @@ import {
   Receipt,
   Send,
 } from "lucide-react";
+import { generateInvoicePdf } from "@/lib/generateInvoicePdf";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -251,7 +252,7 @@ export default function QuoteDetail() {
                 Edit Quote
               </Link>
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => generateInvoicePdf(quote)}>
               <Receipt className="w-4 h-4 mr-2" />
               Generate Invoice
             </Button>
