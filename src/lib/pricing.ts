@@ -7,6 +7,12 @@ export interface EquipmentItem {
   image?: string;
 }
 
+export interface CustomLineItem {
+  name: string;
+  price: number;
+  qty: number;
+}
+
 export interface QuoteData {
   clientName: string;
   contactNo: string;
@@ -18,6 +24,7 @@ export interface QuoteData {
   eventType: string;
   djName: string;
   equipment: { [key: string]: number };
+  customItems: CustomLineItem[];
   kidsCorner: boolean;
   kidsHours: number;
   travelDistance: number;
@@ -417,6 +424,7 @@ export function calculateHours(startTime: string, endTime: string): number {
 export function calculateQuote(data: QuoteData): {
   djCost: number;
   equipmentCost: number;
+  customItemsCost: number;
   kidsCost: number;
   subtotal: number;
   travelCost: number;
@@ -437,12 +445,17 @@ export function calculateQuote(data: QuoteData): {
     const qty = data.equipment[item.id] || 0;
     equipmentCost += qty * item.price;
   });
+
+  // Custom items cost
+  const customItemsCost = (data.customItems || []).reduce(
+    (sum, item) => sum + item.price * item.qty, 0
+  );
   
   // Kids corner
   const kidsCost = data.kidsCorner ? data.kidsHours * KIDS_CORNER_HOURLY_RATE : 0;
   
   // Subtotal before travel and discount
-  const subtotal = djCost + equipmentCost + kidsCost;
+  const subtotal = djCost + equipmentCost + customItemsCost + kidsCost;
   
   // Travel cost
   const extraKm = Math.max(0, data.travelDistance - FREE_TRAVEL_KM);
@@ -460,6 +473,7 @@ export function calculateQuote(data: QuoteData): {
   return {
     djCost,
     equipmentCost,
+    customItemsCost,
     kidsCost,
     subtotal,
     travelCost,

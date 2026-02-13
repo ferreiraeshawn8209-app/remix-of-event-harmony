@@ -17,9 +17,10 @@ import {
   calculateQuote, 
   formatCurrency,
   DJ_HOURLY_RATE,
-  DEPOSIT_PERCENT
+  DEPOSIT_PERCENT,
+  CustomLineItem,
 } from "@/lib/pricing";
-import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn } from "lucide-react";
+import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes } from "@/hooks/useQuotes";
 import { toast } from "@/hooks/use-toast";
@@ -160,6 +161,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       eventType: "",
       djName: DJ_LIST[0],
       equipment: {},
+      customItems: [],
       kidsCorner: false,
       kidsHours: 0,
       travelDistance: 0,
@@ -237,6 +239,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         eventType: "",
         djName: DJ_LIST[0],
         equipment: {},
+        customItems: [],
         kidsCorner: false,
         kidsHours: 0,
         travelDistance: 0,
@@ -475,6 +478,95 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
               );
             })}
 
+            {/* Custom Line Items */}
+            <Card variant="glass">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  📝 Custom Items
+                </CardTitle>
+                <CardDescription>Add custom items with your own name and price</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(quoteData.customItems || []).map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                    <Input
+                      placeholder="Item name"
+                      value={item.name}
+                      onChange={(e) => {
+                        const updated = [...quoteData.customItems];
+                        updated[idx] = { ...updated[idx], name: e.target.value };
+                        setQuoteData({ ...quoteData, customItems: updated });
+                      }}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={item.price || ""}
+                      onChange={(e) => {
+                        const updated = [...quoteData.customItems];
+                        updated[idx] = { ...updated[idx], price: Number(e.target.value) };
+                        setQuoteData({ ...quoteData, customItems: updated });
+                      }}
+                      className="w-24"
+                    />
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          const updated = [...quoteData.customItems];
+                          updated[idx] = { ...updated[idx], qty: Math.max(1, updated[idx].qty - 1) };
+                          setQuoteData({ ...quoteData, customItems: updated });
+                        }}
+                        disabled={item.qty <= 1}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="w-6 text-center text-sm">{item.qty}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          const updated = [...quoteData.customItems];
+                          updated[idx] = { ...updated[idx], qty: updated[idx].qty + 1 };
+                          setQuoteData({ ...quoteData, customItems: updated });
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => {
+                        const updated = quoteData.customItems.filter((_, i) => i !== idx);
+                        setQuoteData({ ...quoteData, customItems: updated });
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setQuoteData({
+                      ...quoteData,
+                      customItems: [...(quoteData.customItems || []), { name: "", price: 0, qty: 1 }],
+                    });
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Custom Item
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Additional Services */}
             <Card variant="glass">
               <CardHeader>
@@ -555,6 +647,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Equipment</span>
                         <span>{formatCurrency(calculations.equipmentCost)}</span>
+                      </div>
+                    )}
+                    {calculations.customItemsCost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Custom Items</span>
+                        <span>{formatCurrency(calculations.customItemsCost)}</span>
                       </div>
                     )}
                     {calculations.kidsCost > 0 && (
