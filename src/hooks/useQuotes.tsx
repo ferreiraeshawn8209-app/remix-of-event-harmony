@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "@/hooks/use-toast";
-import { QuoteData, calculateQuote } from "@/lib/pricing";
+import { QuoteData, calculateQuote, CustomLineItem } from "@/lib/pricing";
 
 export interface DatabaseQuote {
   id: string;
@@ -17,6 +17,8 @@ export interface DatabaseQuote {
   event_type: string | null;
   dj_name: string | null;
   equipment: Record<string, number>;
+  custom_items: CustomLineItem[];
+  custom_items_cost: number;
   kids_corner: boolean;
   kids_hours: number;
   travel_distance: number;
@@ -64,6 +66,7 @@ export function useQuotes() {
       return (data || []).map(quote => ({
         ...quote,
         equipment: (quote.equipment as Record<string, number>) || {},
+        custom_items: (quote.custom_items as unknown as CustomLineItem[]) || [],
       })) as DatabaseQuote[];
     },
     enabled: !!profile,
@@ -97,12 +100,14 @@ export function useQuotes() {
         event_type: quoteData.eventType,
         dj_name: quoteData.djName,
         equipment: quoteData.equipment,
+        custom_items: quoteData.customItems || [],
         kids_corner: quoteData.kidsCorner,
         kids_hours: quoteData.kidsHours,
         travel_distance: quoteData.travelDistance,
         discount_percent: quoteData.discountPercent,
         dj_cost: calculations.djCost,
         equipment_cost: calculations.equipmentCost,
+        custom_items_cost: calculations.customItemsCost,
         kids_cost: calculations.kidsCost,
         subtotal: calculations.subtotal,
         travel_cost: calculations.travelCost,
@@ -117,7 +122,7 @@ export function useQuotes() {
 
       const { data, error } = await supabase
         .from("quotes")
-        .insert(quoteRecord)
+        .insert(quoteRecord as any)
         .select()
         .single();
 
@@ -161,6 +166,7 @@ export function useQuotes() {
       if (calculations) {
         updateData.dj_cost = calculations.djCost;
         updateData.equipment_cost = calculations.equipmentCost;
+        updateData.custom_items_cost = calculations.customItemsCost;
         updateData.kids_cost = calculations.kidsCost;
         updateData.subtotal = calculations.subtotal;
         updateData.travel_cost = calculations.travelCost;

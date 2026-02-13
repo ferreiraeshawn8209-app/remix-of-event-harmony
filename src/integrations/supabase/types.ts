@@ -60,6 +60,8 @@ export type Database = {
           contact_no: string | null
           created_at: string
           created_by: string | null
+          custom_items: Json | null
+          custom_items_cost: number | null
           deposit: number | null
           deposit_paid: boolean
           deposit_paid_at: string | null
@@ -96,6 +98,8 @@ export type Database = {
           contact_no?: string | null
           created_at?: string
           created_by?: string | null
+          custom_items?: Json | null
+          custom_items_cost?: number | null
           deposit?: number | null
           deposit_paid?: boolean
           deposit_paid_at?: string | null
@@ -132,6 +136,8 @@ export type Database = {
           contact_no?: string | null
           created_at?: string
           created_by?: string | null
+          custom_items?: Json | null
+          custom_items_cost?: number | null
           deposit?: number | null
           deposit_paid?: boolean
           deposit_paid_at?: string | null

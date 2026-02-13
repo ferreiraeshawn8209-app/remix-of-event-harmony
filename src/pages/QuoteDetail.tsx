@@ -21,9 +21,12 @@ import {
   Send,
   CheckCircle2,
   Circle,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
-import { generateInvoicePdf } from "@/lib/generateInvoicePdf";
+import { generateInvoicePdf, generateQuotePdf, sharePdfViaWhatsApp, shareViaEmail } from "@/lib/generateInvoicePdf";
 import { toast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -167,7 +170,7 @@ export default function QuoteDetail() {
                 <CardTitle className="text-lg">Equipment</CardTitle>
               </CardHeader>
               <CardContent>
-                {equipmentEntries.length > 0 ? (
+                {equipmentEntries.length > 0 || (quote.custom_items || []).length > 0 ? (
                   <div className="space-y-2 text-sm">
                     {equipmentEntries.map(([eqId, qty]) => {
                       const item = EQUIPMENT_CATALOG.find((e) => e.id === eqId);
@@ -178,6 +181,12 @@ export default function QuoteDetail() {
                         </div>
                       );
                     })}
+                    {(quote.custom_items || []).map((item, idx) => (
+                      <div key={`custom-${idx}`} className="flex justify-between">
+                        <span>{item.name} <Badge variant="outline" className="text-xs ml-1">Custom</Badge></span>
+                        <span className="text-muted-foreground">×{item.qty} @ {formatCurrency(item.price)}</span>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No equipment selected</p>
@@ -200,6 +209,12 @@ export default function QuoteDetail() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Equipment</span>
                   <span>{formatCurrency(Number(quote.equipment_cost))}</span>
+                </div>
+              )}
+              {Number(quote.custom_items_cost) > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Custom Items</span>
+                  <span>{formatCurrency(Number(quote.custom_items_cost))}</span>
                 </div>
               )}
               {Number(quote.kids_cost) > 0 && (
@@ -376,14 +391,40 @@ export default function QuoteDetail() {
                 Edit Quote
               </Link>
             </Button>
+            <Button variant="outline" onClick={() => generateQuotePdf(quote)}>
+              <FileText className="w-4 h-4 mr-2" />
+              Download Quote PDF
+            </Button>
             <Button variant="outline" onClick={() => generateInvoicePdf(quote)}>
               <Receipt className="w-4 h-4 mr-2" />
-              Generate Invoice
+              Download Invoice PDF
             </Button>
-            <Button variant="outline">
-              <Send className="w-4 h-4 mr-2" />
-              Send to Client
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Send className="w-4 h-4 mr-2" />
+                  Share with Client
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "quote")}>
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp Quote
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "invoice")}>
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp Invoice
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => shareViaEmail(quote, "quote")}>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email Quote
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => shareViaEmail(quote, "invoice")}>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email Invoice
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <p className="text-xs text-muted-foreground mt-6">
