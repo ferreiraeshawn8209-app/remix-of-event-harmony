@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { AdminAccountsTab } from "@/components/admin/AdminAccountsTab";
+import { EventManager } from "@/components/admin/EventManager";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -506,10 +507,15 @@ export default function Admin() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 border border-border/50">
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
+              <TabsTrigger value="events">Events & QR</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="events">
+              <EventManager />
+            </TabsContent>
 
             <TabsContent value="quotes">
               <Card variant="glass">

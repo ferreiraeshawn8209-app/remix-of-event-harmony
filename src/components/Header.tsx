@@ -1,10 +1,11 @@
-import { Music, Menu, X, User, LogOut, Shield } from "lucide-react";
+import { Menu, X, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import logoImg from "@/assets/logo.png";
 
 type NavItem = {
   id: "home" | "quote" | "admin";
@@ -47,9 +48,7 @@ export function Header() {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Music className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={logoImg} alt="BeatKulture" className="w-10 h-10 object-contain" />
             <div className="flex flex-col">
               <span className="font-display font-bold text-lg leading-tight">BEATKULTURE</span>
               <span className="text-xs text-muted-foreground">Premium DJ Services</span>
