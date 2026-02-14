@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dj_name: string | null
+          event_date: string | null
+          google_review_url: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dj_name?: string | null
+          event_date?: string | null
+          google_review_url?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dj_name?: string | null
+          event_date?: string | null
+          google_review_url?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -171,6 +210,47 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      song_requests: {
+        Row: {
+          artist: string
+          created_at: string
+          event_id: string
+          guest_name: string | null
+          id: string
+          message: string | null
+          song_title: string
+          status: string
+        }
+        Insert: {
+          artist: string
+          created_at?: string
+          event_id: string
+          guest_name?: string | null
+          id?: string
+          message?: string | null
+          song_title: string
+          status?: string
+        }
+        Update: {
+          artist?: string
+          created_at?: string
+          event_id?: string
+          guest_name?: string | null
+          id?: string
+          message?: string | null
+          song_title?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
