@@ -40,6 +40,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { AdminAccountsTab } from "@/components/admin/AdminAccountsTab";
 import { EventManager } from "@/components/admin/EventManager";
+import { EquipmentManager } from "@/components/admin/EquipmentManager";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -508,6 +509,7 @@ export default function Admin() {
             <TabsList className="bg-muted/50 border border-border/50">
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
               <TabsTrigger value="events">Events & QR</TabsTrigger>
+              <TabsTrigger value="equipment">Equipment</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
@@ -515,6 +517,10 @@ export default function Admin() {
 
             <TabsContent value="events">
               <EventManager />
+            </TabsContent>
+
+            <TabsContent value="equipment">
+              <EquipmentManager />
             </TabsContent>
 
             <TabsContent value="quotes">

@@ -10,7 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { 
-  EQUIPMENT_CATALOG, 
   EVENT_TYPES, 
   DJ_LIST, 
   QuoteData, 
@@ -18,11 +17,11 @@ import {
   formatCurrency,
   DJ_HOURLY_RATE,
   DEPOSIT_PERCENT,
-  CustomLineItem,
 } from "@/lib/pricing";
 import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes } from "@/hooks/useQuotes";
+import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
 import { toast } from "@/hooks/use-toast";
 
 interface QuoteCalculatorProps {
@@ -32,11 +31,7 @@ interface QuoteCalculatorProps {
   onSaveQuote?: (quote: QuoteData, calculations: ReturnType<typeof calculateQuote>) => void;
 }
 
-const groupedEquipment = EQUIPMENT_CATALOG.reduce((acc, item) => {
-  if (!acc[item.category]) acc[item.category] = [];
-  acc[item.category].push(item);
-  return acc;
-}, {} as Record<string, typeof EQUIPMENT_CATALOG>);
+// groupedEquipment is now computed dynamically from DB data
 
 // Category-level suggestions to guide users
 const CATEGORY_SUGGESTIONS: Record<string, { icon: string; title: string; description: string }> = {
@@ -145,9 +140,26 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
   const navigate = useNavigate();
   const { user, profile, isAdmin: userIsAdmin } = useAuth();
   const { createQuote, isCreating } = useQuotes();
+  const { items: catalogItems, isLoading: catalogLoading } = useEquipmentCatalog();
   
   // Use isAdmin prop if passed, otherwise use the user's actual admin status
   const effectiveIsAdmin = isAdmin || userIsAdmin;
+
+  // Group equipment from DB
+  const groupedEquipment = useMemo(() => {
+    return catalogItems.reduce((acc, item) => {
+      if (!acc[item.category]) acc[item.category] = [];
+      acc[item.category].push({
+        id: item.item_key,
+        name: item.name,
+        category: item.category,
+        description: item.description,
+        price: item.price,
+        image: item.image_url || undefined,
+      });
+      return acc;
+    }, {} as Record<string, { id: string; name: string; category: string; description: string; price: number; image?: string }[]>);
+  }, [catalogItems]);
 
   const [quoteData, setQuoteData] = useState<QuoteData>(
     initialData || {
@@ -181,7 +193,16 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
     }
   }, [profile]);
 
-  const calculations = useMemo(() => calculateQuote(quoteData), [quoteData]);
+  // Build flat catalog for calculateQuote
+  const flatCatalog = useMemo(() => catalogItems.map(i => ({
+    id: i.item_key,
+    name: i.name,
+    category: i.category,
+    description: i.description,
+    price: i.price,
+  })), [catalogItems]);
+
+  const calculations = useMemo(() => calculateQuote(quoteData, flatCatalog), [quoteData, flatCatalog]);
 
   const updateEquipment = (id: string, delta: number) => {
     setQuoteData(prev => ({

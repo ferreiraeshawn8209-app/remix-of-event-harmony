@@ -421,7 +421,7 @@ export function calculateHours(startTime: string, endTime: string): number {
   return (endMinutes - startMinutes) / 60;
 }
 
-export function calculateQuote(data: QuoteData): {
+export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[]): {
   djCost: number;
   equipmentCost: number;
   customItemsCost: number;
@@ -439,9 +439,10 @@ export function calculateQuote(data: QuoteData): {
   // DJ cost
   const djCost = hours * DJ_HOURLY_RATE;
   
-  // Equipment cost
+  // Equipment cost - use provided catalog or fallback to hardcoded
+  const equipmentList = catalog || EQUIPMENT_CATALOG;
   let equipmentCost = 0;
-  EQUIPMENT_CATALOG.forEach(item => {
+  equipmentList.forEach(item => {
     const qty = data.equipment[item.id] || 0;
     equipmentCost += qty * item.price;
   });
