@@ -8,13 +8,13 @@ export function generateInvoicePdf(quote: DatabaseQuote, download = true): jsPDF
   let y = 20;
 
   // Header
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text("BEATKULTURE", 20, y);
-  doc.setFontSize(10);
+  doc.text("BEATKULTURE ENTERTAINMENT", 20, y);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text("Professional DJ & Entertainment", 20, y + 7);
+  doc.text("One Beat. One Kulture. One Love.", 20, y + 7);
   doc.setTextColor(0);
 
   // Invoice title
@@ -188,13 +188,13 @@ export function generateQuotePdf(quote: DatabaseQuote, download = true): jsPDF {
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = 20;
 
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text("BEATKULTURE", 20, y);
-  doc.setFontSize(10);
+  doc.text("BEATKULTURE ENTERTAINMENT", 20, y);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text("Professional DJ & Entertainment", 20, y + 7);
+  doc.text("One Beat. One Kulture. One Love.", 20, y + 7);
   doc.setTextColor(0);
 
   doc.setFontSize(18);
