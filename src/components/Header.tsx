@@ -50,8 +50,8 @@ export function Header() {
           >
             <img src={logoImg} alt="BeatKulture" className="w-10 h-10 object-contain" />
             <div className="flex flex-col">
-              <span className="font-display font-bold text-lg leading-tight">BEATKULTURE</span>
-              <span className="text-xs text-muted-foreground">Premium DJ Services</span>
+              <span className="font-display font-bold text-lg leading-tight">BEATKULTURE ENTERTAINMENT</span>
+              <span className="text-xs text-muted-foreground">One Beat. One Kulture. One Love.</span>
             </div>
           </Link>
 
