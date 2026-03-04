@@ -41,6 +41,8 @@ import { toast } from "@/hooks/use-toast";
 import { AdminAccountsTab } from "@/components/admin/AdminAccountsTab";
 import { EventManager } from "@/components/admin/EventManager";
 import { EquipmentManager } from "@/components/admin/EquipmentManager";
+import { ServiceSettingsManager } from "@/components/admin/ServiceSettingsManager";
+import { PackageManager } from "@/components/admin/PackageManager";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -506,10 +508,12 @@ export default function Admin() {
 
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-muted/50 border border-border/50">
+            <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
               <TabsTrigger value="events">Events & QR</TabsTrigger>
               <TabsTrigger value="equipment">Equipment</TabsTrigger>
+              <TabsTrigger value="packages">Packages</TabsTrigger>
+              <TabsTrigger value="settings">Pricing</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
@@ -521,6 +525,14 @@ export default function Admin() {
 
             <TabsContent value="equipment">
               <EquipmentManager />
+            </TabsContent>
+
+            <TabsContent value="packages">
+              <PackageManager />
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <ServiceSettingsManager />
             </TabsContent>
 
             <TabsContent value="quotes">

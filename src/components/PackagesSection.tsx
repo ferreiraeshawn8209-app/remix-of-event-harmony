@@ -4,16 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  WEDDING_PACKAGES, 
-  CORPORATE_PACKAGES, 
-  PARTY_PACKAGES, 
-  Package,
-  formatCurrency 
-} from "@/lib/pricing";
-import { Check, Heart, Building2, PartyPopper, Sparkles } from "lucide-react";
+import { formatCurrency } from "@/lib/pricing";
+import { usePackages, DbPackage } from "@/hooks/usePackages";
+import { Check, Heart, Building2, PartyPopper, Sparkles, Loader2 } from "lucide-react";
 
-function PackageCard({ pkg, onSelect }: { pkg: Package; onSelect: (pkg: Package) => void }) {
+function PackageCard({ pkg, onSelect }: { pkg: DbPackage; onSelect: (pkg: DbPackage) => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -72,9 +67,9 @@ function PackageCard({ pkg, onSelect }: { pkg: Package; onSelect: (pkg: Package)
 
 export function PackagesSection() {
   const [activeTab, setActiveTab] = useState("wedding");
+  const { packages, isLoading } = usePackages();
 
-  const handleSelectPackage = (pkg: Package) => {
-    // Scroll to quote calculator or open modal
+  const handleSelectPackage = (pkg: DbPackage) => {
     const quoteSection = document.getElementById('quote-calculator');
     if (quoteSection) {
       quoteSection.scrollIntoView({ behavior: 'smooth' });
@@ -83,16 +78,16 @@ export function PackagesSection() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'wedding':
-        return <Heart className="w-4 h-4" />;
-      case 'corporate':
-        return <Building2 className="w-4 h-4" />;
-      case 'party':
-        return <PartyPopper className="w-4 h-4" />;
-      default:
-        return null;
+      case 'wedding': return <Heart className="w-4 h-4" />;
+      case 'corporate': return <Building2 className="w-4 h-4" />;
+      case 'party': return <PartyPopper className="w-4 h-4" />;
+      default: return null;
     }
   };
+
+  const weddingPkgs = packages.filter(p => p.category === "wedding");
+  const corporatePkgs = packages.filter(p => p.category === "corporate");
+  const partyPkgs = packages.filter(p => p.category === "party");
 
   return (
     <section className="py-20 bg-muted/30 scroll-mt-24" id="packages">
@@ -112,49 +107,55 @@ export function PackagesSection() {
           </p>
         </motion.div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="wedding" className="gap-2">
-              {getCategoryIcon('wedding')}
-              <span className="hidden sm:inline">Wedding</span>
-              <span className="sm:hidden">Weddings</span>
-            </TabsTrigger>
-            <TabsTrigger value="corporate" className="gap-2">
-              {getCategoryIcon('corporate')}
-              <span className="hidden sm:inline">Corporate</span>
-              <span className="sm:hidden">Corp</span>
-            </TabsTrigger>
-            <TabsTrigger value="party" className="gap-2">
-              {getCategoryIcon('party')}
-              <span className="hidden sm:inline">Private Party</span>
-              <span className="sm:hidden">Party</span>
-            </TabsTrigger>
-          </TabsList>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="wedding" className="gap-2">
+                {getCategoryIcon('wedding')}
+                <span className="hidden sm:inline">Wedding</span>
+                <span className="sm:hidden">Weddings</span>
+              </TabsTrigger>
+              <TabsTrigger value="corporate" className="gap-2">
+                {getCategoryIcon('corporate')}
+                <span className="hidden sm:inline">Corporate</span>
+                <span className="sm:hidden">Corp</span>
+              </TabsTrigger>
+              <TabsTrigger value="party" className="gap-2">
+                {getCategoryIcon('party')}
+                <span className="hidden sm:inline">Private Party</span>
+                <span className="sm:hidden">Party</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="wedding">
-            <div className="grid md:grid-cols-3 gap-6">
-              {WEDDING_PACKAGES.map((pkg) => (
-                <PackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectPackage} />
-              ))}
-            </div>
-          </TabsContent>
+            <TabsContent value="wedding">
+              <div className="grid md:grid-cols-3 gap-6">
+                {weddingPkgs.map((pkg) => (
+                  <PackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectPackage} />
+                ))}
+              </div>
+            </TabsContent>
 
-          <TabsContent value="corporate">
-            <div className="grid md:grid-cols-3 gap-6">
-              {CORPORATE_PACKAGES.map((pkg) => (
-                <PackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectPackage} />
-              ))}
-            </div>
-          </TabsContent>
+            <TabsContent value="corporate">
+              <div className="grid md:grid-cols-3 gap-6">
+                {corporatePkgs.map((pkg) => (
+                  <PackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectPackage} />
+                ))}
+              </div>
+            </TabsContent>
 
-          <TabsContent value="party">
-            <div className="grid md:grid-cols-3 gap-6">
-              {PARTY_PACKAGES.map((pkg) => (
-                <PackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectPackage} />
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="party">
+              <div className="grid md:grid-cols-3 gap-6">
+                {partyPkgs.map((pkg) => (
+                  <PackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectPackage} />
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}
