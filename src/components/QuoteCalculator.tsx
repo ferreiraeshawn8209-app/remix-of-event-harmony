@@ -15,13 +15,12 @@ import {
   QuoteData, 
   calculateQuote, 
   formatCurrency,
-  DJ_HOURLY_RATE,
-  DEPOSIT_PERCENT,
 } from "@/lib/pricing";
 import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
+import { useServiceSettings } from "@/hooks/useServiceSettings";
 import { toast } from "@/hooks/use-toast";
 
 interface QuoteCalculatorProps {
@@ -141,6 +140,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
   const { user, profile, isAdmin: userIsAdmin } = useAuth();
   const { createQuote, isCreating } = useQuotes();
   const { items: catalogItems, isLoading: catalogLoading } = useEquipmentCatalog();
+  const { settings: serviceSettings } = useServiceSettings();
   
   // Use isAdmin prop if passed, otherwise use the user's actual admin status
   const effectiveIsAdmin = isAdmin || userIsAdmin;
@@ -202,7 +202,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
     price: i.price,
   })), [catalogItems]);
 
-  const calculations = useMemo(() => calculateQuote(quoteData, flatCatalog), [quoteData, flatCatalog]);
+  const calculations = useMemo(() => calculateQuote(quoteData, flatCatalog, serviceSettings), [quoteData, flatCatalog, serviceSettings]);
 
   const updateEquipment = (id: string, delta: number) => {
     setQuoteData(prev => ({
@@ -661,7 +661,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">DJ Service ({calculations.hours.toFixed(1)} hrs × {formatCurrency(DJ_HOURLY_RATE)})</span>
+                      <span className="text-muted-foreground">DJ Service ({calculations.hours.toFixed(1)} hrs × {formatCurrency(serviceSettings.dj_hourly_rate)})</span>
                       <span>{formatCurrency(calculations.djCost)}</span>
                     </div>
                     {calculations.equipmentCost > 0 && (
@@ -714,7 +714,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
 
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>{DEPOSIT_PERCENT}% Booking Deposit</span>
+                      <span>{serviceSettings.deposit_percent}% Booking Deposit</span>
                       <span className="font-semibold text-primary">{formatCurrency(calculations.deposit)}</span>
                     </div>
                     <div className="flex justify-between text-sm">

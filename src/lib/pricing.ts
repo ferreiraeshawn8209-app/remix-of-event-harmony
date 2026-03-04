@@ -421,7 +421,13 @@ export function calculateHours(startTime: string, endTime: string): number {
   return (endMinutes - startMinutes) / 60;
 }
 
-export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[]): {
+export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates?: {
+  dj_hourly_rate?: number;
+  kids_corner_hourly_rate?: number;
+  travel_rate_per_km?: number;
+  free_travel_km?: number;
+  deposit_percent?: number;
+}): {
   djCost: number;
   equipmentCost: number;
   customItemsCost: number;
@@ -434,10 +440,16 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[]): {
   balance: number;
   hours: number;
 } {
+  const djRate = rates?.dj_hourly_rate ?? DJ_HOURLY_RATE;
+  const kidsRate = rates?.kids_corner_hourly_rate ?? KIDS_CORNER_HOURLY_RATE;
+  const travelRate = rates?.travel_rate_per_km ?? TRAVEL_RATE_PER_KM;
+  const freeKm = rates?.free_travel_km ?? FREE_TRAVEL_KM;
+  const depositPct = rates?.deposit_percent ?? DEPOSIT_PERCENT;
+
   const hours = calculateHours(data.startTime, data.endTime);
   
   // DJ cost
-  const djCost = hours * DJ_HOURLY_RATE;
+  const djCost = hours * djRate;
   
   // Equipment cost - use provided catalog or fallback to hardcoded
   const equipmentList = catalog || EQUIPMENT_CATALOG;
@@ -453,14 +465,14 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[]): {
   );
   
   // Kids corner
-  const kidsCost = data.kidsCorner ? data.kidsHours * KIDS_CORNER_HOURLY_RATE : 0;
+  const kidsCost = data.kidsCorner ? data.kidsHours * kidsRate : 0;
   
   // Subtotal before travel and discount
   const subtotal = djCost + equipmentCost + customItemsCost + kidsCost;
   
   // Travel cost
-  const extraKm = Math.max(0, data.travelDistance - FREE_TRAVEL_KM);
-  const travelCost = extraKm * TRAVEL_RATE_PER_KM;
+  const extraKm = Math.max(0, data.travelDistance - freeKm);
+  const travelCost = extraKm * travelRate;
   
   // Discount
   const discount = subtotal * (data.discountPercent / 100);
@@ -469,7 +481,7 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[]): {
   const total = subtotal + travelCost - discount;
   
   // Deposit
-  const deposit = total * (DEPOSIT_PERCENT / 100);
+  const deposit = total * (depositPct / 100);
   
   return {
     djCost,

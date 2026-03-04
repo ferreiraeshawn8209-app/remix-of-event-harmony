@@ -95,6 +95,48 @@ export type Database = {
         }
         Relationships: []
       }
+      packages: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          includes: Json
+          is_active: boolean
+          name: string
+          popular: boolean
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string
+          id?: string
+          includes?: Json
+          is_active?: boolean
+          name: string
+          popular?: boolean
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          includes?: Json
+          is_active?: boolean
+          name?: string
+          popular?: boolean
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -255,6 +297,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_settings: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          label: string
+          setting_key: string
+          setting_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          label?: string
+          setting_key: string
+          setting_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          label?: string
+          setting_key?: string
+          setting_value?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       song_requests: {
         Row: {
