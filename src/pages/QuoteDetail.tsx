@@ -391,11 +391,11 @@ export default function QuoteDetail() {
                 Edit Quote
               </Link>
             </Button>
-            <Button variant="outline" onClick={() => generateQuotePdf(quote)}>
+            <Button variant="outline" onClick={() => { generateQuotePdf(quote); }}>
               <FileText className="w-4 h-4 mr-2" />
               Download Quote PDF
             </Button>
-            <Button variant="outline" onClick={() => generateInvoicePdf(quote)}>
+            <Button variant="outline" onClick={() => { generateInvoicePdf(quote); }}>
               <Receipt className="w-4 h-4 mr-2" />
               Download Invoice PDF
             </Button>

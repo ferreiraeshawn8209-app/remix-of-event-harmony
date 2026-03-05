@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useEquipmentCatalog, EquipmentCatalogItem } from "@/hooks/useEquipmentCatalog";
-import { Plus, Pencil, Trash2, Loader2, Save, X, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Save, X, Package, Upload, ImageIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/pricing";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +48,8 @@ const emptyForm: EditForm = {
 export function EquipmentManager() {
   const { items, isLoading, saveItem, deleteItem, isSaving, isDeleting } = useEquipmentCatalog();
   const [editingItem, setEditingItem] = useState<EditForm | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = [...new Set(items.map((i) => i.category))];
 
@@ -61,6 +65,33 @@ export function EquipmentManager() {
       sort_order: item.sort_order,
       is_active: item.is_active,
     });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingItem) return;
+
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `${editingItem.item_key || Date.now()}-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("equipment-images")
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("equipment-images")
+      .getPublicUrl(fileName);
+
+    setEditingItem({ ...editingItem, image_url: urlData.publicUrl });
+    setUploading(false);
+    toast({ title: "Image uploaded", description: "Image ready to save." });
   };
 
   const handleSave = async () => {
@@ -146,6 +177,64 @@ export function EquipmentManager() {
                   placeholder="Brief description"
                 />
               </div>
+
+              {/* Image Upload */}
+              <div className="space-y-2 md:col-span-2">
+                <Label>Equipment Image</Label>
+                <div className="flex items-start gap-4">
+                  {editingItem.image_url ? (
+                    <div className="relative w-32 h-24 rounded-lg overflow-hidden border border-border">
+                      <img
+                        src={editingItem.image_url}
+                        alt="Equipment"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 bg-background/80"
+                        onClick={() => setEditingItem({ ...editingItem, image_url: "" })}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-32 h-24 rounded-lg border border-dashed border-border flex items-center justify-center">
+                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      {uploading ? "Uploading..." : "Upload Image"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">Or paste a URL:</p>
+                    <Input
+                      value={editingItem.image_url}
+                      onChange={(e) => setEditingItem({ ...editingItem, image_url: e.target.value })}
+                      placeholder="https://..."
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>Sort Order</Label>
                 <Input
@@ -205,7 +294,11 @@ export function EquipmentManager() {
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="w-10 h-10 rounded object-cover shrink-0" />
+                        ) : (
+                          <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                        )}
                         <div className="min-w-0">
                           <div className="font-medium text-sm flex items-center gap-2">
                             {item.name}

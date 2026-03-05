@@ -16,18 +16,21 @@ import {
   calculateQuote, 
   formatCurrency,
 } from "@/lib/pricing";
-import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2 } from "lucide-react";
+import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2, X, Package } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
 import { useServiceSettings } from "@/hooks/useServiceSettings";
 import { toast } from "@/hooks/use-toast";
+import { DbPackage } from "@/hooks/usePackages";
 
 interface QuoteCalculatorProps {
   isAdmin?: boolean;
   initialData?: QuoteData;
   editQuoteId?: string;
   onSaveQuote?: (quote: QuoteData, calculations: ReturnType<typeof calculateQuote>) => void;
+  selectedPackage?: DbPackage | null;
+  onClearPackage?: () => void;
 }
 
 // groupedEquipment is now computed dynamically from DB data
@@ -135,7 +138,7 @@ function getContextualSuggestions(equipment: Record<string, number>): { id: stri
   return suggestions;
 }
 
-export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onSaveQuote }: QuoteCalculatorProps) {
+export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onSaveQuote, selectedPackage, onClearPackage }: QuoteCalculatorProps) {
   const navigate = useNavigate();
   const { user, profile, isAdmin: userIsAdmin } = useAuth();
   const { createQuote, isCreating } = useQuotes();
@@ -192,6 +195,23 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       }));
     }
   }, [profile]);
+
+  // Auto-fill from selected package
+  useEffect(() => {
+    if (!selectedPackage) return;
+    
+    // Map package category to event type
+    const categoryToEventType: Record<string, string> = {
+      wedding: "Wedding",
+      corporate: "Corporate Event",
+      party: "Birthday Party",
+    };
+    
+    setQuoteData(prev => ({
+      ...prev,
+      eventType: categoryToEventType[selectedPackage.category] || prev.eventType,
+    }));
+  }, [selectedPackage]);
 
   // Build flat catalog for calculateQuote
   const flatCatalog = useMemo(() => catalogItems.map(i => ({
@@ -291,6 +311,33 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {/* Selected Package Banner */}
+          {selectedPackage && (
+            <div className="lg:col-span-3">
+              <Card variant="glow" className="border-primary/50 bg-primary/5">
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <Package className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="font-semibold text-sm">
+                          Selected Package: <span className="text-primary">{selectedPackage.name}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          From {formatCurrency(selectedPackage.price)} — Fill in your details below to get your personalized quote
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={onClearPackage}>
+                      <X className="w-4 h-4 mr-1" />
+                      Clear
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Left Column - Client Details & Equipment */}
           <div className="lg:col-span-2 space-y-6">
             {/* Client Details */}

@@ -4,26 +4,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { EQUIPMENT_CATALOG, EquipmentItem, formatCurrency } from "@/lib/pricing";
-import { Volume2, Lightbulb, Mic2, Sparkles, X } from "lucide-react";
+import { useEquipmentCatalog, EquipmentCatalogItem } from "@/hooks/useEquipmentCatalog";
+import { formatCurrency } from "@/lib/pricing";
+import { Volume2, Lightbulb, Mic2, Sparkles, Loader2, Package } from "lucide-react";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'Speakers': <Volume2 className="w-5 h-5" />,
+  'Sound System': <Volume2 className="w-5 h-5" />,
   'Mixers/Amplifiers': <Volume2 className="w-5 h-5" />,
+  'DJ Equipment': <Volume2 className="w-5 h-5" />,
   'Lighting': <Lightbulb className="w-5 h-5" />,
   'Microphones': <Mic2 className="w-5 h-5" />,
+  'Audio Equipment': <Mic2 className="w-5 h-5" />,
   'Effects': <Sparkles className="w-5 h-5" />,
 };
 
 const categoryColors: Record<string, string> = {
   'Speakers': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'Sound System': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   'Mixers/Amplifiers': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  'DJ Equipment': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   'Lighting': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   'Microphones': 'bg-green-500/20 text-green-400 border-green-500/30',
+  'Audio Equipment': 'bg-green-500/20 text-green-400 border-green-500/30',
   'Effects': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
 };
 
-function EquipmentCard({ item, onClick }: { item: EquipmentItem; onClick: () => void }) {
+function EquipmentCard({ item, onClick }: { item: EquipmentCatalogItem; onClick: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -38,16 +45,22 @@ function EquipmentCard({ item, onClick }: { item: EquipmentItem; onClick: () => 
         onClick={onClick}
       >
         <div className="aspect-[4/3] relative overflow-hidden">
-          <img
-            src={item.image}
-            alt={item.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted/50">
+              <Package className="w-12 h-12 text-muted-foreground" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
           <Badge 
-            className={`absolute top-3 left-3 ${categoryColors[item.category]} border`}
+            className={`absolute top-3 left-3 ${categoryColors[item.category] || 'bg-muted text-muted-foreground'} border`}
           >
-            {categoryIcons[item.category]}
+            {categoryIcons[item.category] || <Package className="w-5 h-5" />}
             <span className="ml-1">{item.category}</span>
           </Badge>
           <div className="absolute bottom-3 right-3">
@@ -68,14 +81,17 @@ function EquipmentCard({ item, onClick }: { item: EquipmentItem; onClick: () => 
 }
 
 export function EquipmentShowcase() {
-  const [selectedItem, setSelectedItem] = useState<EquipmentItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<EquipmentCatalogItem | null>(null);
   const [filter, setFilter] = useState<string>('all');
+  const { items, isLoading } = useEquipmentCatalog();
 
-  const categories = ['all', ...Array.from(new Set(EQUIPMENT_CATALOG.map(item => item.category)))];
+  // Only show active items
+  const activeItems = items.filter(i => i.is_active);
+  const categories = ['all', ...Array.from(new Set(activeItems.map(item => item.category)))];
   
   const filteredItems = filter === 'all' 
-    ? EQUIPMENT_CATALOG 
-    : EQUIPMENT_CATALOG.filter(item => item.category === filter);
+    ? activeItems 
+    : activeItems.filter(item => item.category === filter);
 
   return (
     <section className="py-20 bg-background" id="equipment">
@@ -95,33 +111,41 @@ export function EquipmentShowcase() {
           </p>
         </motion.div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={filter === category ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(category)}
-              className="capitalize"
-            >
-              {category === 'all' ? 'All Equipment' : category}
-            </Button>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <>
+            {/* Category Filter */}
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={filter === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter(category)}
+                  className="capitalize"
+                >
+                  {category === 'all' ? 'All Equipment' : category}
+                </Button>
+              ))}
+            </div>
 
-        {/* Equipment Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          <AnimatePresence>
-            {filteredItems.map((item) => (
-              <EquipmentCard
-                key={item.id}
-                item={item}
-                onClick={() => setSelectedItem(item)}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
+            {/* Equipment Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <AnimatePresence>
+                {filteredItems.map((item) => (
+                  <EquipmentCard
+                    key={item.id}
+                    item={item}
+                    onClick={() => setSelectedItem(item)}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
 
         {/* Detail Modal */}
         <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
@@ -134,18 +158,24 @@ export function EquipmentShowcase() {
                     {selectedItem.name}
                   </DialogTitle>
                   <DialogDescription>
-                    <Badge className={`${categoryColors[selectedItem.category]} border mt-2`}>
+                    <Badge className={`${categoryColors[selectedItem.category] || ''} border mt-2`}>
                       {selectedItem.category}
                     </Badge>
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="aspect-video relative rounded-lg overflow-hidden">
-                    <img
-                      src={selectedItem.image}
-                      alt={selectedItem.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {selectedItem.image_url ? (
+                      <img
+                        src={selectedItem.image_url}
+                        alt={selectedItem.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                        <Package className="w-16 h-16 text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Description</h4>
