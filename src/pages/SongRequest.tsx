@@ -140,9 +140,9 @@ export default function SongRequest() {
                   <div className="text-center space-y-3">
                     <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30">
                       <AlertCircle className="w-6 h-6 text-secondary mx-auto mb-2" />
-                      <h3 className="font-semibold text-lg">Leave a Review First</h3>
+                       <h3 className="font-semibold text-lg">Leave a Review First</h3>
                       <p className="text-sm text-muted-foreground mt-2">
-                        To request a song, please leave us a 4+ star review on Google.
+                        To request a song, please leave us a quick review.
                         This helps us grow and ensures quality service!
                       </p>
                     </div>
@@ -156,9 +156,9 @@ export default function SongRequest() {
                     </div>
                   </div>
 
-                  <Button variant="hero" className="w-full" size="lg" onClick={handleReviewClick}>
+                   <Button variant="hero" className="w-full" size="lg" onClick={handleReviewClick}>
                     <ExternalLink className="w-4 h-4" />
-                    Leave Google Review
+                    Leave a Review
                   </Button>
 
                   <Button variant="outline" className="w-full" onClick={() => setStep("request")}>

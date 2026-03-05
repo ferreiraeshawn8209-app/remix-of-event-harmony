@@ -65,14 +65,22 @@ function PackageCard({ pkg, onSelect }: { pkg: DbPackage; onSelect: (pkg: DbPack
   );
 }
 
-export function PackagesSection() {
+interface PackagesSectionProps {
+  onSelectPackage?: (pkg: DbPackage) => void;
+}
+
+export function PackagesSection({ onSelectPackage }: PackagesSectionProps) {
   const [activeTab, setActiveTab] = useState("wedding");
   const { packages, isLoading } = usePackages();
 
   const handleSelectPackage = (pkg: DbPackage) => {
-    const quoteSection = document.getElementById('quote-calculator');
-    if (quoteSection) {
-      quoteSection.scrollIntoView({ behavior: 'smooth' });
+    if (onSelectPackage) {
+      onSelectPackage(pkg);
+    } else {
+      const quoteSection = document.getElementById('quote-calculator');
+      if (quoteSection) {
+        quoteSection.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
