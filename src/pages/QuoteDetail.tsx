@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
-import { formatCurrency, EQUIPMENT_CATALOG } from "@/lib/pricing";
+import { formatCurrency } from "@/lib/pricing";
+import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
+import { CatalogItemForPdf } from "@/lib/generateInvoicePdf";
 import {
   Music,
   ArrowLeft,
@@ -33,8 +35,14 @@ export default function QuoteDetail() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, profile } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuote } = useQuotes();
+  const { items: catalogItems } = useEquipmentCatalog();
   const [quote, setQuote] = useState<DatabaseQuote | null>(null);
   const [markingPayment, setMarkingPayment] = useState(false);
+
+  const catalogForPdf: CatalogItemForPdf[] = catalogItems.map(i => ({
+    id: i.item_key, name: i.name, price: i.price,
+    image_url: i.image_url, description: i.description,
+  }));
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -173,10 +181,15 @@ export default function QuoteDetail() {
                 {equipmentEntries.length > 0 || (quote.custom_items || []).length > 0 ? (
                   <div className="space-y-2 text-sm">
                     {equipmentEntries.map(([eqId, qty]) => {
-                      const item = EQUIPMENT_CATALOG.find((e) => e.id === eqId);
+                      const item = catalogItems.find((e) => e.item_key === eqId);
                       return (
-                        <div key={eqId} className="flex justify-between">
-                          <span>{item?.name || eqId}</span>
+                        <div key={eqId} className="flex justify-between items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            {item?.image_url && (
+                              <img src={item.image_url} alt={item.name} className="w-8 h-8 rounded object-cover" />
+                            )}
+                            <span>{item?.name || eqId}</span>
+                          </div>
                           <span className="text-muted-foreground">×{qty as number}</span>
                         </div>
                       );
@@ -391,11 +404,11 @@ export default function QuoteDetail() {
                 Edit Quote
               </Link>
             </Button>
-            <Button variant="outline" onClick={() => { generateQuotePdf(quote); }}>
+            <Button variant="outline" onClick={() => { generateQuotePdf(quote, true, catalogForPdf); }}>
               <FileText className="w-4 h-4 mr-2" />
               Download Quote PDF
             </Button>
-            <Button variant="outline" onClick={() => { generateInvoicePdf(quote); }}>
+            <Button variant="outline" onClick={() => { generateInvoicePdf(quote, true, catalogForPdf); }}>
               <Receipt className="w-4 h-4 mr-2" />
               Download Invoice PDF
             </Button>
@@ -407,19 +420,19 @@ export default function QuoteDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "quote")}>
+                <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "quote", catalogForPdf)}>
                   <MessageCircle className="w-4 h-4 mr-2" />
                   WhatsApp Quote
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "invoice")}>
+                <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "invoice", catalogForPdf)}>
                   <MessageCircle className="w-4 h-4 mr-2" />
                   WhatsApp Invoice
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareViaEmail(quote, "quote")}>
+                <DropdownMenuItem onClick={() => shareViaEmail(quote, "quote", catalogForPdf)}>
                   <Mail className="w-4 h-4 mr-2" />
                   Email Quote
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareViaEmail(quote, "invoice")}>
+                <DropdownMenuItem onClick={() => shareViaEmail(quote, "invoice", catalogForPdf)}>
                   <Mail className="w-4 h-4 mr-2" />
                   Email Invoice
                 </DropdownMenuItem>

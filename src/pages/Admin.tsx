@@ -43,6 +43,7 @@ import { EventManager } from "@/components/admin/EventManager";
 import { EquipmentManager } from "@/components/admin/EquipmentManager";
 import { ServiceSettingsManager } from "@/components/admin/ServiceSettingsManager";
 import { PackageManager } from "@/components/admin/PackageManager";
+import { TermsUploader } from "@/components/admin/TermsUploader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -514,6 +515,7 @@ export default function Admin() {
               <TabsTrigger value="equipment">Equipment</TabsTrigger>
               <TabsTrigger value="packages">Packages</TabsTrigger>
               <TabsTrigger value="settings">Pricing</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
@@ -533,6 +535,10 @@ export default function Admin() {
 
             <TabsContent value="settings">
               <ServiceSettingsManager />
+            </TabsContent>
+
+            <TabsContent value="documents">
+              <TermsUploader />
             </TabsContent>
 
             <TabsContent value="quotes">
