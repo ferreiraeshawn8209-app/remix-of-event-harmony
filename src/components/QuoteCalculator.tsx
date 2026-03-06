@@ -16,7 +16,8 @@ import {
   calculateQuote, 
   formatCurrency,
 } from "@/lib/pricing";
-import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2, X, Package } from "lucide-react";
+import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2, X, Package, MapPin } from "lucide-react";
+import { calculateDistanceFromBase } from "@/lib/distanceCalculator";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
@@ -163,6 +164,28 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       return acc;
     }, {} as Record<string, { id: string; name: string; category: string; description: string; price: number; image?: string }[]>);
   }, [catalogItems]);
+
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
+
+  const handleCalculateDistance = async () => {
+    if (!quoteData.venue.trim()) {
+      toast({ title: "No venue", description: "Please enter a venue address first.", variant: "destructive" });
+      return;
+    }
+    setIsCalculatingDistance(true);
+    try {
+      const distance = await calculateDistanceFromBase(quoteData.venue);
+      if (distance === null) {
+        toast({ title: "Could not find address", description: "Try a more specific address (e.g. include city name).", variant: "destructive" });
+      } else {
+        setQuoteData(prev => ({ ...prev, travelDistance: distance }));
+        toast({ title: `Distance: ~${distance}km`, description: `Estimated from Hatfield Square, Pretoria to your venue.` });
+      }
+    } catch {
+      toast({ title: "Error", description: "Distance calculation failed. Enter manually.", variant: "destructive" });
+    }
+    setIsCalculatingDistance(false);
+  };
 
   const [quoteData, setQuoteData] = useState<QuoteData>(
     initialData || {
@@ -439,14 +462,34 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="travelDistance">Travel Distance (km)</Label>
-                  <Input
-                    id="travelDistance"
-                    type="number"
-                    min={0}
-                    value={quoteData.travelDistance}
-                    onChange={(e) => setQuoteData({ ...quoteData, travelDistance: Number(e.target.value) })}
-                    placeholder="Distance from Hatfield Square PTA"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="travelDistance"
+                      type="number"
+                      min={0}
+                      value={quoteData.travelDistance}
+                      onChange={(e) => setQuoteData({ ...quoteData, travelDistance: Number(e.target.value) })}
+                      placeholder="Distance from Hatfield Square PTA"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCalculateDistance}
+                      disabled={isCalculatingDistance || !quoteData.venue.trim()}
+                      title="Auto-calculate distance from venue address"
+                    >
+                      {isCalculatingDistance ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <MapPin className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    First 33km free. Click 📍 to auto-calculate from venue address.
+                  </p>
                 </div>
               </CardContent>
             </Card>

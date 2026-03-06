@@ -36,8 +36,8 @@ function QuoteCard({ quote }: { quote: DatabaseQuote }) {
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-lg">{quote.event_type || "Event"}</CardTitle>
-              <CardDescription>{quote.venue || "Venue TBD"}</CardDescription>
+              <CardTitle className="text-lg">{quote.client_name}</CardTitle>
+              <CardDescription>{quote.event_type || "Event"} • {quote.venue || "Venue TBD"}</CardDescription>
             </div>
             <Badge className={statusColors[quote.status] || statusColors.draft}>
               {quote.status}

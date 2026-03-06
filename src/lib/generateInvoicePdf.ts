@@ -1,8 +1,34 @@
 import jsPDF from "jspdf";
+import { PDFDocument } from "pdf-lib";
 import { DatabaseQuote } from "@/hooks/useQuotes";
 import { EQUIPMENT_CATALOG, formatCurrency } from "@/lib/pricing";
+import { supabase } from "@/integrations/supabase/client";
 
-// Helper to load logo as base64 for PDF embedding
+export interface CatalogItemForPdf {
+  id: string;
+  name: string;
+  price: number;
+  image_url?: string | null;
+  description?: string;
+}
+
+// Helper to load an image URL as base64
+async function loadImageBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+// Load logo
 async function loadLogoBase64(): Promise<string | null> {
   try {
     const response = await fetch(new URL("@/assets/logo.png", import.meta.url).href);
@@ -18,17 +44,46 @@ async function loadLogoBase64(): Promise<string | null> {
   }
 }
 
-// Equipment lookup helper - accepts optional DB catalog
-function findEquipmentName(eqId: string, catalogItems?: { id: string; name: string; price: number }[]): { name: string; price: number } {
+// Equipment lookup helper
+function findEquipmentInfo(eqId: string, catalogItems?: CatalogItemForPdf[]): CatalogItemForPdf {
   if (catalogItems) {
     const found = catalogItems.find(e => e.id === eqId);
-    if (found) return { name: found.name, price: found.price };
+    if (found) return found;
   }
   const fallback = EQUIPMENT_CATALOG.find(e => e.id === eqId);
-  return { name: fallback?.name || eqId, price: fallback?.price || 0 };
+  return {
+    id: eqId,
+    name: fallback?.name || eqId,
+    price: fallback?.price || 0,
+    description: fallback?.description,
+  };
 }
 
-function addLetterhead(doc: jsPDF, logoBase64: string | null, title: string, quoteId: string) {
+// Pre-load all equipment images needed for the PDF
+async function preloadEquipmentImages(
+  equipment: Record<string, number>,
+  catalogItems?: CatalogItemForPdf[]
+): Promise<Record<string, string>> {
+  const imageMap: Record<string, string> = {};
+  const promises: Promise<void>[] = [];
+
+  for (const [eqId, qty] of Object.entries(equipment)) {
+    if ((qty as number) <= 0) continue;
+    const info = findEquipmentInfo(eqId, catalogItems);
+    if (info.image_url) {
+      promises.push(
+        loadImageBase64(info.image_url).then((b64) => {
+          if (b64) imageMap[eqId] = b64;
+        })
+      );
+    }
+  }
+
+  await Promise.all(promises);
+  return imageMap;
+}
+
+function addLetterhead(doc: jsPDF, logoBase64: string | null, title: string, quote: DatabaseQuote) {
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = 15;
 
@@ -50,23 +105,24 @@ function addLetterhead(doc: jsPDF, logoBase64: string | null, title: string, quo
   doc.text("One Beat. One Kulture. One Love.", textX, y + 11);
   doc.setTextColor(0);
 
-  // Title on right
+  // Title + ref on right
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.text(title, pageWidth - 20, y + 2, { align: "right" });
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text(`#${quoteId.slice(0, 8).toUpperCase()}`, pageWidth - 20, y + 9, { align: "right" });
-  doc.text(`Date: ${new Date().toLocaleDateString("en-ZA")}`, pageWidth - 20, y + 15, { align: "right" });
+  doc.text(`#${quote.id.slice(0, 8).toUpperCase()}`, pageWidth - 20, y + 9, { align: "right" });
+  doc.text(`Created: ${new Date(quote.created_at).toLocaleDateString("en-ZA")}`, pageWidth - 20, y + 15, { align: "right" });
+  doc.text(`Printed: ${new Date().toLocaleDateString("en-ZA")}`, pageWidth - 20, y + 21, { align: "right" });
   doc.setTextColor(0);
 
-  return y + 25;
+  return y + 30;
 }
 
 function addClientAndEventDetails(doc: jsPDF, quote: DatabaseQuote, y: number, clientLabel: string) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  
+
   doc.setDrawColor(200);
   doc.line(20, y, pageWidth - 20, y);
   y += 10;
@@ -96,7 +152,13 @@ function addClientAndEventDetails(doc: jsPDF, quote: DatabaseQuote, y: number, c
   return y;
 }
 
-function addLineItems(doc: jsPDF, quote: DatabaseQuote, y: number, catalogItems?: { id: string; name: string; price: number }[]) {
+function addLineItems(
+  doc: jsPDF,
+  quote: DatabaseQuote,
+  y: number,
+  catalogItems?: CatalogItemForPdf[],
+  equipmentImages?: Record<string, string>
+) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Table header
@@ -107,44 +169,104 @@ function addLineItems(doc: jsPDF, quote: DatabaseQuote, y: number, catalogItems?
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.text("DESCRIPTION", 24, y + 5.5);
-  doc.text("QTY", 120, y + 5.5);
+  doc.text("QTY", 130, y + 5.5);
   doc.text("AMOUNT", pageWidth - 24, y + 5.5, { align: "right" });
   doc.setTextColor(0);
   y += 12;
 
   doc.setFont("helvetica", "normal");
 
-  const addRow = (desc: string, qty: string, amount: string, highlight = false) => {
-    if (y > 260) { doc.addPage(); y = 20; }
+  const checkPage = () => {
+    if (y > 255) { doc.addPage(); y = 20; }
+  };
+
+  // Simple row (no image)
+  const addSimpleRow = (desc: string, qty: string, amount: string, highlight = false) => {
+    checkPage();
     if (highlight) {
       doc.setFillColor(245, 245, 245);
       doc.rect(20, y - 4, pageWidth - 40, 7, "F");
     }
+    doc.setFontSize(9);
     doc.text(desc, 24, y);
-    doc.text(qty, 120, y);
+    doc.text(qty, 130, y);
     doc.text(amount, pageWidth - 24, y, { align: "right" });
     y += 7;
   };
 
-  addRow(`DJ Service (${quote.hours} hours)`, "1", formatCurrency(Number(quote.dj_cost)), true);
+  // Row with image and description
+  const addImageRow = (
+    name: string,
+    description: string,
+    qty: string,
+    amount: string,
+    imageBase64: string | null
+  ) => {
+    checkPage();
+    const rowHeight = 14;
+    doc.setFillColor(250, 250, 250);
+    doc.rect(20, y - 4, pageWidth - 40, rowHeight, "F");
 
+    const textX = imageBase64 ? 40 : 24;
+
+    // Image thumbnail
+    if (imageBase64) {
+      try {
+        doc.addImage(imageBase64, "JPEG", 22, y - 3, 14, 10);
+      } catch { /* skip image */ }
+    }
+
+    // Name
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(name, textX, y);
+
+    // Description (truncated)
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100);
+    const maxDescWidth = 85;
+    const truncDesc = doc.splitTextToSize(description || "", maxDescWidth)[0] || "";
+    doc.text(truncDesc, textX, y + 5);
+    doc.setTextColor(0);
+
+    // Qty & Amount
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(qty, 130, y);
+    doc.text(amount, pageWidth - 24, y, { align: "right" });
+
+    y += rowHeight;
+  };
+
+  // DJ Service
+  addSimpleRow(`DJ Service (${quote.hours} hours)`, "1", formatCurrency(Number(quote.dj_cost)), true);
+
+  // Equipment
   const equipment = quote.equipment || {};
   Object.entries(equipment).forEach(([eqId, qty]) => {
     if ((qty as number) > 0) {
-      const item = findEquipmentName(eqId, catalogItems);
-      addRow(item.name, String(qty), formatCurrency(item.price * (qty as number)));
+      const info = findEquipmentInfo(eqId, catalogItems);
+      const imgB64 = equipmentImages?.[eqId] || null;
+
+      if (imgB64 || info.description) {
+        addImageRow(info.name, info.description || "", String(qty), formatCurrency(info.price * (qty as number)), imgB64);
+      } else {
+        addSimpleRow(info.name, String(qty), formatCurrency(info.price * (qty as number)));
+      }
     }
   });
 
+  // Custom items
   const customItems = quote.custom_items || [];
   customItems.forEach((item) => {
     if (item.name && item.price > 0) {
-      addRow(item.name, String(item.qty), formatCurrency(item.price * item.qty));
+      addSimpleRow(item.name, String(item.qty), formatCurrency(item.price * item.qty));
     }
   });
 
   if (Number(quote.kids_cost) > 0) {
-    addRow(`Kids Corner (${quote.kids_hours || 0} hours)`, "1", formatCurrency(Number(quote.kids_cost)), true);
+    addSimpleRow(`Kids Corner (${quote.kids_hours || 0} hours)`, "1", formatCurrency(Number(quote.kids_cost)), true);
   }
 
   return y;
@@ -162,6 +284,7 @@ function addTotals(doc: jsPDF, quote: DatabaseQuote, y: number) {
     if (bold) doc.setFont("helvetica", "bold");
     else doc.setFont("helvetica", "normal");
     if (color) doc.setTextColor(...color);
+    doc.setFontSize(9);
     doc.text(label, 110, y);
     doc.text(value, pageWidth - 24, y, { align: "right" });
     doc.setTextColor(0);
@@ -187,8 +310,54 @@ function addTotals(doc: jsPDF, quote: DatabaseQuote, y: number) {
   return y;
 }
 
+function addPaymentStatus(doc: jsPDF, quote: DatabaseQuote, y: number) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  if (y > 240) { doc.addPage(); y = 20; }
+
+  y += 6;
+  doc.setFillColor(240, 248, 255);
+  doc.setDrawColor(0, 100, 200);
+  const boxHeight = quote.deposit_paid ? 28 : 22;
+  doc.roundedRect(20, y - 3, pageWidth - 40, boxHeight, 2, 2, "FD");
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 80, 160);
+  doc.text("PAYMENT STATUS", 24, y + 3);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+
+  if (quote.deposit_paid) {
+    doc.setTextColor(34, 139, 34);
+    doc.text(`✓ Deposit of ${formatCurrency(Number(quote.deposit))} PAID`, 24, y + 10);
+    if (quote.deposit_paid_at) {
+      doc.text(`  Paid on: ${new Date(quote.deposit_paid_at).toLocaleDateString("en-ZA")}`, 24, y + 15);
+    }
+    doc.setTextColor(200, 100, 0);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Outstanding balance: ${formatCurrency(Number(quote.balance))}`, 24, y + 21);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100);
+    doc.text("Full balance must be paid before the scheduled performance begins.", 24, y + 26);
+  } else {
+    doc.setTextColor(200, 100, 0);
+    doc.text(`⏳ Deposit of ${formatCurrency(Number(quote.deposit))} is required to confirm booking.`, 24, y + 10);
+    doc.setFontSize(7);
+    doc.setTextColor(100);
+    doc.text("A 30% non-refundable deposit secures your booking. No performance without full payment.", 24, y + 16);
+  }
+
+  doc.setTextColor(0);
+  return y + boxHeight + 4;
+}
+
 function addPaymentTerms(doc: jsPDF, y: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  if (y > 245) { doc.addPage(); y = 20; }
 
   y += 6;
   doc.setFillColor(255, 248, 230);
@@ -205,12 +374,12 @@ function addPaymentTerms(doc: jsPDF, y: number) {
   doc.text("3. No performance will take place without full payment confirmation.", 24, y + 18);
   doc.setTextColor(0);
 
-  return y;
+  return y + 28;
 }
 
 function addFooter(doc: jsPDF, extraLine?: string) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const y = 270;
+  const y = 275;
   doc.setFontSize(8);
   doc.setTextColor(130);
   doc.text("Thank you for choosing BeatKulture Entertainment!", pageWidth / 2, y, { align: "center" });
@@ -219,76 +388,146 @@ function addFooter(doc: jsPDF, extraLine?: string) {
   }
 }
 
-export async function generateInvoicePdf(quote: DatabaseQuote, download = true, catalogItems?: { id: string; name: string; price: number }[]): Promise<jsPDF> {
+/** Try to load T&Cs PDF from storage and merge with main PDF */
+async function mergeWithTermsPdf(mainPdfBytes: ArrayBuffer): Promise<Uint8Array> {
+  try {
+    // Try to download T&Cs PDF from storage
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .download("terms-and-conditions.pdf");
+
+    if (error || !data) {
+      // No T&Cs uploaded — return main PDF as-is
+      return new Uint8Array(mainPdfBytes);
+    }
+
+    const tcBytes = await data.arrayBuffer();
+
+    // Merge using pdf-lib
+    const mainDoc = await PDFDocument.load(mainPdfBytes);
+    const tcDoc = await PDFDocument.load(tcBytes);
+    const copiedPages = await mainDoc.copyPages(tcDoc, tcDoc.getPageIndices());
+
+    copiedPages.forEach((page) => mainDoc.addPage(page));
+
+    return await mainDoc.save();
+  } catch {
+    // If merge fails, return original
+    return new Uint8Array(mainPdfBytes);
+  }
+}
+
+function getClientFileName(quote: DatabaseQuote, type: "Quote" | "Invoice"): string {
+  const safeName = quote.client_name.replace(/[^a-zA-Z0-9\s-]/g, "").replace(/\s+/g, "-");
+  return `BK-${type}-${safeName}-${quote.id.slice(0, 8)}.pdf`;
+}
+
+export async function generateInvoicePdf(
+  quote: DatabaseQuote,
+  download = true,
+  catalogItems?: CatalogItemForPdf[]
+): Promise<jsPDF> {
   const doc = new jsPDF();
   const logoBase64 = await loadLogoBase64();
+  const equipmentImages = await preloadEquipmentImages(quote.equipment || {}, catalogItems);
 
-  let y = addLetterhead(doc, logoBase64, "INVOICE", quote.id);
+  let y = addLetterhead(doc, logoBase64, "INVOICE", quote);
   y = addClientAndEventDetails(doc, quote, y, "BILL TO");
-  y = addLineItems(doc, quote, y, catalogItems);
+  y = addLineItems(doc, quote, y, catalogItems, equipmentImages);
   y = addTotals(doc, quote, y);
+  y = addPaymentStatus(doc, quote, y);
   addPaymentTerms(doc, y);
   addFooter(doc);
 
   if (download) {
-    const fileName = `BK-Invoice-${quote.client_name.replace(/\s+/g, "-")}-${quote.id.slice(0, 8)}.pdf`;
-    doc.save(fileName);
+    // Merge with T&Cs
+    const mainBytes = doc.output("arraybuffer");
+    const merged = await mergeWithTermsPdf(mainBytes);
+    const blob = new Blob([new Uint8Array(merged) as any], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = getClientFileName(quote, "Invoice");
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   return doc;
 }
 
-export async function generateQuotePdf(quote: DatabaseQuote, download = true, catalogItems?: { id: string; name: string; price: number }[]): Promise<jsPDF> {
+export async function generateQuotePdf(
+  quote: DatabaseQuote,
+  download = true,
+  catalogItems?: CatalogItemForPdf[]
+): Promise<jsPDF> {
   const doc = new jsPDF();
   const logoBase64 = await loadLogoBase64();
+  const equipmentImages = await preloadEquipmentImages(quote.equipment || {}, catalogItems);
 
-  let y = addLetterhead(doc, logoBase64, "QUOTE", quote.id);
+  let y = addLetterhead(doc, logoBase64, "QUOTE", quote);
   y = addClientAndEventDetails(doc, quote, y, "PREPARED FOR");
-  y = addLineItems(doc, quote, y, catalogItems);
+  y = addLineItems(doc, quote, y, catalogItems, equipmentImages);
   y = addTotals(doc, quote, y);
   addPaymentTerms(doc, y);
   addFooter(doc, "This quote is valid for 7 days from the date of issue.");
 
   if (download) {
-    const fileName = `BK-Quote-${quote.client_name.replace(/\s+/g, "-")}-${quote.id.slice(0, 8)}.pdf`;
-    doc.save(fileName);
+    const mainBytes = doc.output("arraybuffer");
+    const merged = await mergeWithTermsPdf(mainBytes);
+    const blob = new Blob([new Uint8Array(merged) as any], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = getClientFileName(quote, "Quote");
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   return doc;
 }
 
-export function sharePdfViaWhatsApp(quote: DatabaseQuote, type: "quote" | "invoice") {
+export function sharePdfViaWhatsApp(
+  quote: DatabaseQuote,
+  type: "quote" | "invoice",
+  catalogItems?: CatalogItemForPdf[]
+) {
   const pdfGenerator = type === "quote" ? generateQuotePdf : generateInvoicePdf;
-  pdfGenerator(quote, false).then(doc => {
-    const blob = doc.output("blob");
+  pdfGenerator(quote, false, catalogItems).then(async (doc) => {
+    const mainBytes = doc.output("arraybuffer");
+    const merged = await mergeWithTermsPdf(mainBytes);
+    const blob = new Blob([new Uint8Array(merged) as any], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement("a");
     link.href = url;
-    link.download = `BK-${type === "quote" ? "Quote" : "Invoice"}-${quote.client_name.replace(/\s+/g, "-")}.pdf`;
+    link.download = getClientFileName(quote, type === "quote" ? "Quote" : "Invoice");
     link.click();
 
     const message = encodeURIComponent(
       `Hi ${quote.client_name},\n\nPlease find your ${type} from BeatKulture Entertainment attached.\n\nTotal: ${formatCurrency(Number(quote.total))}\nDeposit (30%): ${formatCurrency(Number(quote.deposit))}\n\nThank you for choosing BeatKulture! 🎵`
     );
     const phone = quote.contact_no?.replace(/\s+/g, "").replace(/^\+?27/, "27") || "";
-    const waUrl = phone 
+    const waUrl = phone
       ? `https://wa.me/${phone}?text=${message}`
       : `https://wa.me/?text=${message}`;
-    
+
     window.open(waUrl, "_blank");
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   });
 }
 
-export function shareViaEmail(quote: DatabaseQuote, type: "quote" | "invoice") {
+export function shareViaEmail(
+  quote: DatabaseQuote,
+  type: "quote" | "invoice",
+  catalogItems?: CatalogItemForPdf[]
+) {
   const pdfGenerator = type === "quote" ? generateQuotePdf : generateInvoicePdf;
-  pdfGenerator(quote, true);
+  pdfGenerator(quote, true, catalogItems);
 
   const subject = encodeURIComponent(`BeatKulture ${type === "quote" ? "Quote" : "Invoice"} - ${quote.client_name}`);
   const body = encodeURIComponent(
     `Hi ${quote.client_name},\n\nPlease find your ${type} from BeatKulture Entertainment attached.\n\nTotal: ${formatCurrency(Number(quote.total))}\nDeposit (30%): ${formatCurrency(Number(quote.deposit))}\n\nThank you for choosing BeatKulture!\n\nPlease download the PDF that was just saved and attach it to this email.`
   );
-  
+
   window.open(`mailto:${quote.email}?subject=${subject}&body=${body}`, "_self");
 }
