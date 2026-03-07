@@ -515,6 +515,8 @@ export default function Admin() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="finance">Finance</TabsTrigger>
               <TabsTrigger value="events">Events & QR</TabsTrigger>
               <TabsTrigger value="equipment">Equipment</TabsTrigger>
               <TabsTrigger value="packages">Packages</TabsTrigger>
@@ -524,6 +526,14 @@ export default function Admin() {
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="calendar">
+              <CalendarBookings quotes={quotes} />
+            </TabsContent>
+
+            <TabsContent value="finance">
+              <FinancialLog quotes={quotes} />
+            </TabsContent>
 
             <TabsContent value="events">
               <EventManager />
