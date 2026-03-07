@@ -9,39 +9,61 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
 import { formatCurrency } from "@/lib/pricing";
 import { 
-  Music, 
-  LogOut, 
-  FileText, 
-  Plus, 
-  Calendar,
-  MapPin,
-  Clock,
-  Loader2,
-  Shield,
-  User
+  Music, LogOut, FileText, Plus, Calendar, MapPin, Clock,
+  Loader2, Shield, User, Settings, ClipboardList
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const statusCardStyles: Record<string, string> = {
+  draft: "border-l-4 border-l-muted-foreground",
+  sent: "border-l-4 border-l-blue-400",
+  accepted: "border-l-4 border-l-success",
+  declined: "border-l-4 border-l-destructive",
+  rejected: "border-l-4 border-l-destructive",
+  paid: "border-l-4 border-l-primary",
+  expired: "border-l-4 border-l-muted-foreground opacity-60",
+};
+
+const statusBadgeColors: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  sent: "bg-blue-500/20 text-blue-400",
+  accepted: "bg-success/20 text-success",
+  declined: "bg-destructive/20 text-destructive",
+  rejected: "bg-destructive/20 text-destructive",
+  paid: "bg-primary/20 text-primary",
+  expired: "bg-muted text-muted-foreground",
+};
 
 function QuoteCard({ quote }: { quote: DatabaseQuote }) {
-  const statusColors: Record<string, string> = {
-    draft: "bg-muted text-muted-foreground",
-    sent: "bg-blue-500/20 text-blue-400",
-    accepted: "bg-success/20 text-success",
-    declined: "bg-destructive/20 text-destructive",
-    expired: "bg-muted text-muted-foreground",
-  };
+  const status = quote.status || "draft";
+  const isDepositPaid = quote.deposit_paid && status !== "paid";
 
   return (
     <Link to={`/quote/${quote.id}`}>
-      <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
+      <Card
+        variant="glass"
+        className={cn(
+          "hover:border-primary/30 transition-colors cursor-pointer",
+          statusCardStyles[status],
+          isDepositPaid && "border-l-secondary bg-secondary/5"
+        )}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-lg">{quote.client_name}</CardTitle>
               <CardDescription>{quote.event_type || "Event"} • {quote.venue || "Venue TBD"}</CardDescription>
             </div>
-            <Badge className={statusColors[quote.status] || statusColors.draft}>
-              {quote.status}
-            </Badge>
+            <div className="flex flex-col items-end gap-1">
+              <Badge className={statusBadgeColors[status]}>
+                {status}
+              </Badge>
+              {isDepositPaid && (
+                <Badge variant="outline" className="text-xs text-secondary border-secondary/30">
+                  Deposit Paid
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -59,9 +81,7 @@ function QuoteCard({ quote }: { quote: DatabaseQuote }) {
               </div>
             )}
           </div>
-
           <Separator />
-
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Quote</p>
@@ -72,7 +92,6 @@ function QuoteCard({ quote }: { quote: DatabaseQuote }) {
               <p className="font-semibold">{formatCurrency(Number(quote.deposit))}</p>
             </div>
           </div>
-
           <p className="text-xs text-muted-foreground">
             Created: {new Date(quote.created_at).toLocaleDateString()}
           </p>
@@ -88,9 +107,7 @@ export default function Dashboard() {
   const { quotes, isLoading: quotesLoading } = useQuotes();
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
+    if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   const handleSignOut = async () => {
@@ -114,22 +131,15 @@ export default function Dashboard() {
         <Card variant="glass" className="max-w-lg w-full mx-4">
           <CardHeader>
             <CardTitle>Setting up your account…</CardTitle>
-            <CardDescription>
-              We’re preparing your dashboard. If this takes longer than a few seconds, try again.
-            </CardDescription>
+            <CardDescription>We're preparing your dashboard. If this takes longer than a few seconds, try again.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Creating/fetching your profile
+              <Loader2 className="w-4 h-4 animate-spin" /> Creating/fetching your profile
             </div>
             <div className="flex gap-2">
-              <Button variant="hero" onClick={refreshProfile}>
-                Retry
-              </Button>
-              <Button variant="outline" onClick={handleSignOut}>
-                Sign out
-              </Button>
+              <Button variant="hero" onClick={refreshProfile}>Retry</Button>
+              <Button variant="outline" onClick={handleSignOut}>Sign out</Button>
             </div>
           </CardContent>
         </Card>
@@ -137,33 +147,30 @@ export default function Dashboard() {
     );
   }
 
+  // Group quotes by status
+  const activeQuotes = quotes.filter(q => q.status !== "declined" && q.status !== "rejected");
+  const archivedQuotes = quotes.filter(q => q.status === "declined" || q.status === "rejected");
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-6 h-6 text-primary" />
             <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
           </Link>
-
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               {isAdmin ? (
-                <Badge variant="secondary" className="gap-1">
-                  <Shield className="w-3 h-3" />
-                  Admin
-                </Badge>
+                <Badge variant="secondary" className="gap-1"><Shield className="w-3 h-3" />Admin</Badge>
               ) : (
-                <Badge variant="outline" className="gap-1">
-                  <User className="w-3 h-3" />
-                  Client
-                </Badge>
+                <Badge variant="outline" className="gap-1"><User className="w-3 h-3" />Client</Badge>
               )}
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {profile.full_name}
-              </span>
+              <span className="text-sm text-muted-foreground hidden sm:inline">{profile.full_name}</span>
             </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/profile"><Settings className="w-4 h-4" /></Link>
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline ml-2">Sign Out</span>
@@ -172,25 +179,17 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          {/* Welcome Section */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="mb-8">
             <h1 className="font-display text-3xl font-bold mb-2">
               Welcome back, <span className="gradient-text">{profile.full_name}</span>
             </h1>
             <p className="text-muted-foreground">
-              {isAdmin
-                ? "Manage quotes, clients, and events from your admin dashboard."
-                : "View your quotes and manage your event bookings."}
+              {isAdmin ? "Manage quotes, clients, and events from your admin dashboard." : "View your quotes and manage your event bookings."}
             </p>
           </div>
 
-          {/* Admin Actions */}
           {isAdmin && (
             <div className="mb-8">
               <Card variant="glow" className="border-secondary/30 bg-secondary/10">
@@ -202,16 +201,10 @@ export default function Dashboard() {
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to="/admin">
-                          <FileText className="w-4 h-4 mr-2" />
-                          Manage All Quotes
-                        </Link>
+                        <Link to="/admin"><FileText className="w-4 h-4 mr-2" />Manage All Quotes</Link>
                       </Button>
                       <Button variant="hero" size="sm" asChild>
-                        <Link to="/#quote-calculator">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Create Quote for Client
-                        </Link>
+                        <Link to="/#quote-calculator"><Plus className="w-4 h-4 mr-2" />Create Quote for Client</Link>
                       </Button>
                     </div>
                   </div>
@@ -225,79 +218,92 @@ export default function Dashboard() {
             <Link to="/#quote-calculator">
               <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
                 <CardContent className="py-6 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10">
-                    <Plus className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">New Quote</p>
-                    <p className="text-sm text-muted-foreground">Build a custom quote</p>
-                  </div>
+                  <div className="p-3 rounded-lg bg-primary/10"><Plus className="w-6 h-6 text-primary" /></div>
+                  <div><p className="font-semibold">New Quote</p><p className="text-sm text-muted-foreground">Build a custom quote</p></div>
                 </CardContent>
               </Card>
             </Link>
-
             <Link to="/#packages">
               <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
                 <CardContent className="py-6 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-secondary/10">
-                    <FileText className="w-6 h-6 text-secondary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">View Packages</p>
-                    <p className="text-sm text-muted-foreground">Browse our packages</p>
-                  </div>
+                  <div className="p-3 rounded-lg bg-secondary/10"><FileText className="w-6 h-6 text-secondary" /></div>
+                  <div><p className="font-semibold">View Packages</p><p className="text-sm text-muted-foreground">Browse our packages</p></div>
                 </CardContent>
               </Card>
             </Link>
-
-            <Card variant="glass" className="hover:border-primary/30 transition-colors">
-              <CardContent className="py-6 flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-muted">
-                  <MapPin className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="font-semibold">Contact Us</p>
-                  <p className="text-sm text-muted-foreground">Get in touch</p>
-                </div>
-              </CardContent>
-            </Card>
+            <Link to="/profile">
+              <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
+                <CardContent className="py-6 flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-muted"><Settings className="w-6 h-6 text-muted-foreground" /></div>
+                  <div><p className="font-semibold">Edit Profile</p><p className="text-sm text-muted-foreground">Update contact details</p></div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
 
-          {/* Quotes Section */}
+          {/* Active Quotes */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-2xl font-bold">Your Quotes</h2>
-              <Badge variant="outline">{quotes.length} total</Badge>
+              <Badge variant="outline">{activeQuotes.length} active</Badge>
             </div>
 
             {quotesLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
-            ) : quotes.length === 0 ? (
+            ) : activeQuotes.length === 0 ? (
               <Card variant="glass" className="text-center py-12">
                 <CardContent>
                   <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-semibold text-lg mb-2">No Quotes Yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start by creating your first quote or browse our packages.
-                  </p>
+                  <p className="text-muted-foreground mb-4">Start by creating your first quote or browse our packages.</p>
                   <Button variant="hero" asChild>
-                    <Link to="/#quote-calculator">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Your First Quote
-                    </Link>
+                    <Link to="/#quote-calculator"><Plus className="w-4 h-4 mr-2" />Create Your First Quote</Link>
                   </Button>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {quotes.map((quote) => (
-                  <QuoteCard key={quote.id} quote={quote} />
-                ))}
+                {activeQuotes.map((quote) => <QuoteCard key={quote.id} quote={quote} />)}
               </div>
             )}
           </div>
+
+          {/* Event Planner links for accepted quotes */}
+          {activeQuotes.filter(q => q.status === "accepted" || q.deposit_paid).length > 0 && (
+            <div className="mt-8">
+              <h2 className="font-display text-2xl font-bold mb-4">Event Planning</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeQuotes.filter(q => q.status === "accepted" || q.deposit_paid).map(q => (
+                  <Link key={q.id} to={`/event-planner/${q.id}`}>
+                    <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer border-l-4 border-l-success">
+                      <CardContent className="py-4 flex items-center gap-4">
+                        <div className="p-3 rounded-lg bg-success/10"><ClipboardList className="w-5 h-5 text-success" /></div>
+                        <div>
+                          <p className="font-semibold">{q.client_name}</p>
+                          <p className="text-sm text-muted-foreground">{q.event_type} • Plan your event details</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Archived/Rejected */}
+          {archivedQuotes.length > 0 && (
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display text-xl font-bold text-muted-foreground">Archived / Rejected</h2>
+                <Badge variant="outline" className="text-destructive border-destructive/30">{archivedQuotes.length}</Badge>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                {archivedQuotes.map((quote) => <QuoteCard key={quote.id} quote={quote} />)}
+              </div>
+            </div>
+          )}
         </motion.div>
       </main>
     </div>
