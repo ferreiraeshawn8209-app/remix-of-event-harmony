@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuoteEdit from "./pages/QuoteEdit";
+import ProfileEdit from "./pages/ProfileEdit";
+import EventPlanner from "./pages/EventPlanner";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import NotFound from "./pages/NotFound";
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/quote/:id" element={<QuoteDetail />} />
             <Route path="/quote/:id/edit" element={<QuoteEdit />} />
+            <Route path="/profile" element={<ProfileEdit />} />
+            <Route path="/event-planner/:quoteId" element={<EventPlanner />} />
             <Route path="/request/:eventId" element={<SongRequest />} />
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

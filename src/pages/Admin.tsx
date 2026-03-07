@@ -44,6 +44,8 @@ import { EquipmentManager } from "@/components/admin/EquipmentManager";
 import { ServiceSettingsManager } from "@/components/admin/ServiceSettingsManager";
 import { PackageManager } from "@/components/admin/PackageManager";
 import { TermsUploader } from "@/components/admin/TermsUploader";
+import { FinancialLog } from "@/components/admin/FinancialLog";
+import { CalendarBookings } from "@/components/admin/CalendarBookings";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +63,7 @@ const statusColors: Record<string, string> = {
   sent: "bg-blue-500/20 text-blue-400 border-blue-400/30",
   accepted: "bg-success/20 text-success border-success/30",
   declined: "bg-destructive/20 text-destructive border-destructive/30",
+  rejected: "bg-destructive/20 text-destructive border-destructive/30",
   paid: "bg-primary/20 text-primary border-primary/30",
   expired: "bg-muted text-muted-foreground",
 };
@@ -119,6 +122,7 @@ function QuoteListItem({
               <SelectItem value="sent">Sent</SelectItem>
               <SelectItem value="accepted">Accepted</SelectItem>
               <SelectItem value="declined">Declined</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
             </SelectContent>
           </Select>
@@ -511,6 +515,8 @@ export default function Admin() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="finance">Finance</TabsTrigger>
               <TabsTrigger value="events">Events & QR</TabsTrigger>
               <TabsTrigger value="equipment">Equipment</TabsTrigger>
               <TabsTrigger value="packages">Packages</TabsTrigger>
@@ -520,6 +526,14 @@ export default function Admin() {
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="calendar">
+              <CalendarBookings quotes={quotes} />
+            </TabsContent>
+
+            <TabsContent value="finance">
+              <FinancialLog quotes={quotes} />
+            </TabsContent>
 
             <TabsContent value="events">
               <EventManager />
@@ -569,6 +583,7 @@ export default function Admin() {
                           <SelectItem value="sent">Sent</SelectItem>
                           <SelectItem value="accepted">Accepted</SelectItem>
                           <SelectItem value="declined">Declined</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
                           <SelectItem value="paid">Paid</SelectItem>
                         </SelectContent>
                       </Select>
