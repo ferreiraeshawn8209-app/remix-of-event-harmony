@@ -56,6 +56,113 @@ export type Database = {
         }
         Relationships: []
       }
+      event_plans: {
+        Row: {
+          additional_notes: string | null
+          bouquet_toss_artist: string | null
+          bouquet_toss_song: string | null
+          cake_cutting_artist: string | null
+          cake_cutting_song: string | null
+          client_id: string
+          client_name: string
+          created_at: string
+          created_by: string | null
+          dietary_notes: string | null
+          do_not_play_songs: string | null
+          email: string
+          entrance_artist: string | null
+          entrance_song: string | null
+          event_date: string | null
+          event_type: string | null
+          first_dance_artist: string | null
+          first_dance_song: string | null
+          guest_count: number | null
+          id: string
+          last_song: string | null
+          last_song_artist: string | null
+          mc_notes: string | null
+          must_play_songs: string | null
+          quote_id: string | null
+          special_announcements: string | null
+          timeline_notes: string | null
+          updated_at: string
+          uplighting_color: string | null
+          venue: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          bouquet_toss_artist?: string | null
+          bouquet_toss_song?: string | null
+          cake_cutting_artist?: string | null
+          cake_cutting_song?: string | null
+          client_id: string
+          client_name: string
+          created_at?: string
+          created_by?: string | null
+          dietary_notes?: string | null
+          do_not_play_songs?: string | null
+          email: string
+          entrance_artist?: string | null
+          entrance_song?: string | null
+          event_date?: string | null
+          event_type?: string | null
+          first_dance_artist?: string | null
+          first_dance_song?: string | null
+          guest_count?: number | null
+          id?: string
+          last_song?: string | null
+          last_song_artist?: string | null
+          mc_notes?: string | null
+          must_play_songs?: string | null
+          quote_id?: string | null
+          special_announcements?: string | null
+          timeline_notes?: string | null
+          updated_at?: string
+          uplighting_color?: string | null
+          venue?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          bouquet_toss_artist?: string | null
+          bouquet_toss_song?: string | null
+          cake_cutting_artist?: string | null
+          cake_cutting_song?: string | null
+          client_id?: string
+          client_name?: string
+          created_at?: string
+          created_by?: string | null
+          dietary_notes?: string | null
+          do_not_play_songs?: string | null
+          email?: string
+          entrance_artist?: string | null
+          entrance_song?: string | null
+          event_date?: string | null
+          event_type?: string | null
+          first_dance_artist?: string | null
+          first_dance_song?: string | null
+          guest_count?: number | null
+          id?: string
+          last_song?: string | null
+          last_song_artist?: string | null
+          mc_notes?: string | null
+          must_play_songs?: string | null
+          quote_id?: string | null
+          special_announcements?: string | null
+          timeline_notes?: string | null
+          updated_at?: string
+          uplighting_color?: string | null
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_plans_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
