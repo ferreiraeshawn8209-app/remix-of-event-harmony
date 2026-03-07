@@ -63,6 +63,7 @@ const statusColors: Record<string, string> = {
   sent: "bg-blue-500/20 text-blue-400 border-blue-400/30",
   accepted: "bg-success/20 text-success border-success/30",
   declined: "bg-destructive/20 text-destructive border-destructive/30",
+  rejected: "bg-destructive/20 text-destructive border-destructive/30",
   paid: "bg-primary/20 text-primary border-primary/30",
   expired: "bg-muted text-muted-foreground",
 };
