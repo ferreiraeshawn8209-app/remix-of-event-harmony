@@ -170,7 +170,7 @@ export function addTermsAndConditionsPages(doc: jsPDF, logoBase64: string | null
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
   doc.text("Company Reg No: 2025/533623/07  |  Tax Ref: 9270022289", headerX, y + 11);
-  doc.text("Email: info@beatkulture.co.za  |  Contact: 078 926 5866  |  www.beatkulture.co.za", headerX, y + 16);
+  doc.text("Email: info@beatkulture.co.za  |  Contact: 065 528 5528  |  www.beatkulture.co.za", headerX, y + 16);
   doc.setTextColor(0);
   y += 26;
 
