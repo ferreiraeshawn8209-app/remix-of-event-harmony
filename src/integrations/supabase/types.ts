@@ -291,6 +291,7 @@ export type Database = {
           balance: number | null
           balance_paid: boolean
           balance_paid_at: string | null
+          client_code: string | null
           client_id: string
           client_name: string
           contact_no: string | null
@@ -329,6 +330,7 @@ export type Database = {
           balance?: number | null
           balance_paid?: boolean
           balance_paid_at?: string | null
+          client_code?: string | null
           client_id: string
           client_name: string
           contact_no?: string | null
@@ -367,6 +369,7 @@ export type Database = {
           balance?: number | null
           balance_paid?: boolean
           balance_paid_at?: string | null
+          client_code?: string | null
           client_id?: string
           client_name?: string
           contact_no?: string | null
@@ -517,6 +520,54 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      lookup_quote_by_code: {
+        Args: { _code: string; _email: string }
+        Returns: {
+          balance: number | null
+          balance_paid: boolean
+          balance_paid_at: string | null
+          client_code: string | null
+          client_id: string
+          client_name: string
+          contact_no: string | null
+          created_at: string
+          created_by: string | null
+          custom_items: Json | null
+          custom_items_cost: number | null
+          deposit: number | null
+          deposit_paid: boolean
+          deposit_paid_at: string | null
+          discount_amount: number | null
+          discount_percent: number | null
+          dj_cost: number | null
+          dj_name: string | null
+          email: string
+          end_time: string | null
+          equipment: Json | null
+          equipment_cost: number | null
+          event_date: string | null
+          event_type: string | null
+          hours: number | null
+          id: string
+          kids_corner: boolean | null
+          kids_cost: number | null
+          kids_hours: number | null
+          start_time: string | null
+          status: string | null
+          subtotal: number | null
+          total: number | null
+          travel_cost: number | null
+          travel_distance: number | null
+          updated_at: string
+          venue: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "quotes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "client"
