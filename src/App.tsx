@@ -39,6 +39,7 @@ const App = () => (
             <Route path="/event-planner/:quoteId" element={<EventPlanner />} />
             <Route path="/request/:eventId" element={<SongRequest />} />
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
+            <Route path="/client" element={<ClientPortal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
