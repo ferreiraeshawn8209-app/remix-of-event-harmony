@@ -46,6 +46,8 @@ import { PackageManager } from "@/components/admin/PackageManager";
 import { TermsUploader } from "@/components/admin/TermsUploader";
 import { FinancialLog } from "@/components/admin/FinancialLog";
 import { CalendarBookings } from "@/components/admin/CalendarBookings";
+import { ClientAccessLogs } from "@/components/admin/ClientAccessLogs";
+import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -693,7 +695,7 @@ export default function Admin() {
               <Card variant="glass">
                 <CardHeader>
                   <CardTitle>Client Database</CardTitle>
-                  <CardDescription>View all clients who have created quotes</CardDescription>
+                  <CardDescription>View all clients, portal access history, and manage event photos</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {quotes.length === 0 ? (
@@ -705,32 +707,87 @@ export default function Admin() {
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {/* Get unique clients */}
-                      {Array.from(new Map(quotes.map(q => [q.email, q])).values()).map((quote) => (
-                        <div key={quote.email} className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
-                              <Users className="w-5 h-5 text-secondary" />
-                            </div>
-                            <div>
-                              <div className="font-medium">{quote.client_name}</div>
-                              <div className="text-sm text-muted-foreground">{quote.email}</div>
-                              {quote.contact_no && (
-                                <div className="text-xs text-muted-foreground">{quote.contact_no}</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm text-muted-foreground">
-                              {quotes.filter(q => q.email === quote.email).length} quote(s)
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedQuote(quote)}>
-                              View <ChevronRight className="w-4 h-4 ml-1" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                      {Array.from(new Map(quotes.map(q => [q.email, q])).values()).map((quote) => {
+                        const clientQuotes = quotes.filter(q => q.email === quote.email);
+                        return (
+                          <Card key={quote.email} variant="glass" className="border border-border/50">
+                            <CardContent className="pt-4 space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
+                                    <Users className="w-5 h-5 text-secondary" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{quote.client_name}</div>
+                                    <div className="text-sm text-muted-foreground">{quote.email}</div>
+                                    {quote.contact_no && (
+                                      <div className="text-xs text-muted-foreground">{quote.contact_no}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right space-y-1">
+                                  <div className="text-sm text-muted-foreground">
+                                    {clientQuotes.length} quote(s)
+                                  </div>
+                                  {quote.client_code && (
+                                    <Badge variant="outline" className="font-mono text-xs">{quote.client_code}</Badge>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Client quotes with View as Client button */}
+                              <div className="space-y-2">
+                                {clientQuotes.map((cq) => (
+                                  <div key={cq.id} className="flex items-center justify-between p-2 rounded bg-muted/20 text-sm">
+                                    <div>
+                                      <span className="font-medium">{cq.event_type || "Event"}</span>
+                                      <span className="text-muted-foreground ml-2">
+                                        {cq.event_date ? new Date(cq.event_date).toLocaleDateString("en-ZA") : "TBD"}
+                                      </span>
+                                      <span className="text-muted-foreground ml-2">{formatCurrency(Number(cq.total))}</span>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button variant="ghost" size="sm" asChild>
+                                        <Link to={`/quote/${cq.id}`}>
+                                          <Eye className="w-3 h-3 mr-1" /> View
+                                        </Link>
+                                      </Button>
+                                      {cq.client_code && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-xs"
+                                          onClick={() => {
+                                            const url = `/client?email=${encodeURIComponent(cq.email)}&code=${encodeURIComponent(cq.client_code)}`;
+                                            window.open(url, "_blank");
+                                          }}
+                                        >
+                                          <Eye className="w-3 h-3 mr-1" /> Client View
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Portal access logs */}
+                              <div className="border-t border-border/30 pt-3">
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">Portal Access History</p>
+                                <ClientAccessLogs email={quote.email} />
+                              </div>
+
+                              {/* Event photos uploader */}
+                              {clientQuotes.filter(cq => cq.client_code).map((cq) => (
+                                <div key={`photos-${cq.id}`} className="border-t border-border/30 pt-3">
+                                  <EventPhotoUploader quoteId={cq.id} clientCode={cq.client_code} />
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>

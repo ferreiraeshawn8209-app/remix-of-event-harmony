@@ -17,8 +17,9 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock, AlertCircle,
   Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, ListMusic
+  User, CreditCard, ListMusic, Image as ImageIcon
 } from "lucide-react";
+import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
 interface QuoteData {
   id: string;
@@ -72,6 +73,33 @@ export default function ClientPortal() {
   const [sendingExtra, setSendingExtra] = useState(false);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
 
+  // Check URL params for admin preview mode
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const previewEmail = params.get("email");
+    const previewCode = params.get("code");
+    if (previewEmail && previewCode) {
+      setEmail(previewEmail);
+      setClientCode(previewCode);
+      // Auto-login
+      setTimeout(() => {
+        (async () => {
+          setLoading(true);
+          const { data, error } = await supabase.rpc("lookup_quote_by_code", {
+            _email: previewEmail,
+            _code: previewCode,
+          });
+          if (!error && data && (data as any[]).length > 0) {
+            const q = (data as unknown as QuoteData[])[0];
+            setQuote({ ...q, equipment: (q.equipment as any) || {}, custom_items: (q.custom_items as any) || [] });
+            setStep("portal");
+          }
+          setLoading(false);
+        })();
+      }, 0);
+    }
+  }, []);
+
   // Load equipment names for display
   useEffect(() => {
     (async () => {
@@ -111,6 +139,16 @@ export default function ClientPortal() {
         custom_items: (q.custom_items as any) || [],
       });
       setStep("portal");
+
+      // Log client access
+      try {
+        await supabase.from("client_access_logs").insert({
+          quote_id: q.id,
+          client_code: clientCode.trim().toUpperCase(),
+          email: email.trim().toLowerCase(),
+          user_agent: navigator.userAgent,
+        });
+      } catch { /* silent */ }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -273,9 +311,10 @@ export default function ClientPortal() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="quote"><FileText className="w-3 h-3 mr-1" />Quote</TabsTrigger>
               <TabsTrigger value="planner"><Calendar className="w-3 h-3 mr-1" />Planner</TabsTrigger>
+              <TabsTrigger value="photos"><ImageIcon className="w-3 h-3 mr-1" />Photos</TabsTrigger>
               <TabsTrigger value="songs"><Music className="w-3 h-3 mr-1" />Songs</TabsTrigger>
               <TabsTrigger value="extras"><Plus className="w-3 h-3 mr-1" />Extras</TabsTrigger>
             </TabsList>
@@ -395,6 +434,11 @@ export default function ClientPortal() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* ─── PHOTOS TAB ─── */}
+            <TabsContent value="photos" className="space-y-4 mt-4">
+              <ClientPhotoGallery quoteId={quote.id} />
             </TabsContent>
 
             {/* ─── SONG REQUEST QR TAB ─── */}
