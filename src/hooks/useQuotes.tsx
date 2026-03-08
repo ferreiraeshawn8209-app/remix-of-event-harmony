@@ -38,6 +38,7 @@ export interface DatabaseQuote {
   deposit_paid_at: string | null;
   balance_paid: boolean;
   balance_paid_at: string | null;
+  client_code: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;
