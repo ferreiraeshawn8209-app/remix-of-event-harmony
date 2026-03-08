@@ -3,6 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import { DatabaseQuote } from "@/hooks/useQuotes";
 import { EQUIPMENT_CATALOG, formatCurrency } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
+import { addTermsAndConditionsPages } from "@/lib/termsAndConditions";
 
 export interface CatalogItemForPdf {
   id: string;
@@ -439,6 +440,9 @@ export async function generateInvoicePdf(
   addPaymentTerms(doc, y);
   addFooter(doc);
 
+  // Add full T&Cs as additional pages
+  addTermsAndConditionsPages(doc, logoBase64);
+
   if (download) {
     // Merge with T&Cs
     const mainBytes = doc.output("arraybuffer");
@@ -470,6 +474,9 @@ export async function generateQuotePdf(
   y = addTotals(doc, quote, y);
   addPaymentTerms(doc, y);
   addFooter(doc, "This quote is valid for 7 days from the date of issue.");
+
+  // Add full T&Cs as additional pages
+  addTermsAndConditionsPages(doc, logoBase64);
 
   if (download) {
     const mainBytes = doc.output("arraybuffer");
