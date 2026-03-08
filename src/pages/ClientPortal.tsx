@@ -436,6 +436,11 @@ export default function ClientPortal() {
               </Card>
             </TabsContent>
 
+            {/* ─── PHOTOS TAB ─── */}
+            <TabsContent value="photos" className="space-y-4 mt-4">
+              <ClientPhotoGallery quoteId={quote.id} />
+            </TabsContent>
+
             {/* ─── SONG REQUEST QR TAB ─── */}
             <TabsContent value="songs" className="space-y-4 mt-4">
               <Card variant="glass">
