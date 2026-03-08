@@ -46,6 +46,8 @@ import { PackageManager } from "@/components/admin/PackageManager";
 import { TermsUploader } from "@/components/admin/TermsUploader";
 import { FinancialLog } from "@/components/admin/FinancialLog";
 import { CalendarBookings } from "@/components/admin/CalendarBookings";
+import { ClientAccessLogs } from "@/components/admin/ClientAccessLogs";
+import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
 import {
   AlertDialog,
   AlertDialogAction,
