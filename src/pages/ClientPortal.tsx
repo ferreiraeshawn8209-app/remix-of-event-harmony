@@ -139,6 +139,16 @@ export default function ClientPortal() {
         custom_items: (q.custom_items as any) || [],
       });
       setStep("portal");
+
+      // Log client access
+      try {
+        await supabase.from("client_access_logs").insert({
+          quote_id: q.id,
+          client_code: clientCode.trim().toUpperCase(),
+          email: email.trim().toLowerCase(),
+          user_agent: navigator.userAgent,
+        });
+      } catch { /* silent */ }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
