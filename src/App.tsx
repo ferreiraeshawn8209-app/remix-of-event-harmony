@@ -14,6 +14,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import EventPlanner from "./pages/EventPlanner";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
+import { BackgroundAudio } from "@/components/BackgroundAudio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <BackgroundAudio />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

@@ -33,9 +33,9 @@ export function Footer() {
           <div>
             <h4 className="font-display font-semibold mb-4">Contact</h4>
             <div className="space-y-3 text-sm text-muted-foreground">
-              <a href="tel:+27789265866" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <a href="tel:+27655285528" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
-                078 926 5866
+                065 528 5528
               </a>
               <a href="mailto:info@beatkulture.co.za" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" />
