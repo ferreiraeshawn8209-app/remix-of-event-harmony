@@ -73,6 +73,7 @@ export type Database = {
           entrance_artist: string | null
           entrance_song: string | null
           event_date: string | null
+          event_style: string | null
           event_type: string | null
           first_dance_artist: string | null
           first_dance_song: string | null
@@ -83,6 +84,7 @@ export type Database = {
           mc_notes: string | null
           must_play_songs: string | null
           quote_id: string | null
+          schedule_items: Json | null
           special_announcements: string | null
           timeline_notes: string | null
           updated_at: string
@@ -105,6 +107,7 @@ export type Database = {
           entrance_artist?: string | null
           entrance_song?: string | null
           event_date?: string | null
+          event_style?: string | null
           event_type?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
@@ -115,6 +118,7 @@ export type Database = {
           mc_notes?: string | null
           must_play_songs?: string | null
           quote_id?: string | null
+          schedule_items?: Json | null
           special_announcements?: string | null
           timeline_notes?: string | null
           updated_at?: string
@@ -137,6 +141,7 @@ export type Database = {
           entrance_artist?: string | null
           entrance_song?: string | null
           event_date?: string | null
+          event_style?: string | null
           event_type?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
@@ -147,6 +152,7 @@ export type Database = {
           mc_notes?: string | null
           must_play_songs?: string | null
           quote_id?: string | null
+          schedule_items?: Json | null
           special_announcements?: string | null
           timeline_notes?: string | null
           updated_at?: string
