@@ -475,6 +475,9 @@ export async function generateQuotePdf(
   addPaymentTerms(doc, y);
   addFooter(doc, "This quote is valid for 7 days from the date of issue.");
 
+  // Add full T&Cs as additional pages
+  addTermsAndConditionsPages(doc, logoBase64);
+
   if (download) {
     const mainBytes = doc.output("arraybuffer");
     const merged = await mergeWithTermsPdf(mainBytes);
