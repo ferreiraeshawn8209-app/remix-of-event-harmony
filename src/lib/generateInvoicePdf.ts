@@ -440,6 +440,9 @@ export async function generateInvoicePdf(
   addPaymentTerms(doc, y);
   addFooter(doc);
 
+  // Add full T&Cs as additional pages
+  addTermsAndConditionsPages(doc, logoBase64);
+
   if (download) {
     // Merge with T&Cs
     const mainBytes = doc.output("arraybuffer");
