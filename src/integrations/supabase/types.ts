@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_access_logs: {
+        Row: {
+          client_code: string
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          quote_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          client_code: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          quote_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          client_code?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          quote_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       equipment_catalog: {
         Row: {
           category: string
@@ -53,6 +83,36 @@ export type Database = {
           price?: number
           sort_order?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      event_photos: {
+        Row: {
+          caption: string | null
+          client_code: string
+          created_at: string
+          id: string
+          photo_url: string
+          quote_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          client_code: string
+          created_at?: string
+          id?: string
+          photo_url: string
+          quote_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          client_code?: string
+          created_at?: string
+          id?: string
+          photo_url?: string
+          quote_id?: string
+          uploaded_by?: string | null
         }
         Relationships: []
       }
