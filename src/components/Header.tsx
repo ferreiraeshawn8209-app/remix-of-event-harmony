@@ -90,9 +90,14 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button variant="hero" size="sm" className="ml-4" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
+              <div className="flex items-center gap-2 ml-4">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/client">Client Portal</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              </div>
             )}
           </nav>
 
