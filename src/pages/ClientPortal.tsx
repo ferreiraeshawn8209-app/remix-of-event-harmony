@@ -17,8 +17,9 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock, AlertCircle,
   Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, ListMusic
+  User, CreditCard, ListMusic, Image as ImageIcon
 } from "lucide-react";
+import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
 interface QuoteData {
   id: string;
