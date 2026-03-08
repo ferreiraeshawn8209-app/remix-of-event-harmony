@@ -14,6 +14,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import EventPlanner from "./pages/EventPlanner";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
+import ClientPortal from "./pages/ClientPortal";
 import { BackgroundAudio } from "@/components/BackgroundAudio";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/event-planner/:quoteId" element={<EventPlanner />} />
             <Route path="/request/:eventId" element={<SongRequest />} />
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
+            <Route path="/client" element={<ClientPortal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

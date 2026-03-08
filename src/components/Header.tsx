@@ -38,6 +38,8 @@ export function Header() {
     ...(isAdmin ? ([{ id: "admin", label: "Admin", to: "/admin" }] as NavItem[]) : []),
   ];
 
+  
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="container mx-auto px-4">
@@ -88,9 +90,14 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button variant="hero" size="sm" className="ml-4" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
+              <div className="flex items-center gap-2 ml-4">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/client">Client Portal</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              </div>
             )}
           </nav>
 
