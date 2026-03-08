@@ -38,6 +38,8 @@ export function Header() {
     ...(isAdmin ? ([{ id: "admin", label: "Admin", to: "/admin" }] as NavItem[]) : []),
   ];
 
+  const showClientPortal = !user; // Show client portal link for non-logged-in users
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="container mx-auto px-4">

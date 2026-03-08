@@ -126,6 +126,22 @@ export default function QuoteDetail() {
             <div>
               <h1 className="font-display text-3xl font-bold mb-1">{quote.client_name}</h1>
               <p className="text-muted-foreground">{quote.email}</p>
+              {quote.client_code && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="font-mono text-xs">Client Code: {quote.client_code}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(quote.client_code);
+                      toast({ title: "Copied", description: "Client code copied to clipboard." });
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              )}
             </div>
             <Badge className={statusColors[quote.status || "draft"]} variant="outline">
               {quote.status || "draft"}
