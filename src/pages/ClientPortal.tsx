@@ -73,6 +73,33 @@ export default function ClientPortal() {
   const [sendingExtra, setSendingExtra] = useState(false);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
 
+  // Check URL params for admin preview mode
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const previewEmail = params.get("email");
+    const previewCode = params.get("code");
+    if (previewEmail && previewCode) {
+      setEmail(previewEmail);
+      setClientCode(previewCode);
+      // Auto-login
+      setTimeout(() => {
+        (async () => {
+          setLoading(true);
+          const { data, error } = await supabase.rpc("lookup_quote_by_code", {
+            _email: previewEmail,
+            _code: previewCode,
+          });
+          if (!error && data && (data as any[]).length > 0) {
+            const q = (data as unknown as QuoteData[])[0];
+            setQuote({ ...q, equipment: (q.equipment as any) || {}, custom_items: (q.custom_items as any) || [] });
+            setStep("portal");
+          }
+          setLoading(false);
+        })();
+      }, 0);
+    }
+  }, []);
+
   // Load equipment names for display
   useEffect(() => {
     (async () => {
