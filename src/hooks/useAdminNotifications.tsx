@@ -23,7 +23,7 @@ export function useAdminNotifications() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    setNotifications((data as AdminNotification[]) || []);
+    setNotifications((data as unknown as AdminNotification[]) || []);
     setLoading(false);
   }, []);
 
