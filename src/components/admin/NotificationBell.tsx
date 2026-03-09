@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 const typeIcon: Record<string, React.ReactNode> = {
   portal_login: <LogIn className="w-3.5 h-3.5 text-primary" />,
+  event_plan_submitted: <ClipboardList className="w-3.5 h-3.5 text-emerald-400" />,
 };
 
 function NotifItem({
