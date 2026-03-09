@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          client_code: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_read: boolean
+          message: string
+          quote_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          client_code?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          quote_id?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          client_code?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          quote_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       client_access_logs: {
         Row: {
           client_code: string
