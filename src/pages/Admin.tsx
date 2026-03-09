@@ -48,6 +48,7 @@ import { FinancialLog } from "@/components/admin/FinancialLog";
 import { CalendarBookings } from "@/components/admin/CalendarBookings";
 import { ClientAccessLogs } from "@/components/admin/ClientAccessLogs";
 import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
+import { NotificationBell } from "@/components/admin/NotificationBell";
 import {
   AlertDialog,
   AlertDialogAction,
