@@ -408,7 +408,7 @@ export default function Admin() {
             <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Badge variant="secondary" className="gap-1">
               <Shield className="w-3 h-3" />
               Admin
@@ -416,6 +416,7 @@ export default function Admin() {
             <span className="text-sm text-muted-foreground hidden sm:inline">
               {profile.full_name}
             </span>
+            <NotificationBell />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline ml-2">Sign Out</span>
