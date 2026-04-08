@@ -72,7 +72,7 @@ export default function Auth() {
           title: "Welcome Back!",
           description: "You have successfully logged in.",
         });
-        navigate("/dashboard");
+        navigate(redirectTo);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -117,7 +117,7 @@ export default function Auth() {
           title: "Account Created!",
           description: "Welcome to BEATKULTURE! You can now access your dashboard.",
         });
-        navigate("/dashboard");
+        navigate(redirectTo);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
