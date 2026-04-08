@@ -16,6 +16,7 @@ import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
 import { BackgroundAudio } from "@/components/BackgroundAudio";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/request/:eventId" element={<SongRequest />} />
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             <Route path="/client" element={<ClientPortal />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

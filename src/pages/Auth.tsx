@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Music, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const signUpSchema = z.object({
@@ -28,6 +29,9 @@ export default function Auth() {
   const { user, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [tab, setTab] = useState<"login" | "signup">("login");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
@@ -37,11 +41,13 @@ export default function Auth() {
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
 
+  const redirectTo = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+
   useEffect(() => {
     if (user && !authLoading) {
-      navigate("/dashboard");
+      navigate(redirectTo);
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +72,7 @@ export default function Auth() {
           title: "Welcome Back!",
           description: "You have successfully logged in.",
         });
-        navigate("/dashboard");
+        navigate(redirectTo);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -111,7 +117,7 @@ export default function Auth() {
           title: "Account Created!",
           description: "Welcome to BEATKULTURE! You can now access your dashboard.",
         });
-        navigate("/dashboard");
+        navigate(redirectTo);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -123,6 +129,24 @@ export default function Auth() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) {
+      toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
+      return;
+    }
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Reset Email Sent", description: "Check your inbox for a password reset link." });
+      setShowForgotPassword(false);
     }
   };
 
@@ -200,6 +224,13 @@ export default function Auth() {
                       "Sign In"
                     )}
                   </Button>
+                  <button
+                    type="button"
+                    className="w-full text-xs text-muted-foreground hover:text-primary transition-colors mt-2"
+                    onClick={() => setShowForgotPassword(true)}
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
               </TabsContent>
 
@@ -268,6 +299,36 @@ export default function Auth() {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Forgot Password Overlay */}
+        {showForgotPassword && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowForgotPassword(false)}>
+            <Card variant="glass" className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle className="text-lg">Reset Password</CardTitle>
+                <CardDescription>Enter your email to receive a reset link</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setShowForgotPassword(false)}>Cancel</Button>
+                  <Button variant="hero" className="flex-1" onClick={handleForgotPassword} disabled={forgotLoading}>
+                    {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Reset Link"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
           <a href="/" className="text-primary hover:underline">
