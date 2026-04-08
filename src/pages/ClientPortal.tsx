@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { usePackages, DbPackage } from "@/hooks/usePackages";
+import { usePackages } from "@/hooks/usePackages";
 import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
@@ -365,7 +365,7 @@ export default function ClientPortal() {
           </Link>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-mono text-xs">{quote.client_code}</Badge>
-            <Button variant="ghost" size="sm" onClick={() => { setStep("login"); setQuote(null); }}>
+            <Button variant="ghost" size="sm" onClick={() => { setStep("code"); setQuote(null); }}>
               Sign Out
             </Button>
           </div>
