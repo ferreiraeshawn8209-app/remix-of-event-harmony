@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Music, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const signUpSchema = z.object({
