@@ -203,43 +203,49 @@ export default function ClientPortal() {
     ? `${window.location.origin}/request/${quote?.id}`
     : "";
 
-  // ─── LOGIN SCREEN ─────────────────────────────────────
-  if (step === "login") {
+  // ─── CODE ENTRY SCREEN ─────────────────────────────────────
+  if (step === "code") {
+    if (authLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <div className="text-center mb-8">
             <img src={logo} alt="BeatKulture" className="w-16 h-16 mx-auto mb-4" />
             <h1 className="font-display text-2xl font-bold">Client <span className="gradient-text">Portal</span></h1>
-            <p className="text-sm text-muted-foreground mt-1">Enter your email and client code to view your quote</p>
+            <p className="text-sm text-muted-foreground mt-1">Welcome, {user?.email}</p>
           </div>
 
           <Card variant="glass">
             <CardContent className="pt-6 space-y-4">
-              <div className="space-y-2">
-                <Label>Email Address</Label>
-                <Input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                />
-              </div>
               <div className="space-y-2">
                 <Label>Client Code</Label>
                 <Input
                   placeholder="BK-XXXXXX"
                   value={clientCode}
                   onChange={(e) => setClientCode(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  className="font-mono tracking-wider"
+                  onKeyDown={(e) => e.key === "Enter" && handleCodeSubmit()}
+                  className="font-mono tracking-wider text-center text-lg"
+                  autoFocus
                 />
                 <p className="text-xs text-muted-foreground">Your client code was provided by BeatKulture with your quote.</p>
               </div>
-              <Button variant="hero" className="w-full" onClick={handleLogin} disabled={loading}>
+              <Button variant="hero" className="w-full" onClick={handleCodeSubmit} disabled={loading}>
                 {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
                 View My Quote
+              </Button>
+
+              <Separator />
+
+              <Button variant="outline" className="w-full" onClick={() => setStep("brochure")}>
+                <Music className="w-4 h-4 mr-2" />
+                Browse Our Packages
               </Button>
             </CardContent>
           </Card>
@@ -250,6 +256,94 @@ export default function ClientPortal() {
             </Link>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  // ─── BROCHURE SCREEN ─────────────────────────────────────
+  if (step === "brochure") {
+    const weddingPkgs = packages.filter(p => p.category.toLowerCase().includes("wedding"));
+    const corporatePkgs = packages.filter(p => p.category.toLowerCase().includes("corporate"));
+    const partyPkgs = packages.filter(p => !p.category.toLowerCase().includes("wedding") && !p.category.toLowerCase().includes("corporate"));
+
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <img src={logo} alt="BeatKulture" className="w-8 h-8" />
+              <span className="font-display text-lg font-bold gradient-text">BEATKULTURE</span>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={() => setStep("code")}>
+              ← Back to Code Entry
+            </Button>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-8 max-w-5xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+            <div className="text-center">
+              <h1 className="font-display text-3xl font-bold">Our <span className="gradient-text">Packages</span></h1>
+              <p className="text-muted-foreground mt-2">Choose from our curated entertainment packages</p>
+            </div>
+
+            {[
+              { title: "🎵 Wedding Packages", pkgs: weddingPkgs },
+              { title: "💼 Corporate Packages", pkgs: corporatePkgs },
+              { title: "🎉 Party & Events", pkgs: partyPkgs },
+            ].map(({ title, pkgs: sectionPkgs }) => sectionPkgs.length > 0 && (
+              <div key={title} className="space-y-4">
+                <h2 className="font-display text-xl font-semibold">{title}</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sectionPkgs.map(pkg => (
+                    <Card key={pkg.id} variant="glass" className="hover:border-primary/30 transition-colors">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-base">{pkg.name}</CardTitle>
+                          {pkg.popular && <Badge variant="default" className="text-xs">Popular</Badge>}
+                        </div>
+                        <CardDescription className="text-xs">{pkg.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="font-display text-2xl font-bold text-primary">
+                          {formatCurrency(Number(pkg.price))}
+                        </p>
+                        <ul className="text-xs space-y-1 text-muted-foreground">
+                          {(pkg.includes as string[]).slice(0, 5).map((item, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            toast({
+                              title: "Interested in this package?",
+                              description: "Contact BeatKulture at 065 528 5528 or info@beatkulture.co.za to get a quote for this package.",
+                            });
+                          }}
+                        >
+                          Get a Quote
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground">Already have a client code?</p>
+              <Button variant="outline" className="mt-2" onClick={() => setStep("code")}>
+                Enter Client Code
+              </Button>
+            </div>
+          </motion.div>
+        </main>
       </div>
     );
   }
