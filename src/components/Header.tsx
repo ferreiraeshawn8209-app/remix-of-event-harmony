@@ -80,6 +80,11 @@ export function Header() {
                   </Badge>
                 )}
                 <Button variant="ghost" size="sm" asChild>
+                  <Link to="/client">
+                    Client Portal
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild>
                   <Link to="/dashboard">
                     <User className="w-4 h-4 mr-1" />
                     Dashboard
