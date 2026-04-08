@@ -28,6 +28,9 @@ export default function Auth() {
   const { user, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [tab, setTab] = useState<"login" | "signup">("login");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
@@ -200,6 +203,13 @@ export default function Auth() {
                       "Sign In"
                     )}
                   </Button>
+                  <button
+                    type="button"
+                    className="w-full text-xs text-muted-foreground hover:text-primary transition-colors mt-2"
+                    onClick={() => setShowForgotPassword(true)}
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
               </TabsContent>
 
