@@ -92,7 +92,7 @@ export function Header() {
             ) : (
               <div className="flex items-center gap-2 ml-4">
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/client">Client Portal</Link>
+                  <Link to="/auth?redirect=/client">Client Portal</Link>
                 </Button>
                 <Button variant="hero" size="sm" asChild>
                   <Link to="/auth">Sign In</Link>

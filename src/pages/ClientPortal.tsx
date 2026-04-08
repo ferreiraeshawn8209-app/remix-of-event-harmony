@@ -81,7 +81,7 @@ export default function ClientPortal() {
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      navigate("/auth?redirect=/client");
     }
   }, [authLoading, user, navigate]);
 
