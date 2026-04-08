@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { usePackages, DbPackage } from "@/hooks/usePackages";
 import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
@@ -17,7 +19,7 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock, AlertCircle,
   Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, ListMusic, Image as ImageIcon
+  User, CreditCard, ListMusic, Image as ImageIcon, Sparkles, ArrowRight
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
@@ -63,8 +65,11 @@ interface ExtraRequest {
 }
 
 export default function ClientPortal() {
-  const [step, setStep] = useState<"login" | "portal">("login");
-  const [email, setEmail] = useState("");
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { packages } = usePackages();
+
+  const [step, setStep] = useState<"code" | "brochure" | "portal">("code");
   const [clientCode, setClientCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [quote, setQuote] = useState<QuoteData | null>(null);
@@ -73,15 +78,20 @@ export default function ClientPortal() {
   const [sendingExtra, setSendingExtra] = useState(false);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [authLoading, user, navigate]);
+
   // Check URL params for admin preview mode
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const previewEmail = params.get("email");
     const previewCode = params.get("code");
     if (previewEmail && previewCode) {
-      setEmail(previewEmail);
-      setClientCode(previewCode);
-      // Auto-login
+      setClientCode(previewCode.toUpperCase());
       setTimeout(() => {
         (async () => {
           setLoading(true);
