@@ -76,6 +76,7 @@ export default function ClientPortal() {
   const [activeTab, setActiveTab] = useState("quote");
   const [extraRequest, setExtraRequest] = useState<ExtraRequest>({ item: "", notes: "" });
   const [sendingExtra, setSendingExtra] = useState(false);
+  const [requestingPkgId, setRequestingPkgId] = useState<string | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
 
   // Redirect to auth if not logged in
@@ -320,14 +321,28 @@ export default function ClientPortal() {
                           variant="hero"
                           size="sm"
                           className="w-full"
-                          onClick={() => {
-                            toast({
-                              title: "Interested in this package?",
-                              description: "Contact BeatKulture at 065 528 5528 or info@beatkulture.co.za to get a quote for this package.",
-                            });
+                          disabled={requestingPkgId === pkg.id}
+                          onClick={async () => {
+                            setRequestingPkgId(pkg.id);
+                            try {
+                              await supabase.from("admin_notifications").insert({
+                                type: "package_quote_request",
+                                title: "Package Quote Request",
+                                message: `${user?.email} is interested in "${pkg.name}" (${formatCurrency(Number(pkg.price))})`,
+                                email: user?.email || "",
+                              });
+                              toast({
+                                title: "Request Sent!",
+                                description: "BeatKulture will prepare your quote and send you a client code shortly.",
+                              });
+                            } catch {
+                              toast({ title: "Error", description: "Could not send request. Please try again.", variant: "destructive" });
+                            }
+                            setRequestingPkgId(null);
                           }}
                         >
-                          Get a Quote
+                          {requestingPkgId === pkg.id ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                          Request a Quote
                         </Button>
                       </CardContent>
                     </Card>
