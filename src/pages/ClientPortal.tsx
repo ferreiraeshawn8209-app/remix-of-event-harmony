@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ import { formatCurrency } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "@/assets/logo.png";
 import {
-  Music, Loader2, FileText, CheckCircle2, Clock, AlertCircle,
+  Music, Loader2, FileText, CheckCircle2, Clock,
   Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, ListMusic, Image as ImageIcon, Sparkles, ArrowRight
+  User, CreditCard, Image as ImageIcon
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
@@ -122,22 +122,26 @@ export default function ClientPortal() {
     })();
   }, []);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !clientCode.trim()) {
-      toast({ title: "Missing details", description: "Please enter both your email and client code.", variant: "destructive" });
+  const userEmail = user?.email || "";
+
+  const handleCodeSubmit = async () => {
+    if (!clientCode.trim()) {
+      toast({ title: "Missing code", description: "Please enter your client code.", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc("lookup_quote_by_code", {
-        _email: email.trim(),
+        _email: userEmail,
         _code: clientCode.trim(),
       });
 
       if (error) throw error;
       const results = data as unknown as QuoteData[];
       if (!results || results.length === 0) {
-        toast({ title: "Not Found", description: "No quote found with that email and client code. Please check your details.", variant: "destructive" });
+        toast({ title: "Not Found", description: "No quote found with that client code. Please check your details.", variant: "destructive" });
+        // Show brochure instead
+        setStep("brochure");
         setLoading(false);
         return;
       }
@@ -155,7 +159,7 @@ export default function ClientPortal() {
         await supabase.from("client_access_logs").insert({
           quote_id: q.id,
           client_code: clientCode.trim().toUpperCase(),
-          email: email.trim().toLowerCase(),
+          email: userEmail.toLowerCase(),
           user_agent: navigator.userAgent,
         });
       } catch { /* silent */ }
@@ -175,7 +179,7 @@ export default function ClientPortal() {
     try {
       // Fetch current quote to get latest custom_items
       const { data: current } = await supabase.rpc("lookup_quote_by_code", {
-        _email: email.trim(),
+        _email: userEmail,
         _code: clientCode.trim(),
       });
       
