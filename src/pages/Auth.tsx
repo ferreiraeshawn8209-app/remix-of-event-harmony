@@ -298,6 +298,36 @@ export default function Auth() {
           </CardContent>
         </Card>
 
+        {/* Forgot Password Overlay */}
+        {showForgotPassword && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowForgotPassword(false)}>
+            <Card variant="glass" className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle className="text-lg">Reset Password</CardTitle>
+                <CardDescription>Enter your email to receive a reset link</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setShowForgotPassword(false)}>Cancel</Button>
+                  <Button variant="hero" className="flex-1" onClick={handleForgotPassword} disabled={forgotLoading}>
+                    {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Reset Link"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <p className="text-center mt-6 text-sm text-muted-foreground">
           <a href="/" className="text-primary hover:underline">
             ← Back to Home
