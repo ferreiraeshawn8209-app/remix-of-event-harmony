@@ -41,11 +41,13 @@ export default function Auth() {
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
 
+  const redirectTo = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+
   useEffect(() => {
     if (user && !authLoading) {
-      navigate("/dashboard");
+      navigate(redirectTo);
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
