@@ -19,7 +19,7 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock,
   Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, Image as ImageIcon
+  User, CreditCard, Image as ImageIcon, Trash2
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
@@ -78,6 +78,8 @@ export default function ClientPortal() {
   const [sendingExtra, setSendingExtra] = useState(false);
   const [requestingPkgId, setRequestingPkgId] = useState<string | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
+  const [equipmentPrices, setEquipmentPrices] = useState<Record<string, number>>({});
+  const [removingItem, setRemovingItem] = useState<string | null>(null);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -114,11 +116,13 @@ export default function ClientPortal() {
   // Load equipment names for display
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("equipment_catalog").select("item_key, name").eq("is_active", true);
+      const { data } = await supabase.from("equipment_catalog").select("item_key, name, price").eq("is_active", true);
       if (data) {
-        const map: Record<string, string> = {};
-        data.forEach(e => { map[e.item_key] = e.name; });
-        setEquipmentNames(map);
+        const nameMap: Record<string, string> = {};
+        const priceMap: Record<string, number> = {};
+        data.forEach(e => { nameMap[e.item_key] = e.name; priceMap[e.item_key] = Number(e.price); });
+        setEquipmentNames(nameMap);
+        setEquipmentPrices(priceMap);
       }
     })();
   }, []);
@@ -192,6 +196,121 @@ export default function ClientPortal() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setSendingExtra(false);
+  };
+
+  const handleRemoveEquipment = async (itemKey: string) => {
+    if (!quote) return;
+    setRemovingItem(itemKey);
+    try {
+      const updatedEquipment = { ...quote.equipment };
+      delete updatedEquipment[itemKey];
+
+      // Recalculate equipment cost
+      let newEquipmentCost = 0;
+      Object.entries(updatedEquipment).forEach(([key, qty]) => {
+        const price = equipmentPrices[key] || 0;
+        newEquipmentCost += price * Number(qty);
+      });
+
+      const newSubtotal = Number(quote.dj_cost) + newEquipmentCost + Number(quote.kids_cost) + Number(quote.custom_items?.reduce((s, i) => s + i.price * i.qty, 0) || 0);
+      const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
+      
+      const newDeposit = Math.round(newTotal * 0.3);
+      const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
+
+      const { error } = await supabase
+        .from("quotes")
+        .update({
+          equipment: updatedEquipment,
+          equipment_cost: newEquipmentCost,
+          subtotal: newSubtotal,
+          total: newTotal,
+          deposit: newDeposit,
+          balance: newBalance,
+        })
+        .eq("id", quote.id);
+
+      if (error) throw error;
+
+      // Notify admin
+      await supabase.from("admin_notifications").insert({
+        type: "extra_request",
+        title: "Client Removed Item",
+        message: `${quote.client_name} (${quote.client_code}) removed "${equipmentNames[itemKey] || itemKey}" from their quote`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      // Update local state
+      setQuote(prev => prev ? {
+        ...prev,
+        equipment: updatedEquipment,
+        equipment_cost: newEquipmentCost,
+        subtotal: newSubtotal,
+        total: newTotal,
+        deposit: newDeposit,
+        balance: newBalance,
+      } : null);
+
+      toast({ title: "Item Removed", description: `${equipmentNames[itemKey] || itemKey} has been removed from your quote.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setRemovingItem(null);
+  };
+
+  const handleRemoveCustomItem = async (index: number) => {
+    if (!quote) return;
+    const item = quote.custom_items[index];
+    setRemovingItem(`custom-${index}`);
+    try {
+      const updatedItems = quote.custom_items.filter((_, i) => i !== index);
+      const newCustomCost = updatedItems.reduce((s, i) => s + i.price * i.qty, 0);
+
+      const newSubtotal = Number(quote.dj_cost) + Number(quote.equipment_cost) + Number(quote.kids_cost) + newCustomCost;
+      const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
+      const newDeposit = Math.round(newTotal * 0.3);
+      const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
+
+      const { error } = await supabase
+        .from("quotes")
+        .update({
+          custom_items: updatedItems as any,
+          custom_items_cost: newCustomCost,
+          subtotal: newSubtotal,
+          total: newTotal,
+          deposit: newDeposit,
+          balance: newBalance,
+        })
+        .eq("id", quote.id);
+
+      if (error) throw error;
+
+      await supabase.from("admin_notifications").insert({
+        type: "extra_request",
+        title: "Client Removed Item",
+        message: `${quote.client_name} (${quote.client_code}) removed custom item "${item.name}" from their quote`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      setQuote(prev => prev ? {
+        ...prev,
+        custom_items: updatedItems,
+        custom_items_cost: newCustomCost,
+        subtotal: newSubtotal,
+        total: newTotal,
+        deposit: newDeposit,
+        balance: newBalance,
+      } : null);
+
+      toast({ title: "Item Removed", description: `${item.name} has been removed from your quote.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setRemovingItem(null);
   };
 
   const songRequestUrl = typeof window !== "undefined"
@@ -470,16 +589,41 @@ export default function ClientPortal() {
                     {Object.entries(quote.equipment || {}).map(([key, qty]) => {
                       if (Number(qty) <= 0) return null;
                       return (
-                        <div key={key} className="flex justify-between text-sm text-muted-foreground">
+                        <div key={key} className="flex justify-between items-center text-sm text-muted-foreground group">
                           <span>{equipmentNames[key] || key} × {qty}</span>
+                          <div className="flex items-center gap-2">
+                            <span>{formatCurrency((equipmentPrices[key] || 0) * Number(qty))}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive hover:bg-destructive/10 opacity-70 hover:opacity-100"
+                              disabled={removingItem === key}
+                              onClick={() => handleRemoveEquipment(key)}
+                              title="Remove this item"
+                            >
+                              {removingItem === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}
 
                     {(quote.custom_items || []).map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm text-muted-foreground">
+                      <div key={i} className="flex justify-between items-center text-sm text-muted-foreground group">
                         <span>{item.name} × {item.qty}</span>
-                        <span>{formatCurrency(item.price * item.qty)}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{formatCurrency(item.price * item.qty)}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10 opacity-70 hover:opacity-100"
+                            disabled={removingItem === `custom-${i}`}
+                            onClick={() => handleRemoveCustomItem(i)}
+                            title="Remove this item"
+                          >
+                            {removingItem === `custom-${i}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          </Button>
+                        </div>
                       </div>
                     ))}
 
@@ -490,6 +634,10 @@ export default function ClientPortal() {
                       </div>
                     )}
                   </div>
+
+                  <p className="text-xs text-muted-foreground italic">
+                    You may remove items above. To add extras, use the Extras tab to request from BeatKulture.
+                  </p>
 
                   <Separator />
 
