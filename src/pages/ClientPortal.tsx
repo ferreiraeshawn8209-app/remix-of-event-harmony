@@ -174,24 +174,18 @@ export default function ClientPortal() {
     if (!extraRequest.item.trim() || !quote) return;
     setSendingExtra(true);
 
-    // We'll use a simple approach: insert a record into event_plans additional_notes
-    // or more practically, we send a notification by updating the quote's custom_items with a pending flag
-    // For simplicity, let's create a lightweight approach using the existing structure
     try {
-      // Fetch current quote to get latest custom_items
-      const { data: current } = await supabase.rpc("lookup_quote_by_code", {
-        _email: userEmail,
-        _code: clientCode.trim(),
+      await supabase.from("admin_notifications").insert({
+        type: "extra_request",
+        title: "Client Extra Request",
+        message: `${quote.client_name} (${quote.client_code}) requested: "${extraRequest.item}"${extraRequest.notes ? ` — Notes: ${extraRequest.notes}` : ""}`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
       });
-      
-      if (!current || (current as any[]).length === 0) throw new Error("Quote not found");
-      
-      // We can't update directly (RLS), so we'll use the song_requests table as a notification channel
-      // by inserting a special "extra request" type. But that's a hack.
-      // Better: just show a toast with instructions to contact admin
       toast({
-        title: "Extra Request Noted",
-        description: `Please contact BeatKulture directly to add "${extraRequest.item}" to your quote. WhatsApp: 065 528 5528 or email: info@beatkulture.co.za`,
+        title: "Request Sent!",
+        description: "BeatKulture has been notified and will update your quote shortly.",
       });
       setExtraRequest({ item: "", notes: "" });
     } catch (err: any) {
@@ -543,18 +537,31 @@ export default function ClientPortal() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-6">
-                    <Heart className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Use our event planner to tell us your song choices, timeline, and special moments.
-                    </p>
-                    <Button variant="hero" asChild>
-                      <Link to={`/event-planner/${quote.id}`}>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Open Event Planner
-                      </Link>
-                    </Button>
-                  </div>
+                  {isPaid ? (
+                    <div className="text-center py-6">
+                      <Heart className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Use our event planner to tell us your song choices, timeline, and special moments.
+                      </p>
+                      <Button variant="hero" asChild>
+                        <Link to={`/event-planner/${quote.id}`}>
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Open Event Planner
+                        </Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <Clock className="w-10 h-10 text-orange-500 mx-auto mb-3 opacity-60" />
+                      <p className="font-semibold text-sm mb-2">Deposit Required</p>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        The event planner becomes available once your 30% deposit of {formatCurrency(Number(quote.deposit))} has been paid and confirmed.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Contact us: <strong>065 528 5528</strong> or <strong>info@beatkulture.co.za</strong>
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

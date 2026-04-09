@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, BellRing, Check, Trash2, X, LogIn, ClipboardList, Package } from "lucide-react";
+import { Bell, BellRing, Check, Trash2, X, LogIn, ClipboardList, Package, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ const typeIcon: Record<string, React.ReactNode> = {
   portal_login: <LogIn className="w-3.5 h-3.5 text-primary" />,
   event_plan_submitted: <ClipboardList className="w-3.5 h-3.5 text-emerald-400" />,
   package_quote_request: <Package className="w-3.5 h-3.5 text-amber-400" />,
+  extra_request: <PlusCircle className="w-3.5 h-3.5 text-violet-400" />,
 };
 
 function NotifItem({
