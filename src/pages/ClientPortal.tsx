@@ -78,6 +78,8 @@ export default function ClientPortal() {
   const [sendingExtra, setSendingExtra] = useState(false);
   const [requestingPkgId, setRequestingPkgId] = useState<string | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
+  const [equipmentPrices, setEquipmentPrices] = useState<Record<string, number>>({});
+  const [removingItem, setRemovingItem] = useState<string | null>(null);
 
   // Redirect to auth if not logged in
   useEffect(() => {
