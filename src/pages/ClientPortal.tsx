@@ -198,6 +198,121 @@ export default function ClientPortal() {
     setSendingExtra(false);
   };
 
+  const handleRemoveEquipment = async (itemKey: string) => {
+    if (!quote) return;
+    setRemovingItem(itemKey);
+    try {
+      const updatedEquipment = { ...quote.equipment };
+      delete updatedEquipment[itemKey];
+
+      // Recalculate equipment cost
+      let newEquipmentCost = 0;
+      Object.entries(updatedEquipment).forEach(([key, qty]) => {
+        const price = equipmentPrices[key] || 0;
+        newEquipmentCost += price * Number(qty);
+      });
+
+      const newSubtotal = Number(quote.dj_cost) + newEquipmentCost + Number(quote.kids_cost) + Number(quote.custom_items?.reduce((s, i) => s + i.price * i.qty, 0) || 0);
+      const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
+      const depositPercent = Number(quote.deposit) / (Number(quote.total) || 1);
+      const newDeposit = Math.round(newTotal * 0.3);
+      const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
+
+      const { error } = await supabase
+        .from("quotes")
+        .update({
+          equipment: updatedEquipment,
+          equipment_cost: newEquipmentCost,
+          subtotal: newSubtotal,
+          total: newTotal,
+          deposit: newDeposit,
+          balance: newBalance,
+        })
+        .eq("id", quote.id);
+
+      if (error) throw error;
+
+      // Notify admin
+      await supabase.from("admin_notifications").insert({
+        type: "extra_request",
+        title: "Client Removed Item",
+        message: `${quote.client_name} (${quote.client_code}) removed "${equipmentNames[itemKey] || itemKey}" from their quote`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      // Update local state
+      setQuote(prev => prev ? {
+        ...prev,
+        equipment: updatedEquipment,
+        equipment_cost: newEquipmentCost,
+        subtotal: newSubtotal,
+        total: newTotal,
+        deposit: newDeposit,
+        balance: newBalance,
+      } : null);
+
+      toast({ title: "Item Removed", description: `${equipmentNames[itemKey] || itemKey} has been removed from your quote.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setRemovingItem(null);
+  };
+
+  const handleRemoveCustomItem = async (index: number) => {
+    if (!quote) return;
+    const item = quote.custom_items[index];
+    setRemovingItem(`custom-${index}`);
+    try {
+      const updatedItems = quote.custom_items.filter((_, i) => i !== index);
+      const newCustomCost = updatedItems.reduce((s, i) => s + i.price * i.qty, 0);
+
+      const newSubtotal = Number(quote.dj_cost) + Number(quote.equipment_cost) + Number(quote.kids_cost) + newCustomCost;
+      const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
+      const newDeposit = Math.round(newTotal * 0.3);
+      const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
+
+      const { error } = await supabase
+        .from("quotes")
+        .update({
+          custom_items: updatedItems as any,
+          custom_items_cost: newCustomCost,
+          subtotal: newSubtotal,
+          total: newTotal,
+          deposit: newDeposit,
+          balance: newBalance,
+        })
+        .eq("id", quote.id);
+
+      if (error) throw error;
+
+      await supabase.from("admin_notifications").insert({
+        type: "extra_request",
+        title: "Client Removed Item",
+        message: `${quote.client_name} (${quote.client_code}) removed custom item "${item.name}" from their quote`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      setQuote(prev => prev ? {
+        ...prev,
+        custom_items: updatedItems,
+        custom_items_cost: newCustomCost,
+        subtotal: newSubtotal,
+        total: newTotal,
+        deposit: newDeposit,
+        balance: newBalance,
+      } : null);
+
+      toast({ title: "Item Removed", description: `${item.name} has been removed from your quote.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setRemovingItem(null);
+  };
+
   const songRequestUrl = typeof window !== "undefined"
     ? `${window.location.origin}/request/${quote?.id}`
     : "";
