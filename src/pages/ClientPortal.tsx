@@ -589,16 +589,41 @@ export default function ClientPortal() {
                     {Object.entries(quote.equipment || {}).map(([key, qty]) => {
                       if (Number(qty) <= 0) return null;
                       return (
-                        <div key={key} className="flex justify-between text-sm text-muted-foreground">
+                        <div key={key} className="flex justify-between items-center text-sm text-muted-foreground group">
                           <span>{equipmentNames[key] || key} × {qty}</span>
+                          <div className="flex items-center gap-2">
+                            <span>{formatCurrency((equipmentPrices[key] || 0) * Number(qty))}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive hover:bg-destructive/10 opacity-70 hover:opacity-100"
+                              disabled={removingItem === key}
+                              onClick={() => handleRemoveEquipment(key)}
+                              title="Remove this item"
+                            >
+                              {removingItem === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}
 
                     {(quote.custom_items || []).map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm text-muted-foreground">
+                      <div key={i} className="flex justify-between items-center text-sm text-muted-foreground group">
                         <span>{item.name} × {item.qty}</span>
-                        <span>{formatCurrency(item.price * item.qty)}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{formatCurrency(item.price * item.qty)}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10 opacity-70 hover:opacity-100"
+                            disabled={removingItem === `custom-${i}`}
+                            onClick={() => handleRemoveCustomItem(i)}
+                            title="Remove this item"
+                          >
+                            {removingItem === `custom-${i}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          </Button>
+                        </div>
                       </div>
                     ))}
 
@@ -609,6 +634,10 @@ export default function ClientPortal() {
                       </div>
                     )}
                   </div>
+
+                  <p className="text-xs text-muted-foreground italic">
+                    You may remove items above. To add extras, use the Extras tab to request from BeatKulture.
+                  </p>
 
                   <Separator />
 
