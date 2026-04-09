@@ -116,11 +116,13 @@ export default function ClientPortal() {
   // Load equipment names for display
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("equipment_catalog").select("item_key, name").eq("is_active", true);
+      const { data } = await supabase.from("equipment_catalog").select("item_key, name, price").eq("is_active", true);
       if (data) {
-        const map: Record<string, string> = {};
-        data.forEach(e => { map[e.item_key] = e.name; });
-        setEquipmentNames(map);
+        const nameMap: Record<string, string> = {};
+        const priceMap: Record<string, number> = {};
+        data.forEach(e => { nameMap[e.item_key] = e.name; priceMap[e.item_key] = Number(e.price); });
+        setEquipmentNames(nameMap);
+        setEquipmentPrices(priceMap);
       }
     })();
   }, []);
