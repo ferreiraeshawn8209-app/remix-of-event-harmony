@@ -214,7 +214,7 @@ export default function ClientPortal() {
 
       const newSubtotal = Number(quote.dj_cost) + newEquipmentCost + Number(quote.kids_cost) + Number(quote.custom_items?.reduce((s, i) => s + i.price * i.qty, 0) || 0);
       const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
-      const depositPercent = Number(quote.deposit) / (Number(quote.total) || 1);
+      
       const newDeposit = Math.round(newTotal * 0.3);
       const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
 
