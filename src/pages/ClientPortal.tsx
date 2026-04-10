@@ -80,6 +80,9 @@ export default function ClientPortal() {
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
   const [equipmentPrices, setEquipmentPrices] = useState<Record<string, number>>({});
   const [removingItem, setRemovingItem] = useState<string | null>(null);
+  const [brochureTab, setBrochureTab] = useState("wedding");
+  const [customNotes, setCustomNotes] = useState("");
+  const [sendingCustom, setSendingCustom] = useState(false);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -374,11 +377,56 @@ export default function ClientPortal() {
     );
   }
 
-  // ─── BROCHURE SCREEN ─────────────────────────────────────
+  // ─── BROCHURE / PACKAGE SELECTION SCREEN ─────────────────
   if (step === "brochure") {
-    const weddingPkgs = packages.filter(p => p.category.toLowerCase().includes("wedding"));
-    const corporatePkgs = packages.filter(p => p.category.toLowerCase().includes("corporate"));
-    const partyPkgs = packages.filter(p => !p.category.toLowerCase().includes("wedding") && !p.category.toLowerCase().includes("corporate"));
+    const weddingPkgs = packages.filter(p => p.category.toLowerCase().includes("wedding") && p.is_active);
+    const corporatePkgs = packages.filter(p => p.category.toLowerCase().includes("corporate") && p.is_active);
+    const partyPkgs = packages.filter(p => p.is_active && !p.category.toLowerCase().includes("wedding") && !p.category.toLowerCase().includes("corporate"));
+
+    const handleSelectPackage = async (pkg: typeof packages[0]) => {
+      setRequestingPkgId(pkg.id);
+      try {
+        await supabase.from("admin_notifications").insert({
+          type: "package_quote_request",
+          title: "Package Quote Request",
+          message: `${user?.email} selected "${pkg.name}" (${formatCurrency(Number(pkg.price))}). Please prepare a quote and send their client code.`,
+          email: user?.email || "",
+        });
+        toast({
+          title: "Package Selected! ✓",
+          description: "BeatKulture will prepare your quote and send you a client code shortly. You can then return here to view and manage your quote.",
+        });
+      } catch {
+        toast({ title: "Error", description: "Could not send request. Please try again.", variant: "destructive" });
+      }
+      setRequestingPkgId(null);
+    };
+
+    const handleRequestCustomQuote = async () => {
+      setSendingCustom(true);
+      try {
+        await supabase.from("admin_notifications").insert({
+          type: "package_quote_request",
+          title: "Custom Quote Request",
+          message: `${user?.email} is requesting a customized quote.${customNotes ? ` Details: "${customNotes}"` : ""} Please contact the client to discuss requirements.`,
+          email: user?.email || "",
+        });
+        toast({
+          title: "Request Sent! ✓",
+          description: "BeatKulture will contact you to discuss your custom requirements and prepare a tailored quote.",
+        });
+        setCustomNotes("");
+      } catch {
+        toast({ title: "Error", description: "Could not send request. Please try again.", variant: "destructive" });
+      }
+      setSendingCustom(false);
+    };
+
+    const categoryTabs = [
+      { value: "wedding", label: "Wedding", icon: <Heart className="w-4 h-4" />, pkgs: weddingPkgs },
+      { value: "corporate", label: "Corporate", icon: <PartyPopper className="w-4 h-4" />, pkgs: corporatePkgs },
+      { value: "party", label: "Party", icon: <Music className="w-4 h-4" />, pkgs: partyPkgs },
+    ].filter(t => t.pkgs.length > 0);
 
     return (
       <div className="min-h-screen bg-background">
@@ -389,84 +437,111 @@ export default function ClientPortal() {
               <span className="font-display text-lg font-bold gradient-text">BEATKULTURE</span>
             </Link>
             <Button variant="ghost" size="sm" onClick={() => setStep("code")}>
-              ← Back to Code Entry
+              ← Back
             </Button>
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8 max-w-5xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        <main className="container mx-auto px-4 py-6 max-w-5xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="text-center">
-              <h1 className="font-display text-3xl font-bold">Our <span className="gradient-text">Packages</span></h1>
-              <p className="text-muted-foreground mt-2">Choose from our curated entertainment packages</p>
+              <h1 className="font-display text-3xl font-bold">Choose Your <span className="gradient-text">Package</span></h1>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Select a package below to get started, or request a custom quote tailored to your needs.
+              </p>
             </div>
 
-            {[
-              { title: "🎵 Wedding Packages", pkgs: weddingPkgs },
-              { title: "💼 Corporate Packages", pkgs: corporatePkgs },
-              { title: "🎉 Party & Events", pkgs: partyPkgs },
-            ].map(({ title, pkgs: sectionPkgs }) => sectionPkgs.length > 0 && (
-              <div key={title} className="space-y-4">
-                <h2 className="font-display text-xl font-semibold">{title}</h2>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sectionPkgs.map(pkg => (
-                    <Card key={pkg.id} variant="glass" className="hover:border-primary/30 transition-colors">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-base">{pkg.name}</CardTitle>
-                          {pkg.popular && <Badge variant="default" className="text-xs">Popular</Badge>}
-                        </div>
-                        <CardDescription className="text-xs">{pkg.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="font-display text-2xl font-bold text-primary">
-                          {formatCurrency(Number(pkg.price))}
-                        </p>
-                        <ul className="text-xs space-y-1 text-muted-foreground">
-                          {(pkg.includes as string[]).slice(0, 5).map((item, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                        <Button
-                          variant="hero"
-                          size="sm"
-                          className="w-full"
-                          disabled={requestingPkgId === pkg.id}
-                          onClick={async () => {
-                            setRequestingPkgId(pkg.id);
-                            try {
-                              await supabase.from("admin_notifications").insert({
-                                type: "package_quote_request",
-                                title: "Package Quote Request",
-                                message: `${user?.email} is interested in "${pkg.name}" (${formatCurrency(Number(pkg.price))})`,
-                                email: user?.email || "",
-                              });
-                              toast({
-                                title: "Request Sent!",
-                                description: "BeatKulture will prepare your quote and send you a client code shortly.",
-                              });
-                            } catch {
-                              toast({ title: "Error", description: "Could not send request. Please try again.", variant: "destructive" });
-                            }
-                            setRequestingPkgId(null);
-                          }}
-                        >
-                          {requestingPkgId === pkg.id ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                          Request a Quote
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
+            {/* Package Tabs */}
+            <Tabs value={brochureTab} onValueChange={setBrochureTab}>
+              <TabsList className={`grid w-full grid-cols-${categoryTabs.length}`}>
+                {categoryTabs.map(tab => (
+                  <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <div className="text-center py-6">
+              {categoryTabs.map(tab => (
+                <TabsContent key={tab.value} value={tab.value}>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {tab.pkgs.map(pkg => (
+                      <Card key={pkg.id} variant={pkg.popular ? "glow" : "glass"} className={`relative hover:border-primary/30 transition-colors ${pkg.popular ? "ring-2 ring-primary" : ""}`}>
+                        {pkg.popular && (
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                            <Badge className="bg-primary text-primary-foreground px-3 py-0.5 text-xs">Most Popular</Badge>
+                          </div>
+                        )}
+                        <CardHeader>
+                          <CardTitle className="text-base">{pkg.name}</CardTitle>
+                          <CardDescription className="text-xs">{pkg.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="font-display text-2xl font-bold gradient-text">
+                            {formatCurrency(Number(pkg.price))}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Starting from</p>
+                          <ul className="text-xs space-y-1.5 text-muted-foreground">
+                            {(pkg.includes as string[]).map((item, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                          <Button
+                            variant={pkg.popular ? "hero" : "default"}
+                            size="sm"
+                            className="w-full mt-3"
+                            disabled={requestingPkgId === pkg.id}
+                            onClick={() => handleSelectPackage(pkg)}
+                          >
+                            {requestingPkgId === pkg.id ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+                            Select This Package
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+
+            {/* Custom Quote Option */}
+            <Card variant="glass" className="border-dashed border-2">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-primary" />
+                  Need Something Custom?
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  None of the packages fit? Tell us what you need and we'll create a tailored quote for you.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Textarea
+                  placeholder="Describe your event, requirements, and any specific needs..."
+                  value={customNotes}
+                  onChange={(e) => setCustomNotes(e.target.value)}
+                  rows={3}
+                  className="text-sm"
+                />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={sendingCustom}
+                  onClick={handleRequestCustomQuote}
+                >
+                  {sendingCustom ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
+                  Request Custom Quote
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Already have a code */}
+            <div className="text-center py-4">
               <p className="text-sm text-muted-foreground">Already have a client code?</p>
-              <Button variant="outline" className="mt-2" onClick={() => setStep("code")}>
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => setStep("code")}>
                 Enter Client Code
               </Button>
             </div>
