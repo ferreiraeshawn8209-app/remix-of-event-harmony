@@ -379,9 +379,6 @@ export default function ClientPortal() {
 
   // ─── BROCHURE / PACKAGE SELECTION SCREEN ─────────────────
   if (step === "brochure") {
-    const [brochureTab, setBrochureTab] = useState("wedding");
-    const [customNotes, setCustomNotes] = useState("");
-    const [sendingCustom, setSendingCustom] = useState(false);
     const weddingPkgs = packages.filter(p => p.category.toLowerCase().includes("wedding") && p.is_active);
     const corporatePkgs = packages.filter(p => p.category.toLowerCase().includes("corporate") && p.is_active);
     const partyPkgs = packages.filter(p => p.is_active && !p.category.toLowerCase().includes("wedding") && !p.category.toLowerCase().includes("corporate"));
