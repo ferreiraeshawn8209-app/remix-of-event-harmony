@@ -65,7 +65,7 @@ interface ExtraRequest {
 }
 
 export default function ClientPortal() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { packages } = usePackages();
 
@@ -139,16 +139,29 @@ export default function ClientPortal() {
     }
     setLoading(true);
     try {
+      // Try standard lookup (email + code)
+      let results: QuoteData[] = [];
       const { data, error } = await supabase.rpc("lookup_quote_by_code", {
         _email: userEmail,
         _code: clientCode.trim(),
       });
-
       if (error) throw error;
-      const results = data as unknown as QuoteData[];
-      if (!results || results.length === 0) {
+      results = (data as unknown as QuoteData[]) || [];
+
+      // Admin fallback: lookup by code only if standard lookup returned nothing
+      if (results.length === 0 && isAdmin) {
+        const { data: adminData, error: adminError } = await supabase
+          .from("quotes")
+          .select("*")
+          .ilike("client_code", clientCode.trim())
+          .limit(1);
+        if (!adminError && adminData && adminData.length > 0) {
+          results = adminData as unknown as QuoteData[];
+        }
+      }
+
+      if (results.length === 0) {
         toast({ title: "Not Found", description: "No quote found with that client code. Please check your details.", variant: "destructive" });
-        // Show brochure instead
         setStep("brochure");
         setLoading(false);
         return;
