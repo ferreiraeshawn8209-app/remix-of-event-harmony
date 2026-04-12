@@ -881,8 +881,97 @@ export default function ClientPortal() {
                     <p>Branch Code: 250655</p>
                     <p className="text-muted-foreground mt-1">Use your name as reference</p>
                   </div>
+
+                  {/* Accept Quote Button */}
+                  {quote.status !== "accepted" && quote.status !== "paid" && !isPaid && (
+                    <Button
+                      variant="hero"
+                      className="w-full mt-4"
+                      disabled={acceptingQuote}
+                      onClick={handleAcceptQuote}
+                    >
+                      {acceptingQuote ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                      Accept This Quote
+                    </Button>
+                  )}
+                  {quote.status === "accepted" && !isPaid && (
+                    <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-center">
+                      <CheckCircle2 className="w-5 h-5 text-primary mx-auto mb-1" />
+                      <p className="font-semibold text-primary">Quote Accepted</p>
+                      <p className="text-xs text-muted-foreground">Please pay the deposit using the banking details above to confirm your booking.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* ─── ALTERNATIVE PACKAGES ─── */}
+              {quote.status !== "accepted" && quote.status !== "paid" && !isPaid && (() => {
+                const eventCategory = (quote.event_type || "").toLowerCase();
+                const relevantPkgs = packages.filter(p => 
+                  p.is_active && (
+                    eventCategory.includes(p.category) ||
+                    p.category.toLowerCase().includes(eventCategory.split(" ")[0] || "---")
+                  )
+                );
+                const allActivePkgs = packages.filter(p => p.is_active);
+                const displayPkgs = relevantPkgs.length > 0 ? relevantPkgs : allActivePkgs;
+
+                if (displayPkgs.length === 0) return null;
+
+                return (
+                  <Card variant="glass">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" /> Or Choose a Package
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Prefer a ready-made package? Select one below and a new quote will be created for you.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {displayPkgs.map(pkg => (
+                          <div key={pkg.id} className={`p-3 rounded-lg border transition-colors hover:border-primary/30 ${pkg.popular ? "border-primary/30 bg-primary/5" : "border-border bg-muted/20"}`}>
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <p className="text-sm font-semibold">{pkg.name}</p>
+                                <p className="text-xs text-muted-foreground">{pkg.description}</p>
+                              </div>
+                              {pkg.popular && (
+                                <Badge className="bg-primary text-primary-foreground text-[10px] px-2">Popular</Badge>
+                              )}
+                            </div>
+                            <p className="font-display text-lg font-bold gradient-text mb-2">
+                              {formatCurrency(Number(pkg.price))}
+                            </p>
+                            <ul className="text-xs space-y-1 text-muted-foreground mb-3">
+                              {(pkg.includes as string[]).slice(0, 4).map((item, i) => (
+                                <li key={i} className="flex items-start gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                                  {item}
+                                </li>
+                              ))}
+                              {(pkg.includes as string[]).length > 4 && (
+                                <li className="text-primary text-[10px]">+{(pkg.includes as string[]).length - 4} more items</li>
+                              )}
+                            </ul>
+                            <Button
+                              variant={pkg.popular ? "hero" : "default"}
+                              size="sm"
+                              className="w-full"
+                              disabled={acceptingPkgId === pkg.id}
+                              onClick={() => handleAcceptPackage(pkg)}
+                            >
+                              {acceptingPkgId === pkg.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
+                              Accept This Package
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </TabsContent>
 
             {/* ─── PLANNER TAB ─── */}
