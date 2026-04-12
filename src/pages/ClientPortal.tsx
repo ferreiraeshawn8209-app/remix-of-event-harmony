@@ -26,6 +26,7 @@ import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
 interface QuoteData {
   id: string;
+  client_id: string;
   client_code: string;
   client_name: string;
   email: string;
@@ -58,6 +59,7 @@ interface QuoteData {
   balance_paid: boolean;
   balance_paid_at: string | null;
   created_at: string;
+  created_by: string | null;
 }
 
 interface ExtraRequest {
