@@ -604,7 +604,28 @@ export default function ClientPortal() {
             </p>
           </div>
 
-          {/* Payment Status Banner */}
+          {/* Specials Banner */}
+          {activeSpecials.length > 0 && (
+            <div className="space-y-3">
+              {activeSpecials.map((special) => (
+                <div key={special.id} className="relative rounded-xl overflow-hidden border border-primary/20">
+                  <img
+                    src={special.image_url}
+                    alt={special.title || "Current Special"}
+                    className="w-full h-auto max-h-48 object-cover"
+                  />
+                  {special.title && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                      <p className="text-white text-sm font-semibold flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> {special.title}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           <Card variant="glass" className={`border-l-4 ${isFullyPaid ? "border-l-green-500 bg-green-500/5" : isPaid ? "border-l-blue-500 bg-blue-500/5" : "border-l-orange-500 bg-orange-500/5"}`}>
             <CardContent className="py-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
