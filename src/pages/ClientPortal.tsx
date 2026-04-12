@@ -333,6 +333,101 @@ export default function ClientPortal() {
     setRemovingItem(null);
   };
 
+  const handleAcceptQuote = async () => {
+    if (!quote) return;
+    setAcceptingQuote(true);
+    try {
+      const { error } = await supabase
+        .from("quotes")
+        .update({ status: "accepted" })
+        .eq("id", quote.id);
+      if (error) throw error;
+
+      await supabase.from("admin_notifications").insert({
+        type: "quote_accepted",
+        title: "Quote Accepted",
+        message: `${quote.client_name} (${quote.client_code}) accepted their custom quote of ${formatCurrency(Number(quote.total))}. Awaiting deposit payment.`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      setQuote(prev => prev ? { ...prev, status: "accepted" } : null);
+      toast({ title: "Quote Accepted! ✓", description: "Please proceed with the deposit payment using the banking details provided." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setAcceptingQuote(false);
+  };
+
+  const handleAcceptPackage = async (pkg: typeof packages[0]) => {
+    if (!quote) return;
+    setAcceptingPkgId(pkg.id);
+    try {
+      // Create a new quote based on the package
+      const { data: newQuote, error } = await supabase
+        .from("quotes")
+        .insert({
+          client_id: quote.client_id,
+          client_name: quote.client_name,
+          contact_no: quote.contact_no,
+          email: quote.email,
+          venue: quote.venue,
+          event_date: quote.event_date,
+          start_time: quote.start_time,
+          end_time: quote.end_time,
+          event_type: pkg.category,
+          dj_name: quote.dj_name,
+          equipment: {},
+          custom_items: [],
+          kids_corner: false,
+          kids_hours: 0,
+          travel_distance: quote.travel_distance,
+          discount_percent: 0,
+          dj_cost: 0,
+          equipment_cost: 0,
+          custom_items_cost: 0,
+          kids_cost: 0,
+          subtotal: Number(pkg.price),
+          travel_cost: Number(quote.travel_cost),
+          discount_amount: 0,
+          total: Number(pkg.price) + Number(quote.travel_cost),
+          deposit: Math.round((Number(pkg.price) + Number(quote.travel_cost)) * 0.3),
+          balance: Number(pkg.price) + Number(quote.travel_cost) - Math.round((Number(pkg.price) + Number(quote.travel_cost)) * 0.3),
+          hours: quote.hours,
+          status: "accepted",
+          created_by: quote.created_by || null,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await supabase.from("admin_notifications").insert({
+        type: "package_accepted",
+        title: "Package Accepted",
+        message: `${quote.client_name} (${quote.client_code}) chose the "${pkg.name}" package (${formatCurrency(Number(pkg.price))}). New quote created. Awaiting deposit.`,
+        quote_id: newQuote?.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      // Load the new quote
+      if (newQuote) {
+        setQuote({
+          ...(newQuote as unknown as QuoteData),
+          equipment: {},
+          custom_items: [],
+        });
+      }
+
+      toast({ title: "Package Selected! ✓", description: `You've chosen the "${pkg.name}" package. Please pay the deposit to confirm your booking.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setAcceptingPkgId(null);
+  };
+
   const songRequestUrl = typeof window !== "undefined"
     ? `${window.location.origin}/request/${quote?.id}`
     : "";
