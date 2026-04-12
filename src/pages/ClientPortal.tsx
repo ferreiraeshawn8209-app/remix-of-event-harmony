@@ -85,6 +85,8 @@ export default function ClientPortal() {
   const [brochureTab, setBrochureTab] = useState("wedding");
   const [customNotes, setCustomNotes] = useState("");
   const [sendingCustom, setSendingCustom] = useState(false);
+  const [acceptingQuote, setAcceptingQuote] = useState(false);
+  const [acceptingPkgId, setAcceptingPkgId] = useState<string | null>(null);
 
   // Redirect to auth if not logged in
   useEffect(() => {
