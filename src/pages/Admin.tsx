@@ -49,6 +49,7 @@ import { CalendarBookings } from "@/components/admin/CalendarBookings";
 import { ClientAccessLogs } from "@/components/admin/ClientAccessLogs";
 import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
 import { NotificationBell } from "@/components/admin/NotificationBell";
+import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -528,6 +529,7 @@ export default function Admin() {
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
+              <TabsTrigger value="specials">Specials</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
 
@@ -794,6 +796,10 @@ export default function Admin() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="specials">
+              <SpecialsManager />
             </TabsContent>
 
             <TabsContent value="admins">

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePackages } from "@/hooks/usePackages";
+import { useSpecials } from "@/hooks/useSpecials";
 import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
@@ -19,12 +20,13 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock,
   Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, Image as ImageIcon, Trash2
+  User, CreditCard, Image as ImageIcon, Trash2, Sparkles
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 
 interface QuoteData {
   id: string;
+  client_id: string;
   client_code: string;
   client_name: string;
   email: string;
@@ -57,6 +59,7 @@ interface QuoteData {
   balance_paid: boolean;
   balance_paid_at: string | null;
   created_at: string;
+  created_by: string | null;
 }
 
 interface ExtraRequest {
@@ -68,6 +71,7 @@ export default function ClientPortal() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { packages } = usePackages();
+  const { activeSpecials } = useSpecials();
 
   const [step, setStep] = useState<"code" | "brochure" | "portal">("code");
   const [clientCode, setClientCode] = useState("");
@@ -83,6 +87,8 @@ export default function ClientPortal() {
   const [brochureTab, setBrochureTab] = useState("wedding");
   const [customNotes, setCustomNotes] = useState("");
   const [sendingCustom, setSendingCustom] = useState(false);
+  const [acceptingQuote, setAcceptingQuote] = useState(false);
+  const [acceptingPkgId, setAcceptingPkgId] = useState<string | null>(null);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -327,6 +333,101 @@ export default function ClientPortal() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setRemovingItem(null);
+  };
+
+  const handleAcceptQuote = async () => {
+    if (!quote) return;
+    setAcceptingQuote(true);
+    try {
+      const { error } = await supabase
+        .from("quotes")
+        .update({ status: "accepted" })
+        .eq("id", quote.id);
+      if (error) throw error;
+
+      await supabase.from("admin_notifications").insert({
+        type: "quote_accepted",
+        title: "Quote Accepted",
+        message: `${quote.client_name} (${quote.client_code}) accepted their custom quote of ${formatCurrency(Number(quote.total))}. Awaiting deposit payment.`,
+        quote_id: quote.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      setQuote(prev => prev ? { ...prev, status: "accepted" } : null);
+      toast({ title: "Quote Accepted! ✓", description: "Please proceed with the deposit payment using the banking details provided." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setAcceptingQuote(false);
+  };
+
+  const handleAcceptPackage = async (pkg: typeof packages[0]) => {
+    if (!quote) return;
+    setAcceptingPkgId(pkg.id);
+    try {
+      // Create a new quote based on the package
+      const { data: newQuote, error } = await supabase
+        .from("quotes")
+        .insert({
+          client_id: quote.client_id,
+          client_name: quote.client_name,
+          contact_no: quote.contact_no,
+          email: quote.email,
+          venue: quote.venue,
+          event_date: quote.event_date,
+          start_time: quote.start_time,
+          end_time: quote.end_time,
+          event_type: pkg.category,
+          dj_name: quote.dj_name,
+          equipment: {},
+          custom_items: [],
+          kids_corner: false,
+          kids_hours: 0,
+          travel_distance: quote.travel_distance,
+          discount_percent: 0,
+          dj_cost: 0,
+          equipment_cost: 0,
+          custom_items_cost: 0,
+          kids_cost: 0,
+          subtotal: Number(pkg.price),
+          travel_cost: Number(quote.travel_cost),
+          discount_amount: 0,
+          total: Number(pkg.price) + Number(quote.travel_cost),
+          deposit: Math.round((Number(pkg.price) + Number(quote.travel_cost)) * 0.3),
+          balance: Number(pkg.price) + Number(quote.travel_cost) - Math.round((Number(pkg.price) + Number(quote.travel_cost)) * 0.3),
+          hours: quote.hours,
+          status: "accepted",
+          created_by: quote.created_by || null,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await supabase.from("admin_notifications").insert({
+        type: "package_accepted",
+        title: "Package Accepted",
+        message: `${quote.client_name} (${quote.client_code}) chose the "${pkg.name}" package (${formatCurrency(Number(pkg.price))}). New quote created. Awaiting deposit.`,
+        quote_id: newQuote?.id,
+        client_code: quote.client_code,
+        email: userEmail,
+      });
+
+      // Load the new quote
+      if (newQuote) {
+        setQuote({
+          ...(newQuote as unknown as QuoteData),
+          equipment: {},
+          custom_items: [],
+        });
+      }
+
+      toast({ title: "Package Selected! ✓", description: `You've chosen the "${pkg.name}" package. Please pay the deposit to confirm your booking.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setAcceptingPkgId(null);
   };
 
   const songRequestUrl = typeof window !== "undefined"
@@ -600,7 +701,28 @@ export default function ClientPortal() {
             </p>
           </div>
 
-          {/* Payment Status Banner */}
+          {/* Specials Banner */}
+          {activeSpecials.length > 0 && (
+            <div className="space-y-3">
+              {activeSpecials.map((special) => (
+                <div key={special.id} className="relative rounded-xl overflow-hidden border border-primary/20">
+                  <img
+                    src={special.image_url}
+                    alt={special.title || "Current Special"}
+                    className="w-full h-auto max-h-48 object-cover"
+                  />
+                  {special.title && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                      <p className="text-white text-sm font-semibold flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> {special.title}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           <Card variant="glass" className={`border-l-4 ${isFullyPaid ? "border-l-green-500 bg-green-500/5" : isPaid ? "border-l-blue-500 bg-blue-500/5" : "border-l-orange-500 bg-orange-500/5"}`}>
             <CardContent className="py-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
@@ -759,8 +881,97 @@ export default function ClientPortal() {
                     <p>Branch Code: 250655</p>
                     <p className="text-muted-foreground mt-1">Use your name as reference</p>
                   </div>
+
+                  {/* Accept Quote Button */}
+                  {quote.status !== "accepted" && quote.status !== "paid" && !isPaid && (
+                    <Button
+                      variant="hero"
+                      className="w-full mt-4"
+                      disabled={acceptingQuote}
+                      onClick={handleAcceptQuote}
+                    >
+                      {acceptingQuote ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                      Accept This Quote
+                    </Button>
+                  )}
+                  {quote.status === "accepted" && !isPaid && (
+                    <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-center">
+                      <CheckCircle2 className="w-5 h-5 text-primary mx-auto mb-1" />
+                      <p className="font-semibold text-primary">Quote Accepted</p>
+                      <p className="text-xs text-muted-foreground">Please pay the deposit using the banking details above to confirm your booking.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* ─── ALTERNATIVE PACKAGES ─── */}
+              {quote.status !== "accepted" && quote.status !== "paid" && !isPaid && (() => {
+                const eventCategory = (quote.event_type || "").toLowerCase();
+                const relevantPkgs = packages.filter(p => 
+                  p.is_active && (
+                    eventCategory.includes(p.category) ||
+                    p.category.toLowerCase().includes(eventCategory.split(" ")[0] || "---")
+                  )
+                );
+                const allActivePkgs = packages.filter(p => p.is_active);
+                const displayPkgs = relevantPkgs.length > 0 ? relevantPkgs : allActivePkgs;
+
+                if (displayPkgs.length === 0) return null;
+
+                return (
+                  <Card variant="glass">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" /> Or Choose a Package
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Prefer a ready-made package? Select one below and a new quote will be created for you.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {displayPkgs.map(pkg => (
+                          <div key={pkg.id} className={`p-3 rounded-lg border transition-colors hover:border-primary/30 ${pkg.popular ? "border-primary/30 bg-primary/5" : "border-border bg-muted/20"}`}>
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <p className="text-sm font-semibold">{pkg.name}</p>
+                                <p className="text-xs text-muted-foreground">{pkg.description}</p>
+                              </div>
+                              {pkg.popular && (
+                                <Badge className="bg-primary text-primary-foreground text-[10px] px-2">Popular</Badge>
+                              )}
+                            </div>
+                            <p className="font-display text-lg font-bold gradient-text mb-2">
+                              {formatCurrency(Number(pkg.price))}
+                            </p>
+                            <ul className="text-xs space-y-1 text-muted-foreground mb-3">
+                              {(pkg.includes as string[]).slice(0, 4).map((item, i) => (
+                                <li key={i} className="flex items-start gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                                  {item}
+                                </li>
+                              ))}
+                              {(pkg.includes as string[]).length > 4 && (
+                                <li className="text-primary text-[10px]">+{(pkg.includes as string[]).length - 4} more items</li>
+                              )}
+                            </ul>
+                            <Button
+                              variant={pkg.popular ? "hero" : "default"}
+                              size="sm"
+                              className="w-full"
+                              disabled={acceptingPkgId === pkg.id}
+                              onClick={() => handleAcceptPackage(pkg)}
+                            >
+                              {acceptingPkgId === pkg.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
+                              Accept This Package
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </TabsContent>
 
             {/* ─── PLANNER TAB ─── */}
