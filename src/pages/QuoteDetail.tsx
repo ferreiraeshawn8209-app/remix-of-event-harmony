@@ -436,6 +436,24 @@ export default function QuoteDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => {
+                  const phone = (quote.contact_no || "").replace(/\D/g, "");
+                  if (!phone) {
+                    toast({ title: "No phone number", description: "This quote has no contact number saved.", variant: "destructive" });
+                    return;
+                  }
+                  const code = quote.client_code || "N/A";
+                  const appUrl = "https://bkentertainment.lovable.app/client-portal";
+                  const message = `Hi ${quote.client_name} 👋\n\nYour quote from BK Entertainment is ready!\n\nYour client code is: *${code}*\n\nTo view your quote:\n1. Go to ${appUrl}\n2. Sign up with your email address (${quote.email})\n3. Enter your client code: *${code}*\n\nLooking forward to making your event unforgettable! 🎶`;
+                  const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                  window.open(waUrl, "_blank");
+                  navigator.clipboard.writeText(code);
+                  toast({ title: "Client code copied!", description: `Code ${code} copied to clipboard & WhatsApp opened.` });
+                }}>
+                  <Send className="w-4 h-4 mr-2" />
+                  Share Client Code via WhatsApp
+                </DropdownMenuItem>
+                <Separator className="my-1" />
                 <DropdownMenuItem onClick={() => sharePdfViaWhatsApp(quote, "quote", catalogForPdf)}>
                   <MessageCircle className="w-4 h-4 mr-2" />
                   WhatsApp Quote
