@@ -80,7 +80,7 @@ export default function ClientPortal() {
   const [activeTab, setActiveTab] = useState("quote");
   const [extraRequest, setExtraRequest] = useState<ExtraRequest>({ item: "", notes: "" });
   const [sendingExtra, setSendingExtra] = useState(false);
-  const [requestingPkgId, setRequestingPkgId] = useState<string | null>(null);
+  
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
   const [equipmentPrices, setEquipmentPrices] = useState<Record<string, number>>({});
   const [removingItem, setRemovingItem] = useState<string | null>(null);
