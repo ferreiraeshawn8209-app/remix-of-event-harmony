@@ -726,6 +726,11 @@ export default function ClientPortal() {
                       <p className="text-xs text-muted-foreground">Please pay the deposit using the banking details above to confirm your booking.</p>
                     </div>
                   )}
+                  {!isPaid && (
+                    <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border text-xs text-muted-foreground text-center">
+                      <p>Once your deposit is confirmed, you'll unlock <strong>Event Planner</strong>, <strong>Photos</strong>, and <strong>Song Requests</strong>.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
