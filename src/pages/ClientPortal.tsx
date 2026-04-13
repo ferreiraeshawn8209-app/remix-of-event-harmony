@@ -830,12 +830,15 @@ export default function ClientPortal() {
             </TabsContent>
             )}
 
-            {/* ─── PHOTOS TAB ─── */}
+            {/* ─── PHOTOS TAB (deposit required) ─── */}
+            {isPaid && (
             <TabsContent value="photos" className="space-y-4 mt-4">
               <ClientPhotoGallery quoteId={quote.id} />
             </TabsContent>
+            )}
 
-            {/* ─── SONG REQUEST QR TAB ─── */}
+            {/* ─── SONG REQUEST QR TAB (deposit required) ─── */}
+            {isPaid && (
             <TabsContent value="songs" className="space-y-4 mt-4">
               <Card variant="glass">
                 <CardHeader>
@@ -884,6 +887,7 @@ export default function ClientPortal() {
                 </CardContent>
               </Card>
             </TabsContent>
+            )}
 
             {/* ─── EXTRAS REQUEST TAB ─── */}
             <TabsContent value="extras" className="space-y-4 mt-4">
