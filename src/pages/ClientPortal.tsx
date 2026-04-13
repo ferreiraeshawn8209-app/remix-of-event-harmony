@@ -802,7 +802,8 @@ export default function ClientPortal() {
               })()}
             </TabsContent>
 
-            {/* ─── PLANNER TAB ─── */}
+            {/* ─── PLANNER TAB (deposit required) ─── */}
+            {isPaid && (
             <TabsContent value="planner" className="space-y-4 mt-4">
               <Card variant="glass">
                 <CardHeader>
@@ -812,34 +813,22 @@ export default function ClientPortal() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isPaid ? (
-                    <div className="text-center py-6">
-                      <Heart className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Use our event planner to tell us your song choices, timeline, and special moments.
-                      </p>
-                      <Button variant="hero" asChild>
-                        <Link to={`/event-planner/${quote.id}`}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Open Event Planner
-                        </Link>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <Clock className="w-10 h-10 text-orange-500 mx-auto mb-3 opacity-60" />
-                      <p className="font-semibold text-sm mb-2">Deposit Required</p>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        The event planner becomes available once your 30% deposit of {formatCurrency(Number(quote.deposit))} has been paid and confirmed.
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Contact us: <strong>065 528 5528</strong> or <strong>info@beatkulture.co.za</strong>
-                      </p>
-                    </div>
-                  )}
+                  <div className="text-center py-6">
+                    <Heart className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Use our event planner to tell us your song choices, timeline, and special moments.
+                    </p>
+                    <Button variant="hero" asChild>
+                      <Link to={`/event-planner/${quote.id}`}>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Open Event Planner
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
+            )}
 
             {/* ─── PHOTOS TAB ─── */}
             <TabsContent value="photos" className="space-y-4 mt-4">
