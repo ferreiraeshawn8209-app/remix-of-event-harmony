@@ -108,7 +108,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
-  }, [user, authLoading, navigate]);
+    if (!authLoading && user && !isAdmin && profile) navigate("/client");
+  }, [user, authLoading, isAdmin, profile, navigate]);
 
   const handleSignOut = async () => {
     await signOut();

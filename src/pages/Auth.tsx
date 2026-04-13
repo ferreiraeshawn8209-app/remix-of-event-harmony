@@ -26,7 +26,7 @@ const signInSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, signUp, signIn } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -41,7 +41,8 @@ export default function Auth() {
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
 
-  const redirectTo = new URLSearchParams(window.location.search).get("redirect") || "/dashboard";
+  const explicitRedirect = new URLSearchParams(window.location.search).get("redirect");
+  const redirectTo = explicitRedirect || (isAdmin ? "/dashboard" : "/client");
 
   useEffect(() => {
     if (user && !authLoading) {
