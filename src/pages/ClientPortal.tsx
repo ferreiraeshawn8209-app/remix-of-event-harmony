@@ -473,12 +473,9 @@ export default function ClientPortal() {
               </Button>
 
               <Separator />
-
-              <Button variant="outline" className="w-full" onClick={() => setStep("brochure")}>
-                <Music className="w-4 h-4 mr-2" />
-                Browse Our Packages
-              </Button>
-            </CardContent>
+              <p className="text-xs text-muted-foreground text-center">
+                Don't have a code? Contact BeatKulture at <strong>065 528 5528</strong> to get started.
+              </p>
           </Card>
 
           <div className="text-center mt-4">
