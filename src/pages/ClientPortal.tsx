@@ -476,6 +476,7 @@ export default function ClientPortal() {
               <p className="text-xs text-muted-foreground text-center">
                 Don't have a code? Contact BeatKulture at <strong>065 528 5528</strong> to get started.
               </p>
+            </CardContent>
           </Card>
 
           <div className="text-center mt-4">
