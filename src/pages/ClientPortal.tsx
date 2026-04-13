@@ -168,7 +168,6 @@ export default function ClientPortal() {
 
       if (results.length === 0) {
         toast({ title: "Not Found", description: "No quote found with that client code. Please check your details.", variant: "destructive" });
-        setStep("brochure");
         setLoading(false);
         return;
       }
