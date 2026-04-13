@@ -84,9 +84,6 @@ export default function ClientPortal() {
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
   const [equipmentPrices, setEquipmentPrices] = useState<Record<string, number>>({});
   const [removingItem, setRemovingItem] = useState<string | null>(null);
-  const [brochureTab, setBrochureTab] = useState("wedding");
-  const [customNotes, setCustomNotes] = useState("");
-  const [sendingCustom, setSendingCustom] = useState(false);
   const [acceptingQuote, setAcceptingQuote] = useState(false);
   const [acceptingPkgId, setAcceptingPkgId] = useState<string | null>(null);
 
