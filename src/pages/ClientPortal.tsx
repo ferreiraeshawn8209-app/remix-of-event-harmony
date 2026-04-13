@@ -73,7 +73,7 @@ export default function ClientPortal() {
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
 
-  const [step, setStep] = useState<"code" | "brochure" | "portal">("code");
+  const [step, setStep] = useState<"code" | "portal">("code");
   const [clientCode, setClientCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [quote, setQuote] = useState<QuoteData | null>(null);
