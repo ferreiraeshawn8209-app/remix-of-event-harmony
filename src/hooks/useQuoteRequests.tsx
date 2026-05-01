@@ -51,16 +51,8 @@ export function useQuoteRequests(clientId?: string | null) {
         .select()
         .single();
       if (error) throw error;
-
-      // Trigger admin email notification (best-effort)
-      try {
-        await supabase.functions.invoke("notify-admin-quote-request", {
-          body: { request: data },
-        });
-      } catch (e) {
-        console.warn("Email notification failed (non-fatal):", e);
-      }
-
+      // Admin in-app notification is created automatically by DB trigger.
+      // Email notification will be wired up once a sender domain is configured.
       return data as QuoteRequest;
     },
     onSuccess: () => {
