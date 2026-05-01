@@ -125,15 +125,7 @@ export default function ClientPortal() {
     navigate("/");
   };
 
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Group packages by category for the dashboard
+  // Group packages by category for the dashboard (must be before any conditional return)
   const packagesByCategory = useMemo(() => {
     const map: Record<string, DbPackage[]> = {};
     packages.filter(p => p.is_active).forEach(p => {
@@ -143,6 +135,14 @@ export default function ClientPortal() {
     });
     return map;
   }, [packages]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // ─── DASHBOARD ────────────────────────────────────────────
   if (view === "dashboard") {
