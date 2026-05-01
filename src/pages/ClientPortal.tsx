@@ -1,28 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // used in extras tab
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { usePackages } from "@/hooks/usePackages";
+import { usePackages, DbPackage } from "@/hooks/usePackages";
 import { useSpecials } from "@/hooks/useSpecials";
+import { useQuoteRequests } from "@/hooks/useQuoteRequests";
 import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
 import logo from "@/assets/logo.png";
 import {
-  Music, Loader2, FileText, CheckCircle2, Clock,
-  Send, QrCode, PartyPopper, Plus, Heart, Calendar, MapPin,
-  User, CreditCard, Image as ImageIcon, Trash2, Sparkles
+  Music, Loader2, FileText, CheckCircle2, Clock, Send, QrCode, PartyPopper,
+  Calendar, MapPin, User, CreditCard, Image as ImageIcon, Sparkles, ArrowLeft,
+  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut,
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
+
+type View = "dashboard" | "questionnaire" | "quote";
 
 interface QuoteData {
   id: string;
@@ -59,885 +63,750 @@ interface QuoteData {
   balance_paid: boolean;
   balance_paid_at: string | null;
   created_at: string;
-  created_by: string | null;
-}
-
-interface ExtraRequest {
-  item: string;
-  notes: string;
 }
 
 export default function ClientPortal() {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
 
-  const [step, setStep] = useState<"code" | "portal">("code");
-  const [clientCode, setClientCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [quote, setQuote] = useState<QuoteData | null>(null);
-  const [activeTab, setActiveTab] = useState("quote");
-  const [extraRequest, setExtraRequest] = useState<ExtraRequest>({ item: "", notes: "" });
-  const [sendingExtra, setSendingExtra] = useState(false);
-  
+  const [view, setView] = useState<View>("dashboard");
+  const [quotes, setQuotes] = useState<QuoteData[]>([]);
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
+  const [activeQuote, setActiveQuote] = useState<QuoteData | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
-  const [equipmentPrices, setEquipmentPrices] = useState<Record<string, number>>({});
-  const [removingItem, setRemovingItem] = useState<string | null>(null);
-  const [acceptingQuote, setAcceptingQuote] = useState(false);
-  const [acceptingPkgId, setAcceptingPkgId] = useState<string | null>(null);
+  const [actioning, setActioning] = useState(false);
+  const [changeMessage, setChangeMessage] = useState("");
+  const [sendingChange, setSendingChange] = useState(false);
+
+  const { requests, createRequest, isCreating } = useQuoteRequests(profile?.id);
 
   // Redirect to auth if not logged in
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth?redirect=/client");
-    }
+    if (!authLoading && !user) navigate("/auth?redirect=/client");
   }, [authLoading, user, navigate]);
 
-  // Check URL params for admin preview mode
+  // Load this client's quotes
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const previewEmail = params.get("email");
-    const previewCode = params.get("code");
-    if (previewEmail && previewCode) {
-      setClientCode(previewCode.toUpperCase());
-      setTimeout(() => {
-        (async () => {
-          setLoading(true);
-          const { data, error } = await supabase.rpc("lookup_quote_by_code", {
-            _email: previewEmail,
-            _code: previewCode,
-          });
-          if (!error && data && (data as any[]).length > 0) {
-            const q = (data as unknown as QuoteData[])[0];
-            setQuote({ ...q, equipment: (q.equipment as any) || {}, custom_items: (q.custom_items as any) || [] });
-            setStep("portal");
-          }
-          setLoading(false);
-        })();
-      }, 0);
-    }
-  }, []);
+    if (!profile?.id) return;
+    (async () => {
+      setLoadingQuotes(true);
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("*")
+        .eq("client_id", profile.id)
+        .order("created_at", { ascending: false });
+      if (!error && data) {
+        setQuotes(data.map((q: any) => ({
+          ...q,
+          equipment: q.equipment || {},
+          custom_items: q.custom_items || [],
+        })) as QuoteData[]);
+      }
+      setLoadingQuotes(false);
+    })();
+  }, [profile?.id]);
 
-  // Load equipment names for display
+  // Equipment label cache (for line items)
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("equipment_catalog").select("item_key, name, price").eq("is_active", true);
+      const { data } = await supabase.from("equipment_catalog").select("item_key, name").eq("is_active", true);
       if (data) {
-        const nameMap: Record<string, string> = {};
-        const priceMap: Record<string, number> = {};
-        data.forEach(e => { nameMap[e.item_key] = e.name; priceMap[e.item_key] = Number(e.price); });
-        setEquipmentNames(nameMap);
-        setEquipmentPrices(priceMap);
+        const m: Record<string, string> = {};
+        data.forEach((e: any) => { m[e.item_key] = e.name; });
+        setEquipmentNames(m);
       }
     })();
   }, []);
 
-  const userEmail = user?.email || "";
-
-  const handleCodeSubmit = async () => {
-    if (!clientCode.trim()) {
-      toast({ title: "Missing code", description: "Please enter your client code.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      // Try standard lookup (email + code)
-      let results: QuoteData[] = [];
-      const { data, error } = await supabase.rpc("lookup_quote_by_code", {
-        _email: userEmail,
-        _code: clientCode.trim(),
-      });
-      if (error) throw error;
-      results = (data as unknown as QuoteData[]) || [];
-
-      // Admin fallback: lookup by code only if standard lookup returned nothing
-      if (results.length === 0 && isAdmin) {
-        const { data: adminData, error: adminError } = await supabase
-          .from("quotes")
-          .select("*")
-          .ilike("client_code", clientCode.trim())
-          .limit(1);
-        if (!adminError && adminData && adminData.length > 0) {
-          results = adminData as unknown as QuoteData[];
-        }
-      }
-
-      if (results.length === 0) {
-        toast({ title: "Not Found", description: "No quote found with that client code. Please check your details.", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-
-      const q = results[0];
-      setQuote({
-        ...q,
-        equipment: (q.equipment as any) || {},
-        custom_items: (q.custom_items as any) || [],
-      });
-      setStep("portal");
-
-      // Log client access
-      try {
-        await supabase.from("client_access_logs").insert({
-          quote_id: q.id,
-          client_code: clientCode.trim().toUpperCase(),
-          email: userEmail.toLowerCase(),
-          user_agent: navigator.userAgent,
-        });
-      } catch { /* silent */ }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-    setLoading(false);
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
   };
 
-  const handleRequestExtra = async () => {
-    if (!extraRequest.item.trim() || !quote) return;
-    setSendingExtra(true);
+  // Group packages by category for the dashboard (must be before any conditional return)
+  const packagesByCategory = useMemo(() => {
+    const map: Record<string, DbPackage[]> = {};
+    packages.filter(p => p.is_active).forEach(p => {
+      const k = p.category || "other";
+      if (!map[k]) map[k] = [];
+      map[k].push(p);
+    });
+    return map;
+  }, [packages]);
 
-    try {
-      await supabase.from("admin_notifications").insert({
-        type: "extra_request",
-        title: "Client Extra Request",
-        message: `${quote.client_name} (${quote.client_code}) requested: "${extraRequest.item}"${extraRequest.notes ? ` — Notes: ${extraRequest.notes}` : ""}`,
-        quote_id: quote.id,
-        client_code: quote.client_code,
-        email: userEmail,
-      });
-      toast({
-        title: "Request Sent!",
-        description: "BeatKulture has been notified and will update your quote shortly.",
-      });
-      setExtraRequest({ item: "", notes: "" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-    setSendingExtra(false);
-  };
-
-  const handleRemoveEquipment = async (itemKey: string) => {
-    if (!quote) return;
-    setRemovingItem(itemKey);
-    try {
-      const updatedEquipment = { ...quote.equipment };
-      delete updatedEquipment[itemKey];
-
-      // Recalculate equipment cost
-      let newEquipmentCost = 0;
-      Object.entries(updatedEquipment).forEach(([key, qty]) => {
-        const price = equipmentPrices[key] || 0;
-        newEquipmentCost += price * Number(qty);
-      });
-
-      const newSubtotal = Number(quote.dj_cost) + newEquipmentCost + Number(quote.kids_cost) + Number(quote.custom_items?.reduce((s, i) => s + i.price * i.qty, 0) || 0);
-      const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
-      
-      const newDeposit = Math.round(newTotal * 0.3);
-      const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
-
-      const { error } = await supabase
-        .from("quotes")
-        .update({
-          equipment: updatedEquipment,
-          equipment_cost: newEquipmentCost,
-          subtotal: newSubtotal,
-          total: newTotal,
-          deposit: newDeposit,
-          balance: newBalance,
-        })
-        .eq("id", quote.id);
-
-      if (error) throw error;
-
-      // Notify admin
-      await supabase.from("admin_notifications").insert({
-        type: "extra_request",
-        title: "Client Removed Item",
-        message: `${quote.client_name} (${quote.client_code}) removed "${equipmentNames[itemKey] || itemKey}" from their quote`,
-        quote_id: quote.id,
-        client_code: quote.client_code,
-        email: userEmail,
-      });
-
-      // Update local state
-      setQuote(prev => prev ? {
-        ...prev,
-        equipment: updatedEquipment,
-        equipment_cost: newEquipmentCost,
-        subtotal: newSubtotal,
-        total: newTotal,
-        deposit: newDeposit,
-        balance: newBalance,
-      } : null);
-
-      toast({ title: "Item Removed", description: `${equipmentNames[itemKey] || itemKey} has been removed from your quote.` });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-    setRemovingItem(null);
-  };
-
-  const handleRemoveCustomItem = async (index: number) => {
-    if (!quote) return;
-    const item = quote.custom_items[index];
-    setRemovingItem(`custom-${index}`);
-    try {
-      const updatedItems = quote.custom_items.filter((_, i) => i !== index);
-      const newCustomCost = updatedItems.reduce((s, i) => s + i.price * i.qty, 0);
-
-      const newSubtotal = Number(quote.dj_cost) + Number(quote.equipment_cost) + Number(quote.kids_cost) + newCustomCost;
-      const newTotal = newSubtotal + Number(quote.travel_cost) - Number(quote.discount_amount);
-      const newDeposit = Math.round(newTotal * 0.3);
-      const newBalance = newTotal - (quote.deposit_paid ? Number(quote.deposit) : 0);
-
-      const { error } = await supabase
-        .from("quotes")
-        .update({
-          custom_items: updatedItems as any,
-          custom_items_cost: newCustomCost,
-          subtotal: newSubtotal,
-          total: newTotal,
-          deposit: newDeposit,
-          balance: newBalance,
-        })
-        .eq("id", quote.id);
-
-      if (error) throw error;
-
-      await supabase.from("admin_notifications").insert({
-        type: "extra_request",
-        title: "Client Removed Item",
-        message: `${quote.client_name} (${quote.client_code}) removed custom item "${item.name}" from their quote`,
-        quote_id: quote.id,
-        client_code: quote.client_code,
-        email: userEmail,
-      });
-
-      setQuote(prev => prev ? {
-        ...prev,
-        custom_items: updatedItems,
-        custom_items_cost: newCustomCost,
-        subtotal: newSubtotal,
-        total: newTotal,
-        deposit: newDeposit,
-        balance: newBalance,
-      } : null);
-
-      toast({ title: "Item Removed", description: `${item.name} has been removed from your quote.` });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-    setRemovingItem(null);
-  };
-
-  const handleAcceptQuote = async () => {
-    if (!quote) return;
-    setAcceptingQuote(true);
-    try {
-      const { error } = await supabase
-        .from("quotes")
-        .update({ status: "accepted" })
-        .eq("id", quote.id);
-      if (error) throw error;
-
-      await supabase.from("admin_notifications").insert({
-        type: "quote_accepted",
-        title: "Quote Accepted",
-        message: `${quote.client_name} (${quote.client_code}) accepted their custom quote of ${formatCurrency(Number(quote.total))}. Awaiting deposit payment.`,
-        quote_id: quote.id,
-        client_code: quote.client_code,
-        email: userEmail,
-      });
-
-      setQuote(prev => prev ? { ...prev, status: "accepted" } : null);
-      toast({ title: "Quote Accepted! ✓", description: "Please proceed with the deposit payment using the banking details provided." });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-    setAcceptingQuote(false);
-  };
-
-  const handleAcceptPackage = async (pkg: typeof packages[0]) => {
-    if (!quote) return;
-    setAcceptingPkgId(pkg.id);
-    try {
-      // Create a new quote based on the package
-      const { data: newQuote, error } = await supabase
-        .from("quotes")
-        .insert({
-          client_id: quote.client_id,
-          client_name: quote.client_name,
-          contact_no: quote.contact_no,
-          email: quote.email,
-          venue: quote.venue,
-          event_date: quote.event_date,
-          start_time: quote.start_time,
-          end_time: quote.end_time,
-          event_type: pkg.category,
-          dj_name: quote.dj_name,
-          equipment: {},
-          custom_items: [],
-          kids_corner: false,
-          kids_hours: 0,
-          travel_distance: quote.travel_distance,
-          discount_percent: 0,
-          dj_cost: 0,
-          equipment_cost: 0,
-          custom_items_cost: 0,
-          kids_cost: 0,
-          subtotal: Number(pkg.price),
-          travel_cost: Number(quote.travel_cost),
-          discount_amount: 0,
-          total: Number(pkg.price) + Number(quote.travel_cost),
-          deposit: Math.round((Number(pkg.price) + Number(quote.travel_cost)) * 0.3),
-          balance: Number(pkg.price) + Number(quote.travel_cost) - Math.round((Number(pkg.price) + Number(quote.travel_cost)) * 0.3),
-          hours: quote.hours,
-          status: "accepted",
-          created_by: quote.created_by || null,
-        } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await supabase.from("admin_notifications").insert({
-        type: "package_accepted",
-        title: "Package Accepted",
-        message: `${quote.client_name} (${quote.client_code}) chose the "${pkg.name}" package (${formatCurrency(Number(pkg.price))}). New quote created. Awaiting deposit.`,
-        quote_id: newQuote?.id,
-        client_code: quote.client_code,
-        email: userEmail,
-      });
-
-      // Load the new quote
-      if (newQuote) {
-        setQuote({
-          ...(newQuote as unknown as QuoteData),
-          equipment: {},
-          custom_items: [],
-        });
-      }
-
-      toast({ title: "Package Selected! ✓", description: `You've chosen the "${pkg.name}" package. Please pay the deposit to confirm your booking.` });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-    setAcceptingPkgId(null);
-  };
-
-  const songRequestUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/request/${quote?.id}`
-    : "";
-
-  // ─── CODE ENTRY SCREEN ─────────────────────────────────────
-  if (step === "code") {
-    if (authLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      );
-    }
-
+  if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <img src={logo} alt="BeatKulture" className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="font-display text-2xl font-bold">Client <span className="gradient-text">Portal</span></h1>
-            <p className="text-sm text-muted-foreground mt-1">Welcome, {user?.email}</p>
-          </div>
-
-          <Card variant="glass">
-            <CardContent className="pt-6 space-y-4">
-              <div className="space-y-2">
-                <Label>Client Code</Label>
-                <Input
-                  placeholder="BK-XXXXXX"
-                  value={clientCode}
-                  onChange={(e) => setClientCode(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && handleCodeSubmit()}
-                  className="font-mono tracking-wider text-center text-lg"
-                  autoFocus
-                />
-                <p className="text-xs text-muted-foreground">Your client code was provided by BeatKulture with your quote.</p>
-              </div>
-              <Button variant="hero" className="w-full" onClick={handleCodeSubmit} disabled={loading}>
-                {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-                View My Quote
-              </Button>
-
-              <Separator />
-              <p className="text-xs text-muted-foreground text-center">
-                Don't have a code? Contact BeatKulture at <strong>065 528 5528</strong> to get started.
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="text-center mt-4">
-            <Link to="/" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              ← Back to BeatKulture
-            </Link>
-          </div>
-        </motion.div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-
-  // ─── CLIENT PORTAL ────────────────────────────────────
-  if (!quote) return null;
-
-  const isPaid = quote.deposit_paid;
-  const isFullyPaid = quote.balance_paid;
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="BeatKulture" className="w-8 h-8" />
-            <span className="font-display text-lg font-bold gradient-text">BEATKULTURE</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-xs">{quote.client_code}</Badge>
-            <Button variant="ghost" size="sm" onClick={() => { setStep("code"); setQuote(null); }}>
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+  // ─── DASHBOARD ────────────────────────────────────────────
+  if (view === "dashboard") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header profile={profile} onSignOut={handleSignOut} />
+        <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
           {/* Welcome */}
-          <div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="font-display text-2xl font-bold">
-              Welcome, <span className="gradient-text">{quote.client_name}</span>
+              Welcome, <span className="gradient-text">{profile?.full_name || user.email}</span>
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {quote.event_type} • {quote.event_date ? new Date(quote.event_date).toLocaleDateString("en-ZA", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) : "Date TBD"}
-            </p>
-          </div>
+            <p className="text-sm text-muted-foreground">Browse our packages or request a tailored quote.</p>
+          </motion.div>
 
-          {/* Specials Banner */}
+          {/* Specials */}
           {activeSpecials.length > 0 && (
-            <div className="space-y-3">
-              {activeSpecials.map((special) => (
-                <div key={special.id} className="relative rounded-xl overflow-hidden border border-primary/20">
-                  <img
-                    src={special.image_url}
-                    alt={special.title || "Current Special"}
-                    className="w-full h-auto max-h-48 object-cover"
-                  />
-                  {special.title && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                      <p className="text-white text-sm font-semibold flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" /> {special.title}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" /> Current Specials
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {activeSpecials.map((s) => (
+                  <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/20">
+                    <img src={s.image_url} alt={s.title || "Special"} className="w-full h-auto max-h-56 object-cover" />
+                    {s.title && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                        <p className="text-white text-sm font-semibold">{s.title}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
 
-          <Card variant="glass" className={`border-l-4 ${isFullyPaid ? "border-l-green-500 bg-green-500/5" : isPaid ? "border-l-blue-500 bg-blue-500/5" : "border-l-orange-500 bg-orange-500/5"}`}>
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
-                  {isFullyPaid ? (
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
-                  ) : isPaid ? (
-                    <CreditCard className="w-8 h-8 text-blue-500" />
-                  ) : (
-                    <Clock className="w-8 h-8 text-orange-500" />
-                  )}
-                  <div>
-                    <p className="font-semibold text-sm">
-                      {isFullyPaid ? "Fully Paid ✓" : isPaid ? "Deposit Paid — Balance Outstanding" : "Deposit Required to Confirm Booking"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {isFullyPaid
-                        ? "Your booking is confirmed and fully paid. See you at the event!"
-                        : isPaid
-                          ? `Deposit of ${formatCurrency(Number(quote.deposit))} received${quote.deposit_paid_at ? ` on ${new Date(quote.deposit_paid_at).toLocaleDateString("en-ZA")}` : ""}. Outstanding: ${formatCurrency(Number(quote.balance))}`
-                          : `A 30% deposit of ${formatCurrency(Number(quote.deposit))} is required to secure your booking.`}
-                    </p>
+          {/* CTA: Request Custom Quote */}
+          <Card variant="glass" className="border-primary/30">
+            <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold">Need something tailored?</p>
+                <p className="text-xs text-muted-foreground">Tell us about your event and we'll prepare a custom quote.</p>
+              </div>
+              <Button variant="hero" onClick={() => setView("questionnaire")}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Request Custom Quote
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Packages */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <PartyPopper className="w-4 h-4 text-primary" /> Available Packages
+            </h2>
+            {Object.keys(packagesByCategory).length === 0 ? (
+              <p className="text-xs text-muted-foreground">No packages available right now.</p>
+            ) : (
+              Object.entries(packagesByCategory).map(([cat, list]) => (
+                <div key={cat} className="space-y-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{cat}</p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {list.map(pkg => (
+                      <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30" : ""}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-base">{pkg.name}</CardTitle>
+                            {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
+                          </div>
+                          <CardDescription className="text-xs">{pkg.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <ul className="text-xs text-muted-foreground space-y-1">
+                            {(pkg.includes || []).slice(0, 5).map((it, i) => (
+                              <li key={i} className="flex items-start gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {it}
+                              </li>
+                            ))}
+                          </ul>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setView("questionnaire")}
+                          >
+                            Request This Package
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="font-display text-xl font-bold">{formatCurrency(Number(quote.total))}</p>
+              ))
+            )}
+          </section>
+
+          {/* My Requests / Quotes */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" /> My Requests &amp; Quotes
+            </h2>
+
+            {loadingQuotes ? (
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            ) : (
+              <div className="space-y-2">
+                {/* Pending requests (no quote yet) */}
+                {requests.filter(r => !r.quote_id).map(r => (
+                  <Card key={r.id} variant="glass">
+                    <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {r.event_type}{r.package_name ? ` — ${r.package_name}` : ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.event_date ? new Date(r.event_date).toLocaleDateString("en-ZA") : "Date TBD"}
+                          {r.venue_name ? ` • ${r.venue_name}` : ""}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="capitalize">{r.status.replace("_", " ")}</Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Existing quotes */}
+                {quotes.map(q => (
+                  <Card key={q.id} variant="glass">
+                    <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {q.event_type || "Event"} • <span className="font-mono text-xs">{q.client_code}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {q.event_date ? new Date(q.event_date).toLocaleDateString("en-ZA") : "Date TBD"}
+                          {q.venue ? ` • ${q.venue}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize">{q.status}</Badge>
+                        <Button size="sm" variant="outline" onClick={() => { setActiveQuote(q); setView("quote"); }}>
+                          View
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {requests.length === 0 && quotes.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    You don't have any quotes yet. Pick a package or request a custom quote above.
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Coming soon: events organisers / entertainment features */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Wand2 className="w-4 h-4 text-primary" /> Coming Soon
+            </h2>
+            <Card variant="glass">
+              <CardContent className="py-4 text-xs text-muted-foreground">
+                Event organisers and entertainment add-ons will appear here as we add them.
+              </CardContent>
+            </Card>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  // ─── QUESTIONNAIRE ────────────────────────────────────────
+  if (view === "questionnaire") {
+    return (
+      <Questionnaire
+        profile={profile}
+        userEmail={user.email || ""}
+        packages={packages.filter(p => p.is_active)}
+        onCancel={() => setView("dashboard")}
+        onSubmit={async (payload) => {
+          await createRequest(payload as any);
+          setView("dashboard");
+        }}
+        submitting={isCreating}
+      />
+    );
+  }
+
+  // ─── QUOTE VIEW (read-only) ────────────────────────────────
+  if (view === "quote" && activeQuote) {
+    const q = activeQuote;
+    const isPaid = q.deposit_paid;
+    const isFullyPaid = q.balance_paid;
+    const songRequestUrl = `${window.location.origin}/request/${q.id}`;
+
+    const handleAccept = async () => {
+      setActioning(true);
+      const { error } = await supabase.from("quotes").update({ status: "accepted" }).eq("id", q.id);
+      if (!error) {
+        await supabase.from("admin_notifications").insert({
+          type: "quote_accepted",
+          title: "Quote Accepted",
+          message: `${q.client_name} (${q.client_code}) accepted their quote of ${formatCurrency(Number(q.total))}.`,
+          quote_id: q.id,
+          client_code: q.client_code,
+          email: q.email,
+        });
+        setActiveQuote({ ...q, status: "accepted" });
+        toast({ title: "Quote Accepted ✓", description: "Please pay the deposit to confirm your booking." });
+      } else {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      }
+      setActioning(false);
+    };
+
+    const handleDecline = async () => {
+      setActioning(true);
+      const { error } = await supabase.from("quotes").update({ status: "declined" }).eq("id", q.id);
+      if (!error) {
+        await supabase.from("admin_notifications").insert({
+          type: "quote_declined",
+          title: "Quote Declined",
+          message: `${q.client_name} (${q.client_code}) declined their quote.`,
+          quote_id: q.id,
+          client_code: q.client_code,
+          email: q.email,
+        });
+        setActiveQuote({ ...q, status: "declined" });
+        toast({ title: "Quote Declined" });
+      }
+      setActioning(false);
+    };
+
+    const handleRequestChanges = async () => {
+      if (!changeMessage.trim()) return;
+      setSendingChange(true);
+      await supabase.from("admin_notifications").insert({
+        type: "quote_change_request",
+        title: "Quote Change Request",
+        message: `${q.client_name} (${q.client_code}) requested changes: "${changeMessage.trim()}"`,
+        quote_id: q.id,
+        client_code: q.client_code,
+        email: q.email,
+      });
+      toast({ title: "Message Sent", description: "BeatKulture will review your request and update your quote." });
+      setChangeMessage("");
+      setSendingChange(false);
+    };
+
+    return (
+      <div className="min-h-screen bg-background">
+        <Header profile={profile} onSignOut={handleSignOut} extra={
+          <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
+          </Button>
+        } />
+        <main className="container mx-auto px-4 py-6 max-w-3xl space-y-4">
+          {/* Status banner */}
+          <Card variant="glass" className={`border-l-4 ${isFullyPaid ? "border-l-green-500" : isPaid ? "border-l-blue-500" : "border-l-orange-500"}`}>
+            <CardContent className="py-4 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                {isFullyPaid ? <CheckCircle2 className="w-7 h-7 text-green-500" />
+                  : isPaid ? <CreditCard className="w-7 h-7 text-blue-500" />
+                  : <Clock className="w-7 h-7 text-orange-500" />}
+                <div>
+                  <p className="font-semibold text-sm">
+                    {isFullyPaid ? "Fully Paid ✓" : isPaid ? "Deposit Paid" : "Awaiting Deposit"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Status: <span className="capitalize">{q.status}</span></p>
                 </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="font-display text-xl font-bold">{formatCurrency(Number(q.total))}</p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className={`grid w-full ${isPaid ? "grid-cols-5" : "grid-cols-2"}`}>
-              <TabsTrigger value="quote"><FileText className="w-3 h-3 mr-1" />Quote</TabsTrigger>
-              <TabsTrigger value="extras"><Plus className="w-3 h-3 mr-1" />Extras</TabsTrigger>
-              {isPaid && (
-                <>
-                  <TabsTrigger value="planner"><Calendar className="w-3 h-3 mr-1" />Planner</TabsTrigger>
-                  <TabsTrigger value="photos"><ImageIcon className="w-3 h-3 mr-1" />Photos</TabsTrigger>
-                  <TabsTrigger value="songs"><Music className="w-3 h-3 mr-1" />Songs</TabsTrigger>
-                </>
-              )}
-            </TabsList>
+          {/* Quote details (read-only) */}
+          <Card variant="glass">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" /> Your Quote
+              </CardTitle>
+              <CardDescription>Ref: <span className="font-mono">{q.client_code}</span> • Created {new Date(q.created_at).toLocaleDateString("en-ZA")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-muted-foreground"><User className="w-3 h-3" /> {q.client_name}</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="w-3 h-3" /> {q.venue || "TBD"}</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="w-3 h-3" /> {q.event_date ? new Date(q.event_date).toLocaleDateString("en-ZA") : "TBD"}</div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-muted-foreground"><Clock className="w-3 h-3" /> {q.start_time?.slice(0,5) || ""} – {q.end_time?.slice(0,5) || ""}</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><PartyPopper className="w-3 h-3" /> {q.event_type || "N/A"}</div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><Music className="w-3 h-3" /> DJ: {q.dj_name || "TBD"}</div>
+                </div>
+              </div>
 
-            {/* ─── QUOTE TAB ─── */}
-            <TabsContent value="quote" className="space-y-4 mt-4">
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Your Quote</CardTitle>
-                  <CardDescription>Ref: {quote.client_code} • Created {new Date(quote.created_at).toLocaleDateString("en-ZA")}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Event Details */}
-                  <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-muted-foreground"><User className="w-3 h-3" /> {quote.client_name}</div>
-                      <div className="flex items-center gap-2 text-muted-foreground"><MapPin className="w-3 h-3" /> {quote.venue || "TBD"}</div>
-                      <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="w-3 h-3" /> {quote.event_date ? new Date(quote.event_date).toLocaleDateString("en-ZA") : "TBD"}</div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-muted-foreground"><Clock className="w-3 h-3" /> {quote.start_time?.slice(0, 5) || ""} – {quote.end_time?.slice(0, 5) || ""}</div>
-                      <div className="flex items-center gap-2 text-muted-foreground"><PartyPopper className="w-3 h-3" /> {quote.event_type || "N/A"}</div>
-                      <div className="flex items-center gap-2 text-muted-foreground"><Music className="w-3 h-3" /> DJ: {quote.dj_name || "TBD"}</div>
-                    </div>
+              <Separator />
+
+              {/* Line items (no remove button — clients are read-only) */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between font-medium">
+                  <span>DJ Service ({q.hours} hours)</span>
+                  <span>{formatCurrency(Number(q.dj_cost))}</span>
+                </div>
+                {Object.entries(q.equipment || {}).map(([k, qty]) => Number(qty) > 0 && (
+                  <div key={k} className="flex justify-between text-muted-foreground">
+                    <span>{equipmentNames[k] || k} × {qty}</span>
                   </div>
-
-                  <Separator />
-
-                  {/* Line Items */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>DJ Service ({quote.hours} hours)</span>
-                      <span>{formatCurrency(Number(quote.dj_cost))}</span>
-                    </div>
-
-                    {Object.entries(quote.equipment || {}).map(([key, qty]) => {
-                      if (Number(qty) <= 0) return null;
-                      return (
-                        <div key={key} className="flex justify-between items-center text-sm text-muted-foreground group">
-                          <span>{equipmentNames[key] || key} × {qty}</span>
-                          <div className="flex items-center gap-2">
-                            <span>{formatCurrency((equipmentPrices[key] || 0) * Number(qty))}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-destructive hover:bg-destructive/10 opacity-70 hover:opacity-100"
-                              disabled={removingItem === key}
-                              onClick={() => handleRemoveEquipment(key)}
-                              title="Remove this item"
-                            >
-                              {removingItem === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {(quote.custom_items || []).map((item, i) => (
-                      <div key={i} className="flex justify-between items-center text-sm text-muted-foreground group">
-                        <span>{item.name} × {item.qty}</span>
-                        <div className="flex items-center gap-2">
-                          <span>{formatCurrency(item.price * item.qty)}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-destructive hover:bg-destructive/10 opacity-70 hover:opacity-100"
-                            disabled={removingItem === `custom-${i}`}
-                            onClick={() => handleRemoveCustomItem(i)}
-                            title="Remove this item"
-                          >
-                            {removingItem === `custom-${i}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {Number(quote.kids_cost) > 0 && (
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Kids Corner ({quote.kids_hours}h)</span>
-                        <span>{formatCurrency(Number(quote.kids_cost))}</span>
-                      </div>
-                    )}
+                ))}
+                {(q.custom_items || []).map((it, i) => (
+                  <div key={i} className="flex justify-between text-muted-foreground">
+                    <span>{it.name} × {it.qty}</span>
                   </div>
-
-                  <p className="text-xs text-muted-foreground italic">
-                    You may remove items above. To add extras, use the Extras tab to request from BeatKulture.
-                  </p>
-
-                  <Separator />
-
-                  {/* Totals */}
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(Number(quote.subtotal))}</span></div>
-                    {Number(quote.travel_cost) > 0 && (
-                      <div className="flex justify-between text-muted-foreground"><span>Travel ({quote.travel_distance}km)</span><span>{formatCurrency(Number(quote.travel_cost))}</span></div>
-                    )}
-                    {Number(quote.discount_amount) > 0 && (
-                      <div className="flex justify-between text-green-600"><span>Discount ({quote.discount_percent}%)</span><span>-{formatCurrency(Number(quote.discount_amount))}</span></div>
-                    )}
-                    <Separator />
-                    <div className="flex justify-between font-display font-bold text-lg pt-1">
-                      <span>Total</span><span>{formatCurrency(Number(quote.total))}</span>
-                    </div>
-                    <div className="flex justify-between text-primary font-semibold">
-                      <span>30% Deposit</span><span>{formatCurrency(Number(quote.deposit))}</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Remaining Balance</span><span>{formatCurrency(Number(quote.balance))}</span>
-                    </div>
+                ))}
+                {Number(q.kids_cost) > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Kids Corner ({q.kids_hours}h)</span>
                   </div>
+                )}
+              </div>
 
-                  {/* Banking */}
-                  <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border text-xs space-y-1">
-                    <p className="font-semibold text-sm">Banking Details</p>
-                    <p>Bank: First National Bank</p>
-                    <p>Account: BEATKULTURE (PTY) LTD</p>
-                    <p>Account No: 63189325905</p>
-                    <p>Branch Code: 250655</p>
-                    <p className="text-muted-foreground mt-1">Use your name as reference</p>
-                  </div>
+              <Separator />
 
-                  {/* Accept Quote Button */}
-                  {quote.status !== "accepted" && quote.status !== "paid" && !isPaid && (
-                    <Button
-                      variant="hero"
-                      className="w-full mt-4"
-                      disabled={acceptingQuote}
-                      onClick={handleAcceptQuote}
-                    >
-                      {acceptingQuote ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                      Accept This Quote
-                    </Button>
-                  )}
-                  {quote.status === "accepted" && !isPaid && (
-                    <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-center">
-                      <CheckCircle2 className="w-5 h-5 text-primary mx-auto mb-1" />
-                      <p className="font-semibold text-primary">Quote Accepted</p>
-                      <p className="text-xs text-muted-foreground">Please pay the deposit using the banking details above to confirm your booking.</p>
-                    </div>
-                  )}
-                  {!isPaid && (
-                    <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border text-xs text-muted-foreground text-center">
-                      <p>Once your deposit is confirmed, you'll unlock <strong>Event Planner</strong>, <strong>Photos</strong>, and <strong>Song Requests</strong>.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="space-y-1">
+                <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(Number(q.subtotal))}</span></div>
+                {Number(q.travel_cost) > 0 && (
+                  <div className="flex justify-between text-muted-foreground"><span>Travel</span><span>{formatCurrency(Number(q.travel_cost))}</span></div>
+                )}
+                {Number(q.discount_amount) > 0 && (
+                  <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatCurrency(Number(q.discount_amount))}</span></div>
+                )}
+                <Separator />
+                <div className="flex justify-between font-display font-bold text-lg pt-1">
+                  <span>Total</span><span>{formatCurrency(Number(q.total))}</span>
+                </div>
+                <div className="flex justify-between text-primary font-semibold">
+                  <span>30% Deposit</span><span>{formatCurrency(Number(q.deposit))}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Balance</span><span>{formatCurrency(Number(q.balance))}</span>
+                </div>
+              </div>
 
-              {/* ─── ALTERNATIVE PACKAGES ─── */}
-              {quote.status !== "accepted" && quote.status !== "paid" && !isPaid && (() => {
-                const eventCategory = (quote.event_type || "").toLowerCase();
-                const relevantPkgs = packages.filter(p => 
-                  p.is_active && (
-                    eventCategory.includes(p.category) ||
-                    p.category.toLowerCase().includes(eventCategory.split(" ")[0] || "---")
-                  )
-                );
-                const allActivePkgs = packages.filter(p => p.is_active);
-                const displayPkgs = relevantPkgs.length > 0 ? relevantPkgs : allActivePkgs;
+              {/* Banking */}
+              <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs space-y-1">
+                <p className="font-semibold text-sm">Banking Details</p>
+                <p>Bank: First National Bank</p>
+                <p>Account: BEATKULTURE (PTY) LTD</p>
+                <p>Account No: 63189325905</p>
+                <p>Branch Code: 250655</p>
+                <p className="text-muted-foreground">Use your client code <strong className="font-mono">{q.client_code}</strong> as reference.</p>
+              </div>
 
-                if (displayPkgs.length === 0) return null;
-
-                return (
-                  <Card variant="glass">
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-primary" /> Or Choose a Package
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Prefer a ready-made package? Select one below and a new quote will be created for you.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid sm:grid-cols-2 gap-3">
-                        {displayPkgs.map(pkg => (
-                          <div key={pkg.id} className={`p-3 rounded-lg border transition-colors hover:border-primary/30 ${pkg.popular ? "border-primary/30 bg-primary/5" : "border-border bg-muted/20"}`}>
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <p className="text-sm font-semibold">{pkg.name}</p>
-                                <p className="text-xs text-muted-foreground">{pkg.description}</p>
-                              </div>
-                              {pkg.popular && (
-                                <Badge className="bg-primary text-primary-foreground text-[10px] px-2">Popular</Badge>
-                              )}
-                            </div>
-                            <p className="font-display text-lg font-bold gradient-text mb-2">
-                              {formatCurrency(Number(pkg.price))}
-                            </p>
-                            <ul className="text-xs space-y-1 text-muted-foreground mb-3">
-                              {(pkg.includes as string[]).slice(0, 4).map((item, i) => (
-                                <li key={i} className="flex items-start gap-1">
-                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-                                  {item}
-                                </li>
-                              ))}
-                              {(pkg.includes as string[]).length > 4 && (
-                                <li className="text-primary text-[10px]">+{(pkg.includes as string[]).length - 4} more items</li>
-                              )}
-                            </ul>
-                            <Button
-                              variant={pkg.popular ? "hero" : "default"}
-                              size="sm"
-                              className="w-full"
-                              disabled={acceptingPkgId === pkg.id}
-                              onClick={() => handleAcceptPackage(pkg)}
-                            >
-                              {acceptingPkgId === pkg.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
-                              Accept This Package
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
-            </TabsContent>
-
-            {/* ─── PLANNER TAB (deposit required) ─── */}
-            {isPaid && (
-            <TabsContent value="planner" className="space-y-4 mt-4">
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Event Planner</CardTitle>
-                  <CardDescription>
-                    Plan your event schedule, music cues, and special moments
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-6">
-                    <Heart className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Use our event planner to tell us your song choices, timeline, and special moments.
-                    </p>
-                    <Button variant="hero" asChild>
-                      <Link to={`/event-planner/${quote.id}`}>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Open Event Planner
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            )}
-
-            {/* ─── PHOTOS TAB (deposit required) ─── */}
-            {isPaid && (
-            <TabsContent value="photos" className="space-y-4 mt-4">
-              <ClientPhotoGallery quoteId={quote.id} />
-            </TabsContent>
-            )}
-
-            {/* ─── SONG REQUEST QR TAB (deposit required) ─── */}
-            {isPaid && (
-            <TabsContent value="songs" className="space-y-4 mt-4">
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><QrCode className="w-5 h-5 text-primary" /> Song Request QR Code</CardTitle>
-                  <CardDescription>
-                    Share this QR code with your guests so they can request songs at your event
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="bg-white p-4 rounded-xl">
-                      <QRCodeSVG
-                        value={songRequestUrl}
-                        size={200}
-                        level="H"
-                        includeMargin
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center max-w-xs">
-                      Guests scan this code → leave a review → then submit their song request. 
-                      All requests go directly to your DJ's live queue.
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(songRequestUrl);
-                          toast({ title: "Link Copied", description: "Song request link copied to clipboard." });
-                        }}
-                      >
-                        Copy Link
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const waMsg = encodeURIComponent(`🎵 Request songs at our event!\n\nScan or click: ${songRequestUrl}`);
-                          window.open(`https://wa.me/?text=${waMsg}`, "_blank");
-                        }}
-                      >
-                        Share via WhatsApp
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            )}
-
-            {/* ─── EXTRAS REQUEST TAB ─── */}
-            <TabsContent value="extras" className="space-y-4 mt-4">
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Plus className="w-5 h-5 text-primary" /> Request Extras</CardTitle>
-                  <CardDescription>
-                    Want to add something to your booking? Let us know and we'll update your quote.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>What would you like to add?</Label>
-                    <Input
-                      placeholder="e.g. Extra speaker, Smoke machine, Low fog..."
-                      value={extraRequest.item}
-                      onChange={(e) => setExtraRequest(prev => ({ ...prev, item: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Additional Notes</Label>
-                    <Textarea
-                      placeholder="Any details about what you need..."
-                      value={extraRequest.notes}
-                      onChange={(e) => setExtraRequest(prev => ({ ...prev, notes: e.target.value }))}
-                      rows={3}
-                    />
-                  </div>
-                  <Button onClick={handleRequestExtra} disabled={sendingExtra || !extraRequest.item.trim()}>
-                    {sendingExtra ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                    Send Request
+              {/* Actions */}
+              {q.status !== "accepted" && q.status !== "paid" && q.status !== "declined" && (
+                <div className="grid sm:grid-cols-2 gap-2 pt-2">
+                  <Button variant="hero" disabled={actioning} onClick={handleAccept}>
+                    {actioning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                    Accept Quote
                   </Button>
+                  <Button variant="outline" disabled={actioning} onClick={handleDecline}>
+                    Decline
+                  </Button>
+                </div>
+              )}
 
-                  <div className="mt-4 p-3 rounded-lg bg-muted/20 border border-border text-xs text-muted-foreground">
-                    <p><strong>How it works:</strong> Your request will be sent to BeatKulture. We'll update your quote with any additions and let you know the revised total.</p>
-                    <p className="mt-1">Contact us directly: <strong>065 528 5528</strong> or <strong>info@beatkulture.co.za</strong></p>
-                  </div>
-                </CardContent>
+              {/* Request changes */}
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs">Request changes from BeatKulture</Label>
+                <Textarea
+                  rows={3}
+                  placeholder="e.g. Can we adjust the end time or remove the smoke machine?"
+                  value={changeMessage}
+                  onChange={(e) => setChangeMessage(e.target.value)}
+                />
+                <Button variant="outline" size="sm" disabled={sendingChange || !changeMessage.trim()} onClick={handleRequestChanges}>
+                  {sendingChange ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                  Send Message
+                </Button>
+                <p className="text-[11px] text-muted-foreground">
+                  Only BeatKulture can edit your quote. Send a message and we'll update it for you.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Unlocked features once paid */}
+          {isPaid && (
+            <div className="grid sm:grid-cols-3 gap-3">
+              <Button variant="outline" asChild>
+                <Link to={`/event-planner/${q.id}`}><Calendar className="w-4 h-4 mr-2" /> Event Planner</Link>
+              </Button>
+              <Card variant="glass" className="p-3 flex flex-col items-center gap-2">
+                <div className="bg-white p-2 rounded-md">
+                  <QRCodeSVG value={songRequestUrl} size={120} level="H" includeMargin />
+                </div>
+                <p className="text-[11px] text-muted-foreground">Song requests QR</p>
               </Card>
-            </TabsContent>
-          </Tabs>
+              <div>
+                <ClientPhotoGallery quoteId={q.id} />
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
 
-          {/* Quote validity */}
-          <p className="text-xs text-center text-muted-foreground">
-            This quote is valid for 7 days from {new Date(quote.created_at).toLocaleDateString("en-ZA")}. 
-            BeatKulture Entertainment (PTY) LTD • Reg: 2025/533623/07
-          </p>
-        </motion.div>
+  return null;
+}
+
+// ───────────── Header ─────────────
+function Header({ profile, onSignOut, extra }: { profile: any; onSignOut: () => void; extra?: React.ReactNode }) {
+  return (
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logo} alt="BeatKulture" className="w-8 h-8" />
+          <span className="font-display text-lg font-bold gradient-text">BEATKULTURE</span>
+        </Link>
+        <div className="flex items-center gap-2">
+          {extra}
+          <span className="text-xs text-muted-foreground hidden sm:inline">{profile?.full_name}</span>
+          <Button variant="ghost" size="sm" onClick={onSignOut}>
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline ml-2">Sign Out</span>
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ───────────── Questionnaire ─────────────
+function Questionnaire({
+  profile, userEmail, packages, onCancel, onSubmit, submitting,
+}: {
+  profile: any;
+  userEmail: string;
+  packages: DbPackage[];
+  onCancel: () => void;
+  onSubmit: (payload: any) => Promise<void>;
+  submitting: boolean;
+}) {
+  const [form, setForm] = useState({
+    event_type: "",
+    venue_name: "",
+    venue_address: "",
+    event_date: "",
+    start_time: "",
+    end_time: "",
+    is_outdoor: false,
+    needs_sound: true,
+    needs_lighting: false,
+    needs_special_effects: false,
+    needs_mic: false,
+    guest_count: "",
+    package_id: "none",
+    notes: "",
+    contact_no: profile?.phone || "",
+  });
+
+  const update = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const submit = async () => {
+    if (!form.event_type) {
+      toast({ title: "Event type required", variant: "destructive" });
+      return;
+    }
+    const chosenPkg = packages.find(p => p.id === form.package_id);
+    await onSubmit({
+      client_id: profile.id,
+      client_name: profile?.full_name || userEmail,
+      email: userEmail,
+      contact_no: form.contact_no || null,
+      event_type: form.event_type,
+      venue_name: form.venue_name || null,
+      venue_address: form.venue_address || null,
+      event_date: form.event_date || null,
+      start_time: form.start_time || null,
+      end_time: form.end_time || null,
+      is_outdoor: form.is_outdoor,
+      needs_sound: form.needs_sound,
+      needs_lighting: form.needs_lighting,
+      needs_special_effects: form.needs_special_effects,
+      needs_mic: form.needs_mic,
+      guest_count: form.guest_count ? Number(form.guest_count) : null,
+      package_id: chosenPkg?.id || null,
+      package_name: chosenPkg?.name || null,
+      notes: form.notes || null,
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <button onClick={onCancel} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          </button>
+          <span className="font-display font-bold gradient-text">Custom Quote Request</span>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-6 max-w-2xl">
+        <Card variant="glass">
+          <CardHeader>
+            <CardTitle>Tell us about your event</CardTitle>
+            <CardDescription>Answer a few quick questions and we'll prepare your quote.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Type of event *</Label>
+              <Select value={form.event_type} onValueChange={(v) => update("event_type", v)}>
+                <SelectTrigger><SelectValue placeholder="Select event type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Wedding">Wedding</SelectItem>
+                  <SelectItem value="Birthday">Birthday</SelectItem>
+                  <SelectItem value="Corporate">Corporate</SelectItem>
+                  <SelectItem value="Private Party">Private Party</SelectItem>
+                  <SelectItem value="Anniversary">Anniversary</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {packages.length > 0 && (
+              <div className="space-y-2">
+                <Label>Interested in a package? (optional)</Label>
+                <Select value={form.package_id} onValueChange={(v) => update("package_id", v)}>
+                  <SelectTrigger><SelectValue placeholder="Choose a package or skip" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No specific package</SelectItem>
+                    {packages.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} — {p.category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Venue name</Label>
+                <Input value={form.venue_name} onChange={(e) => update("venue_name", e.target.value)} placeholder="e.g. The Garden Venue" />
+              </div>
+              <div className="space-y-2">
+                <Label>Contact number</Label>
+                <Input value={form.contact_no} onChange={(e) => update("contact_no", e.target.value)} placeholder="082 ..." />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Venue address</Label>
+              <Input value={form.venue_address} onChange={(e) => update("venue_address", e.target.value)} placeholder="Street, suburb, city" />
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label>Event date</Label>
+                <Input type="date" value={form.event_date} onChange={(e) => update("event_date", e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Start time</Label>
+                <Input type="time" value={form.start_time} onChange={(e) => update("start_time", e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>End time</Label>
+                <Input type="time" value={form.end_time} onChange={(e) => update("end_time", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Approximate guest count</Label>
+              <Input type="number" min="0" value={form.guest_count} onChange={(e) => update("guest_count", e.target.value)} placeholder="e.g. 80" />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <Label className="text-sm">Venue &amp; requirements</Label>
+
+              <div className="flex items-start gap-3 rounded-md border border-border p-3">
+                <Checkbox
+                  id="outdoor"
+                  checked={form.is_outdoor}
+                  onCheckedChange={(c) => update("is_outdoor", !!c)}
+                />
+                <div>
+                  <Label htmlFor="outdoor" className="cursor-pointer flex items-center gap-2"><MapPin className="w-3 h-3" /> Outdoor event</Label>
+                  <p className="text-[11px] text-muted-foreground">Tick if your event is outdoors (affects equipment &amp; cover).</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-md border border-border p-3">
+                <Checkbox
+                  id="sound"
+                  checked={form.needs_sound}
+                  onCheckedChange={(c) => update("needs_sound", !!c)}
+                />
+                <div>
+                  <Label htmlFor="sound" className="cursor-pointer flex items-center gap-2"><Speaker className="w-3 h-3" /> I need sound equipment</Label>
+                  <p className="text-[11px] text-muted-foreground">Untick if your venue already provides sound.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-md border border-border p-3">
+                <Checkbox
+                  id="lighting"
+                  checked={form.needs_lighting}
+                  onCheckedChange={(c) => update("needs_lighting", !!c)}
+                />
+                <div>
+                  <Label htmlFor="lighting" className="cursor-pointer flex items-center gap-2"><Lightbulb className="w-3 h-3" /> Lighting</Label>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-md border border-border p-3">
+                <Checkbox
+                  id="effects"
+                  checked={form.needs_special_effects}
+                  onCheckedChange={(c) => update("needs_special_effects", !!c)}
+                />
+                <div>
+                  <Label htmlFor="effects" className="cursor-pointer flex items-center gap-2"><Wand2 className="w-3 h-3" /> Special effects (smoke, fog, etc.)</Label>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-md border border-border p-3">
+                <Checkbox
+                  id="mic"
+                  checked={form.needs_mic}
+                  onCheckedChange={(c) => update("needs_mic", !!c)}
+                />
+                <div>
+                  <Label htmlFor="mic" className="cursor-pointer flex items-center gap-2"><Mic className="w-3 h-3" /> Microphone for speeches</Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Anything else we should know?</Label>
+              <Textarea
+                rows={4}
+                value={form.notes}
+                onChange={(e) => update("notes", e.target.value)}
+                placeholder="Theme, special moments, accessibility, etc."
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onCancel} disabled={submitting} className="flex-1">Cancel</Button>
+              <Button variant="hero" onClick={submit} disabled={submitting} className="flex-1">
+                {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                Submit Request
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

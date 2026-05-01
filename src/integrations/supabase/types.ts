@@ -382,6 +382,87 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_requests: {
+        Row: {
+          client_id: string
+          client_name: string
+          contact_no: string | null
+          created_at: string
+          email: string
+          end_time: string | null
+          event_date: string | null
+          event_type: string
+          guest_count: number | null
+          id: string
+          is_outdoor: boolean
+          needs_lighting: boolean
+          needs_mic: boolean
+          needs_sound: boolean
+          needs_special_effects: boolean
+          notes: string | null
+          package_id: string | null
+          package_name: string | null
+          quote_id: string | null
+          start_time: string | null
+          status: string
+          updated_at: string
+          venue_address: string | null
+          venue_name: string | null
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          contact_no?: string | null
+          created_at?: string
+          email: string
+          end_time?: string | null
+          event_date?: string | null
+          event_type: string
+          guest_count?: number | null
+          id?: string
+          is_outdoor?: boolean
+          needs_lighting?: boolean
+          needs_mic?: boolean
+          needs_sound?: boolean
+          needs_special_effects?: boolean
+          notes?: string | null
+          package_id?: string | null
+          package_name?: string | null
+          quote_id?: string | null
+          start_time?: string | null
+          status?: string
+          updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          contact_no?: string | null
+          created_at?: string
+          email?: string
+          end_time?: string | null
+          event_date?: string | null
+          event_type?: string
+          guest_count?: number | null
+          id?: string
+          is_outdoor?: boolean
+          needs_lighting?: boolean
+          needs_mic?: boolean
+          needs_sound?: boolean
+          needs_special_effects?: boolean
+          notes?: string | null
+          package_id?: string | null
+          package_name?: string | null
+          quote_id?: string | null
+          start_time?: string | null
+          status?: string
+          updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
+        }
+        Relationships: []
+      }
       quotes: {
         Row: {
           balance: number | null
