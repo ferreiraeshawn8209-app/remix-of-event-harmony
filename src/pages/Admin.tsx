@@ -50,6 +50,7 @@ import { ClientAccessLogs } from "@/components/admin/ClientAccessLogs";
 import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { SpecialsManager } from "@/components/admin/SpecialsManager";
+import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -519,6 +520,7 @@ export default function Admin() {
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
+              <TabsTrigger value="requests">Quote Requests</TabsTrigger>
               <TabsTrigger value="quotes">All Quotes</TabsTrigger>
               <TabsTrigger value="calendar">Calendar</TabsTrigger>
               <TabsTrigger value="finance">Finance</TabsTrigger>
@@ -800,6 +802,10 @@ export default function Admin() {
 
             <TabsContent value="specials">
               <SpecialsManager />
+            </TabsContent>
+
+            <TabsContent value="requests">
+              <QuoteRequestsManager />
             </TabsContent>
 
             <TabsContent value="admins">
