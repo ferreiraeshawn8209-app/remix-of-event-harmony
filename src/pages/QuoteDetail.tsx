@@ -474,6 +474,14 @@ export default function QuoteDetail() {
             </DropdownMenu>
           </div>
 
+          <div className="mt-8">
+            <QuoteMessageThread
+              quoteId={quote.id}
+              role="admin"
+              senderName={profile?.full_name || "BeatKulture Admin"}
+            />
+          </div>
+
           <p className="text-xs text-muted-foreground mt-6">
             Created: {new Date(quote.created_at).toLocaleDateString()} • Last updated: {new Date(quote.updated_at).toLocaleDateString()}
           </p>
