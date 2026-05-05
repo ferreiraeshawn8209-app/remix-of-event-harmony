@@ -25,6 +25,7 @@ import {
   Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut,
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
+import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
