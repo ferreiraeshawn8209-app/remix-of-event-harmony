@@ -375,22 +375,6 @@ export default function ClientPortal() {
       setActioning(false);
     };
 
-    const handleRequestChanges = async () => {
-      if (!changeMessage.trim()) return;
-      setSendingChange(true);
-      await supabase.from("admin_notifications").insert({
-        type: "quote_change_request",
-        title: "Quote Change Request",
-        message: `${q.client_name} (${q.client_code}) requested changes: "${changeMessage.trim()}"`,
-        quote_id: q.id,
-        client_code: q.client_code,
-        email: q.email,
-      });
-      toast({ title: "Message Sent", description: "BeatKulture will review your request and update your quote." });
-      setChangeMessage("");
-      setSendingChange(false);
-    };
-
     return (
       <div className="min-h-screen bg-background">
         <Header profile={profile} onSignOut={handleSignOut} extra={
