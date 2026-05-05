@@ -29,6 +29,7 @@ import {
 import { generateInvoicePdf, generateQuotePdf, sharePdfViaWhatsApp, shareViaEmail } from "@/lib/generateInvoicePdf";
 import { toast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -472,6 +473,14 @@ export default function QuoteDetail() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+
+          <div className="mt-8">
+            <QuoteMessageThread
+              quoteId={quote.id}
+              role="admin"
+              senderName={profile?.full_name || "BeatKulture Admin"}
+            />
           </div>
 
           <p className="text-xs text-muted-foreground mt-6">

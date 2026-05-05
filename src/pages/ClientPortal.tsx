@@ -25,6 +25,7 @@ import {
   Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut,
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
+import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -77,9 +78,6 @@ export default function ClientPortal() {
   const [activeQuote, setActiveQuote] = useState<QuoteData | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
   const [actioning, setActioning] = useState(false);
-  const [changeMessage, setChangeMessage] = useState("");
-  const [sendingChange, setSendingChange] = useState(false);
-
   const { requests, createRequest, isCreating } = useQuoteRequests(profile?.id);
 
   // Redirect to auth if not logged in
@@ -377,22 +375,6 @@ export default function ClientPortal() {
       setActioning(false);
     };
 
-    const handleRequestChanges = async () => {
-      if (!changeMessage.trim()) return;
-      setSendingChange(true);
-      await supabase.from("admin_notifications").insert({
-        type: "quote_change_request",
-        title: "Quote Change Request",
-        message: `${q.client_name} (${q.client_code}) requested changes: "${changeMessage.trim()}"`,
-        quote_id: q.id,
-        client_code: q.client_code,
-        email: q.email,
-      });
-      toast({ title: "Message Sent", description: "BeatKulture will review your request and update your quote." });
-      setChangeMessage("");
-      setSendingChange(false);
-    };
-
     return (
       <div className="min-h-screen bg-background">
         <Header profile={profile} onSignOut={handleSignOut} extra={
@@ -514,26 +496,15 @@ export default function ClientPortal() {
                 </div>
               )}
 
-              {/* Request changes */}
-              <div className="space-y-2 pt-2">
-                <Label className="text-xs">Request changes from BeatKulture</Label>
-                <Textarea
-                  rows={3}
-                  placeholder="e.g. Can we adjust the end time or remove the smoke machine?"
-                  value={changeMessage}
-                  onChange={(e) => setChangeMessage(e.target.value)}
-                />
-                <Button variant="outline" size="sm" disabled={sendingChange || !changeMessage.trim()} onClick={handleRequestChanges}>
-                  {sendingChange ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                  Send Message
-                </Button>
-                <p className="text-[11px] text-muted-foreground">
-                  Only BeatKulture can edit your quote. Send a message and we'll update it for you.
-                </p>
-              </div>
             </CardContent>
           </Card>
 
+          {/* Conversation thread */}
+          <QuoteMessageThread
+            quoteId={q.id}
+            role="client"
+            senderName={q.client_name || profile?.full_name || "Client"}
+          />
           {/* Unlocked features once paid */}
           {isPaid && (
             <div className="grid sm:grid-cols-3 gap-3">
