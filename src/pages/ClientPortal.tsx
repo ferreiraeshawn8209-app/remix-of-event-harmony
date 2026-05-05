@@ -515,23 +515,15 @@ export default function ClientPortal() {
                 </div>
               )}
 
-              {/* Request changes */}
-              <div className="space-y-2 pt-2">
-                <Label className="text-xs">Request changes from BeatKulture</Label>
-                <Textarea
-                  rows={3}
-                  placeholder="e.g. Can we adjust the end time or remove the smoke machine?"
-                  value={changeMessage}
-                  onChange={(e) => setChangeMessage(e.target.value)}
-                />
-                <Button variant="outline" size="sm" disabled={sendingChange || !changeMessage.trim()} onClick={handleRequestChanges}>
-                  {sendingChange ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                  Send Message
-                </Button>
-                <p className="text-[11px] text-muted-foreground">
-                  Only BeatKulture can edit your quote. Send a message and we'll update it for you.
-                </p>
-              </div>
+            </CardContent>
+          </Card>
+
+          {/* Conversation thread */}
+          <QuoteMessageThread
+            quoteId={q.id}
+            role="client"
+            senderName={q.client_name || profile?.full_name || "Client"}
+          />
             </CardContent>
           </Card>
 
