@@ -29,6 +29,7 @@ import {
 import { generateInvoicePdf, generateQuotePdf, sharePdfViaWhatsApp, shareViaEmail } from "@/lib/generateInvoicePdf";
 import { toast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
