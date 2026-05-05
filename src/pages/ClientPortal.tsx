@@ -78,9 +78,6 @@ export default function ClientPortal() {
   const [activeQuote, setActiveQuote] = useState<QuoteData | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
   const [actioning, setActioning] = useState(false);
-  const [changeMessage, setChangeMessage] = useState("");
-  const [sendingChange, setSendingChange] = useState(false);
-
   const { requests, createRequest, isCreating } = useQuoteRequests(profile?.id);
 
   // Redirect to auth if not logged in
