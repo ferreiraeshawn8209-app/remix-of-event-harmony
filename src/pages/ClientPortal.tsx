@@ -524,9 +524,6 @@ export default function ClientPortal() {
             role="client"
             senderName={q.client_name || profile?.full_name || "Client"}
           />
-            </CardContent>
-          </Card>
-
           {/* Unlocked features once paid */}
           {isPaid && (
             <div className="grid sm:grid-cols-3 gap-3">
