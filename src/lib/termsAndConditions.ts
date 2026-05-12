@@ -237,21 +237,24 @@ export function addTermsAndConditionsPages(
     y += 3;
   }
 
-  // Bank details box
-  checkPage(35);
-  y += 4;
-  doc.setFillColor(240, 248, 255);
-  doc.setDrawColor(0, 100, 200);
-  doc.roundedRect(marginLeft, y, contentWidth, 32, 2, 2, "FD");
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 80, 160);
-  doc.text("BANKING DETAILS", marginLeft + 4, y + 6);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(30);
-  BANK_DETAILS.forEach((line, i) => {
-    doc.text(line, marginLeft + 4, y + 12 + i * 4);
-  });
-  doc.setTextColor(0);
+  // Bank details box (only if configured)
+  if (BANK_DETAILS.length > 0) {
+    checkPage(35);
+    y += 4;
+    const boxH = Math.max(32, 12 + BANK_DETAILS.length * 4 + 4);
+    doc.setFillColor(240, 248, 255);
+    doc.setDrawColor(0, 100, 200);
+    doc.roundedRect(marginLeft, y, contentWidth, boxH, 2, 2, "FD");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 80, 160);
+    doc.text("BANKING DETAILS", marginLeft + 4, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(30);
+    BANK_DETAILS.forEach((line, i) => {
+      doc.text(line, marginLeft + 4, y + 12 + i * 4);
+    });
+    doc.setTextColor(0);
+  }
 }
