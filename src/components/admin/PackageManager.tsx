@@ -40,7 +40,22 @@ function PackageForm({
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [sortOrder, setSortOrder] = useState(String(initial?.sort_order || 0));
   const [includesText, setIncludesText] = useState((initial?.includes || []).join("\n"));
+  const [imageUrl, setImageUrl] = useState(initial?.image_url || "");
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const { uploadSiteImage } = await import("@/hooks/useBusinessSettings");
+      const url = await uploadSiteImage(file, "packages");
+      setImageUrl(url);
+      toast({ title: "Image uploaded" });
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
@@ -55,6 +70,7 @@ function PackageForm({
         is_active: isActive,
         sort_order: Number(sortOrder),
         includes: includesText.split("\n").map(s => s.trim()).filter(Boolean),
+        image_url: imageUrl || null,
       });
       toast({ title: "Saved", description: `Package "${name}" saved.` });
     } catch {
@@ -96,6 +112,24 @@ function PackageForm({
         <div className="space-y-2">
           <Label>Includes (one item per line)</Label>
           <Textarea value={includesText} onChange={(e) => setIncludesText(e.target.value)} rows={6} placeholder="5 hours DJ service&#10;Professional sound system&#10;Basic lighting package" />
+        </div>
+        <div className="space-y-2">
+          <Label>Package Image</Label>
+          {imageUrl && (
+            <img src={imageUrl} alt="Package" className="w-full max-h-40 object-cover rounded mb-2" />
+          )}
+          <div className="flex gap-2 items-center">
+            <input
+              type="file"
+              accept="image/*"
+              className="text-xs flex-1"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+            />
+            {imageUrl && (
+              <Button variant="ghost" size="sm" type="button" onClick={() => setImageUrl("")}>Remove</Button>
+            )}
+          </div>
+          {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">

@@ -2,18 +2,22 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Headphones, Calendar } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 
 interface HeroSectionProps {
   onGetQuote: () => void;
 }
 
 export function HeroSection({ onGetQuote }: HeroSectionProps) {
+  const { get } = useBusinessSettings();
+  const customHero = get("hero_image_url");
+  const bg = customHero || heroBg;
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})` }}
+        style={{ backgroundImage: `url(${bg})` }}
       />
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-card">

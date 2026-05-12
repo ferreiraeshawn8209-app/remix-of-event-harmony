@@ -108,19 +108,18 @@ const TC_SECTIONS: TCSection[] = [
 const TRAVEL_NOTE =
   "Travel Costs: The following costs are not included in the package price and will be calculated separately at R7.50 per kilometre: Venue inspection (optional at the request of the client), DJ travel (should the travel distance be outside a 30km radius measured from Hatfield Square, Pretoria, serving as base point). Accommodation for DJs may also be required, depending on the event location and finishing time.";
 
-const BANK_DETAILS = [
-  "Bank: First National Bank",
-  "Account: BEATKULTURE (PTY) LTD",
-  "Account No: 63189325905",
-  "Branch Code: 250655",
-  "Account Type: Current Account",
-  "Please use your name as reference.",
-];
+const DEFAULT_BANK_DETAILS: string[] = [];
 
 /**
  * Adds the full BeatKulture Terms & Conditions as new pages in the PDF.
+ * Pass `bankDetails` to override the banking lines (admin-configured).
  */
-export function addTermsAndConditionsPages(doc: jsPDF, logoBase64: string | null) {
+export function addTermsAndConditionsPages(
+  doc: jsPDF,
+  logoBase64: string | null,
+  bankDetails?: string[],
+) {
+  const BANK_DETAILS = bankDetails && bankDetails.length > 0 ? bankDetails : DEFAULT_BANK_DETAILS;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginLeft = 20;
@@ -238,21 +237,24 @@ export function addTermsAndConditionsPages(doc: jsPDF, logoBase64: string | null
     y += 3;
   }
 
-  // Bank details box
-  checkPage(35);
-  y += 4;
-  doc.setFillColor(240, 248, 255);
-  doc.setDrawColor(0, 100, 200);
-  doc.roundedRect(marginLeft, y, contentWidth, 32, 2, 2, "FD");
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 80, 160);
-  doc.text("BANKING DETAILS", marginLeft + 4, y + 6);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(30);
-  BANK_DETAILS.forEach((line, i) => {
-    doc.text(line, marginLeft + 4, y + 12 + i * 4);
-  });
-  doc.setTextColor(0);
+  // Bank details box (only if configured)
+  if (BANK_DETAILS.length > 0) {
+    checkPage(35);
+    y += 4;
+    const boxH = Math.max(32, 12 + BANK_DETAILS.length * 4 + 4);
+    doc.setFillColor(240, 248, 255);
+    doc.setDrawColor(0, 100, 200);
+    doc.roundedRect(marginLeft, y, contentWidth, boxH, 2, 2, "FD");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 80, 160);
+    doc.text("BANKING DETAILS", marginLeft + 4, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(30);
+    BANK_DETAILS.forEach((line, i) => {
+      doc.text(line, marginLeft + 4, y + 12 + i * 4);
+    });
+    doc.setTextColor(0);
+  }
 }

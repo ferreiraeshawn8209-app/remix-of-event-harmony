@@ -51,6 +51,7 @@ import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
+import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -532,8 +533,13 @@ export default function Admin() {
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="specials">Specials</TabsTrigger>
+              <TabsTrigger value="business">Branding & Banking</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="business">
+              <BusinessSettingsManager />
+            </TabsContent>
 
             <TabsContent value="calendar">
               <CalendarBookings quotes={quotes} />

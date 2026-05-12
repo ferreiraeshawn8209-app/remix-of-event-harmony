@@ -11,6 +11,7 @@ export interface DbPackage {
   popular: boolean;
   is_active: boolean;
   sort_order: number;
+  image_url?: string | null;
 }
 
 export function usePackages() {

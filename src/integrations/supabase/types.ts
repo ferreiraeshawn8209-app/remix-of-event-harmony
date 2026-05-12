@@ -50,6 +50,24 @@ export type Database = {
         }
         Relationships: []
       }
+      business_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       client_access_logs: {
         Row: {
           client_code: string
@@ -310,6 +328,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          image_url: string | null
           includes: Json
           is_active: boolean
           name: string
@@ -323,6 +342,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          image_url?: string | null
           includes?: Json
           is_active?: boolean
           name: string
@@ -336,6 +356,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          image_url?: string | null
           includes?: Json
           is_active?: boolean
           name?: string

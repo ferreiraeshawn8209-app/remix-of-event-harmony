@@ -29,7 +29,13 @@ function PackageCard({ pkg, onSelect }: { pkg: DbPackage; onSelect: (pkg: DbPack
             </Badge>
           </div>
         )}
-        
+
+        {pkg.image_url && (
+          <div className="overflow-hidden rounded-t-lg -mx-px -mt-px">
+            <img src={pkg.image_url} alt={pkg.name} className="w-full h-40 object-cover" loading="lazy" />
+          </div>
+        )}
+
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-xl">{pkg.name}</CardTitle>
           <CardDescription className="text-sm">{pkg.description}</CardDescription>

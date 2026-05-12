@@ -4,6 +4,7 @@ import { DatabaseQuote } from "@/hooks/useQuotes";
 import { EQUIPMENT_CATALOG, formatCurrency } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { addTermsAndConditionsPages } from "@/lib/termsAndConditions";
+import { fetchBankingDetails } from "@/hooks/useBusinessSettings";
 
 export interface CatalogItemForPdf {
   id: string;
@@ -430,6 +431,7 @@ export async function generateInvoicePdf(
 ): Promise<jsPDF> {
   const doc = new jsPDF();
   const logoBase64 = await loadLogoBase64();
+  const bankDetails = await fetchBankingDetails();
   const equipmentImages = await preloadEquipmentImages(quote.equipment || {}, catalogItems);
 
   let y = addLetterhead(doc, logoBase64, "INVOICE", quote);
@@ -441,7 +443,7 @@ export async function generateInvoicePdf(
   addFooter(doc);
 
   // Add full T&Cs as additional pages
-  addTermsAndConditionsPages(doc, logoBase64);
+  addTermsAndConditionsPages(doc, logoBase64, bankDetails);
 
   if (download) {
     // Merge with T&Cs
@@ -466,6 +468,7 @@ export async function generateQuotePdf(
 ): Promise<jsPDF> {
   const doc = new jsPDF();
   const logoBase64 = await loadLogoBase64();
+  const bankDetails = await fetchBankingDetails();
   const equipmentImages = await preloadEquipmentImages(quote.equipment || {}, catalogItems);
 
   let y = addLetterhead(doc, logoBase64, "QUOTE", quote);
@@ -476,7 +479,7 @@ export async function generateQuotePdf(
   addFooter(doc, "This quote is valid for 7 days from the date of issue.");
 
   // Add full T&Cs as additional pages
-  addTermsAndConditionsPages(doc, logoBase64);
+  addTermsAndConditionsPages(doc, logoBase64, bankDetails);
 
   if (download) {
     const mainBytes = doc.output("arraybuffer");
