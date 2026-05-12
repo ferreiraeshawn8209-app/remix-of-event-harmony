@@ -204,7 +204,10 @@ export default function ClientPortal() {
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">{cat}</p>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {list.map(pkg => (
-                      <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30" : ""}>
+                      <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
+                        {pkg.image_url && (
+                          <img src={pkg.image_url} alt={pkg.name} className="w-full h-32 object-cover" loading="lazy" />
+                        )}
                         <CardHeader className="pb-2">
                           <div className="flex items-start justify-between">
                             <CardTitle className="text-base">{pkg.name}</CardTitle>
