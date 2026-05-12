@@ -431,6 +431,7 @@ export async function generateInvoicePdf(
 ): Promise<jsPDF> {
   const doc = new jsPDF();
   const logoBase64 = await loadLogoBase64();
+  const bankDetails = await fetchBankingDetails();
   const equipmentImages = await preloadEquipmentImages(quote.equipment || {}, catalogItems);
 
   let y = addLetterhead(doc, logoBase64, "INVOICE", quote);
@@ -442,7 +443,7 @@ export async function generateInvoicePdf(
   addFooter(doc);
 
   // Add full T&Cs as additional pages
-  addTermsAndConditionsPages(doc, logoBase64);
+  addTermsAndConditionsPages(doc, logoBase64, bankDetails);
 
   if (download) {
     // Merge with T&Cs
