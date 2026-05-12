@@ -40,7 +40,24 @@ function PackageForm({
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [sortOrder, setSortOrder] = useState(String(initial?.sort_order || 0));
   const [includesText, setIncludesText] = useState((initial?.includes || []).join("\n"));
+  const [imageUrl, setImageUrl] = useState(initial?.image_url || "");
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const fileRef = (typeof window !== "undefined") ? null : null;
+  let fileInput: HTMLInputElement | null = null;
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const { uploadSiteImage } = await import("@/hooks/useBusinessSettings");
+      const url = await uploadSiteImage(file, "packages");
+      setImageUrl(url);
+      toast({ title: "Image uploaded" });
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
@@ -55,6 +72,7 @@ function PackageForm({
         is_active: isActive,
         sort_order: Number(sortOrder),
         includes: includesText.split("\n").map(s => s.trim()).filter(Boolean),
+        image_url: imageUrl || null,
       });
       toast({ title: "Saved", description: `Package "${name}" saved.` });
     } catch {
