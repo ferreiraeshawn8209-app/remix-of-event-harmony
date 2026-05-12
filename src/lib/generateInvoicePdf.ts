@@ -468,6 +468,7 @@ export async function generateQuotePdf(
 ): Promise<jsPDF> {
   const doc = new jsPDF();
   const logoBase64 = await loadLogoBase64();
+  const bankDetails = await fetchBankingDetails();
   const equipmentImages = await preloadEquipmentImages(quote.equipment || {}, catalogItems);
 
   let y = addLetterhead(doc, logoBase64, "QUOTE", quote);
@@ -478,7 +479,7 @@ export async function generateQuotePdf(
   addFooter(doc, "This quote is valid for 7 days from the date of issue.");
 
   // Add full T&Cs as additional pages
-  addTermsAndConditionsPages(doc, logoBase64);
+  addTermsAndConditionsPages(doc, logoBase64, bankDetails);
 
   if (download) {
     const mainBytes = doc.output("arraybuffer");
