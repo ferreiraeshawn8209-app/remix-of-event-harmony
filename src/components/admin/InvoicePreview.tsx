@@ -168,10 +168,14 @@ export function InvoicePreview({ open, onOpenChange, quote }: InvoicePreviewProp
             <Separator className="my-3" />
             <div className="text-xs text-muted-foreground">
               <p className="font-semibold mb-1">Banking Details:</p>
-              <p>Bank: First National Bank</p>
-              <p>Account: BEATKULTURE(PTY)LTD</p>
-              <p>Account No: 63189325905</p>
-              <p>Branch Code: 250655</p>
+              {get("bank_name") && <p>Bank: {get("bank_name")}</p>}
+              {get("bank_account_name") && <p>Account: {get("bank_account_name")}</p>}
+              {get("bank_account_number") && <p>Account No: {get("bank_account_number")}</p>}
+              {get("bank_branch_code") && <p>Branch Code: {get("bank_branch_code")}</p>}
+              {get("bank_account_type") && <p>Account Type: {get("bank_account_type")}</p>}
+              {!get("bank_name") && !get("bank_account_number") && (
+                <p className="italic">Banking details not configured. Set them in Admin → Business Settings.</p>
+              )}
               <p className="mt-2 text-primary">Use your name as reference</p>
             </div>
           </div>
