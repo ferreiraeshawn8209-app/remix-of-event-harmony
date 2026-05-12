@@ -43,8 +43,6 @@ function PackageForm({
   const [imageUrl, setImageUrl] = useState(initial?.image_url || "");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const fileRef = (typeof window !== "undefined") ? null : null;
-  let fileInput: HTMLInputElement | null = null;
 
   const handleImageUpload = async (file: File) => {
     setUploading(true);
