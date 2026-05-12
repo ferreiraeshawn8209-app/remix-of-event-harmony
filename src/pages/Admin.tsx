@@ -51,6 +51,7 @@ import { EventPhotoUploader } from "@/components/admin/EventPhotoUploader";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
+import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
 import {
   AlertDialog,
   AlertDialogAction,
