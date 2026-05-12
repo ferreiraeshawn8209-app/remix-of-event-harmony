@@ -533,8 +533,13 @@ export default function Admin() {
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="specials">Specials</TabsTrigger>
+              <TabsTrigger value="business">Branding & Banking</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="business">
+              <BusinessSettingsManager />
+            </TabsContent>
 
             <TabsContent value="calendar">
               <CalendarBookings quotes={quotes} />
