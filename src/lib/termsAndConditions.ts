@@ -108,19 +108,18 @@ const TC_SECTIONS: TCSection[] = [
 const TRAVEL_NOTE =
   "Travel Costs: The following costs are not included in the package price and will be calculated separately at R7.50 per kilometre: Venue inspection (optional at the request of the client), DJ travel (should the travel distance be outside a 30km radius measured from Hatfield Square, Pretoria, serving as base point). Accommodation for DJs may also be required, depending on the event location and finishing time.";
 
-const BANK_DETAILS = [
-  "Bank: First National Bank",
-  "Account: BEATKULTURE (PTY) LTD",
-  "Account No: 63189325905",
-  "Branch Code: 250655",
-  "Account Type: Current Account",
-  "Please use your name as reference.",
-];
+const DEFAULT_BANK_DETAILS: string[] = [];
 
 /**
  * Adds the full BeatKulture Terms & Conditions as new pages in the PDF.
+ * Pass `bankDetails` to override the banking lines (admin-configured).
  */
-export function addTermsAndConditionsPages(doc: jsPDF, logoBase64: string | null) {
+export function addTermsAndConditionsPages(
+  doc: jsPDF,
+  logoBase64: string | null,
+  bankDetails?: string[],
+) {
+  const BANK_DETAILS = bankDetails && bankDetails.length > 0 ? bankDetails : DEFAULT_BANK_DETAILS;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginLeft = 20;
