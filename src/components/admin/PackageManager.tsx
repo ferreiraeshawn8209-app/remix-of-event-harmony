@@ -115,6 +115,24 @@ function PackageForm({
           <Label>Includes (one item per line)</Label>
           <Textarea value={includesText} onChange={(e) => setIncludesText(e.target.value)} rows={6} placeholder="5 hours DJ service&#10;Professional sound system&#10;Basic lighting package" />
         </div>
+        <div className="space-y-2">
+          <Label>Package Image</Label>
+          {imageUrl && (
+            <img src={imageUrl} alt="Package" className="w-full max-h-40 object-cover rounded mb-2" />
+          )}
+          <div className="flex gap-2 items-center">
+            <input
+              type="file"
+              accept="image/*"
+              className="text-xs flex-1"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+            />
+            {imageUrl && (
+              <Button variant="ghost" size="sm" type="button" onClick={() => setImageUrl("")}>Remove</Button>
+            )}
+          </div>
+          {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+        </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Switch checked={popular} onCheckedChange={setPopular} />
