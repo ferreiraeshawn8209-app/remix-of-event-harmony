@@ -10,6 +10,7 @@ import {
   calculateQuote
 } from "@/lib/pricing";
 import { Download, Send, Music, MapPin, Calendar, Clock, User, Phone, Mail } from "lucide-react";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 
 interface InvoicePreviewProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface InvoicePreviewProps {
 }
 
 export function InvoicePreview({ open, onOpenChange, quote }: InvoicePreviewProps) {
+  const { get } = useBusinessSettings();
   if (!quote) return null;
 
   const calculations = calculateQuote(quote);
