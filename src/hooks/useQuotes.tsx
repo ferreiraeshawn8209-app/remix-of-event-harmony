@@ -250,12 +250,31 @@ export function useQuotes() {
         throw error;
       }
 
+      // Auto-trigger AI alarm generation on key status transitions
+      if (status === "sent") {
+        supabase.functions.invoke("generate-alarms", {
+          body: { category: "followup_quoted", quote_id: quoteId },
+        }).catch((e) => console.warn("alarm gen (followup) failed", e));
+      } else if (status === "accepted" || status === "paid") {
+        supabase.functions.invoke("generate-alarms", {
+          body: { category: "event_prep", quote_id: quoteId },
+        }).catch((e) => console.warn("alarm gen (event prep) failed", e));
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["alarms"] });
     },
     onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    },
+  });
       toast({
         title: "Error",
         description: error.message || "Failed to update status",
