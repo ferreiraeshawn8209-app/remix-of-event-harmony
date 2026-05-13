@@ -156,6 +156,25 @@ export default function ClientPortal() {
             <p className="text-sm text-muted-foreground">Browse our packages or request a tailored quote.</p>
           </motion.div>
 
+          {/* Mixcloud Player */}
+          <Card variant="glass" className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Music className="w-4 h-4 text-primary" /> BeatKulture Live Mix
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <iframe
+                width="100%"
+                height="60"
+                src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2FBeatkulture%2F"
+                frameBorder="0"
+                allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
+                title="BeatKulture Mixcloud Player"
+              />
+            </CardContent>
+          </Card>
+
           {/* Specials */}
           {activeSpecials.length > 0 && (
             <section className="space-y-3">
