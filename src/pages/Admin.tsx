@@ -295,6 +295,7 @@ export default function Admin() {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
