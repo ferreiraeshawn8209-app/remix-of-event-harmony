@@ -275,13 +275,6 @@ export function useQuotes() {
       });
     },
   });
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update status",
-        variant: "destructive",
-      });
-    },
-  });
 
   return {
     quotes: quotesQuery.data || [],
