@@ -52,6 +52,8 @@ import { NotificationBell } from "@/components/admin/NotificationBell";
 import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
+import { AlarmsManager } from "@/components/admin/AlarmsManager";
+import { useAlarms } from "@/hooks/useAlarms";
 import {
   AlertDialog,
   AlertDialogAction,
