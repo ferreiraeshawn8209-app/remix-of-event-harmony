@@ -50,6 +50,60 @@ export type Database = {
         }
         Relationships: []
       }
+      alarms: {
+        Row: {
+          ai_reasoning: string | null
+          category: string
+          client_email: string | null
+          client_name: string | null
+          created_at: string
+          description: string
+          done_at: string | null
+          due_at: string
+          id: string
+          is_done: boolean
+          quote_id: string | null
+          quote_request_id: string | null
+          stage: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_reasoning?: string | null
+          category: string
+          client_email?: string | null
+          client_name?: string | null
+          created_at?: string
+          description?: string
+          done_at?: string | null
+          due_at: string
+          id?: string
+          is_done?: boolean
+          quote_id?: string | null
+          quote_request_id?: string | null
+          stage?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_reasoning?: string | null
+          category?: string
+          client_email?: string | null
+          client_name?: string | null
+          created_at?: string
+          description?: string
+          done_at?: string | null
+          due_at?: string
+          id?: string
+          is_done?: boolean
+          quote_id?: string | null
+          quote_request_id?: string | null
+          stage?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_settings: {
         Row: {
           key: string

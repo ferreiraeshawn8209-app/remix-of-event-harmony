@@ -52,11 +52,17 @@ export function useQuoteRequests(clientId?: string | null) {
         .single();
       if (error) throw error;
       // Admin in-app notification is created automatically by DB trigger.
-      // Email notification will be wired up once a sender domain is configured.
+      // Trigger AI alarm cadence so the lead is not forgotten.
+      if (data?.id) {
+        supabase.functions.invoke("generate-alarms", {
+          body: { category: "followup_request", quote_request_id: data.id },
+        }).catch((e) => console.warn("alarm gen (lead) failed", e));
+      }
       return data as QuoteRequest;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quote_requests"] });
+      queryClient.invalidateQueries({ queryKey: ["alarms"] });
       toast({ title: "Request Submitted", description: "We'll prepare your quote and let you know when it's ready." });
     },
     onError: (e: any) => {

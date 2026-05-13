@@ -52,6 +52,8 @@ import { NotificationBell } from "@/components/admin/NotificationBell";
 import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
+import { AlarmsManager } from "@/components/admin/AlarmsManager";
+import { useAlarms } from "@/hooks/useAlarms";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -293,6 +295,7 @@ export default function Admin() {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -535,7 +538,19 @@ export default function Admin() {
               <TabsTrigger value="specials">Specials</TabsTrigger>
               <TabsTrigger value="business">Branding & Banking</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
+              <TabsTrigger value="alarms" className="relative">
+                Alarms
+                {dueCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-destructive text-destructive-foreground">
+                    {dueCount}
+                  </span>
+                )}
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="alarms">
+              <AlarmsManager />
+            </TabsContent>
 
             <TabsContent value="business">
               <BusinessSettingsManager />
