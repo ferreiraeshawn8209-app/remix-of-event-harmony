@@ -75,7 +75,7 @@ export default function Auth() {
           title: "Welcome Back!",
           description: "You have successfully logged in.",
         });
-        navigate(redirectTo);
+        // Redirect happens in the useEffect once the role is resolved.
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
