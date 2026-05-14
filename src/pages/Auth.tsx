@@ -120,7 +120,7 @@ export default function Auth() {
           title: "Account Created!",
           description: "Welcome to BEATKULTURE! You can now access your dashboard.",
         });
-        navigate(redirectTo);
+        // Redirect happens in the useEffect once the role is resolved.
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
