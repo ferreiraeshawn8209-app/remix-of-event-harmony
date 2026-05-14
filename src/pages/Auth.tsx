@@ -42,13 +42,15 @@ export default function Auth() {
   const [signupPhone, setSignupPhone] = useState("");
 
   const explicitRedirect = new URLSearchParams(window.location.search).get("redirect");
-  const redirectTo = explicitRedirect || (isAdmin ? "/dashboard" : "/client");
+  const redirectTo = explicitRedirect || (isAdmin ? "/admin" : "/client");
 
   useEffect(() => {
-    if (user && !authLoading) {
-      navigate(redirectTo);
+    // Wait for profile (and therefore isAdmin) to resolve before redirecting,
+    // otherwise admins get sent to /client before their role is known.
+    if (user && !authLoading && profile) {
+      navigate(explicitRedirect || (isAdmin ? "/admin" : "/client"));
     }
-  }, [user, authLoading, navigate, redirectTo]);
+  }, [user, authLoading, profile, isAdmin, navigate, explicitRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
