@@ -26,7 +26,7 @@ const signInSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
+  const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
