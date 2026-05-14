@@ -35,6 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const hydrateAuthState = async (currentSession: Session | null) => {
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+
+    if (currentSession?.user) {
+      await fetchProfile(currentSession.user);
+      return;
+    }
+
+    setProfile(null);
+    setIsAdmin(false);
+  };
+
   const clearLocalAuthState = async () => {
     try {
       // Clear local session to recover from corrupted/invalid refresh tokens
@@ -140,17 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        try {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+        setIsLoading(true);
 
-          if (currentSession?.user) {
-            // Use setTimeout to avoid potential deadlocks
-            setTimeout(() => fetchProfile(currentSession.user), 0);
-          } else {
-            setProfile(null);
-            setIsAdmin(false);
-          }
+        try {
+          await hydrateAuthState(currentSession);
         } catch (e: any) {
           console.error("Auth state change error:", e);
         } finally {
@@ -179,13 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const initialSession = data.session;
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-
-        if (initialSession?.user) {
-          await fetchProfile(initialSession.user);
-        }
+        await hydrateAuthState(data.session);
       } catch (e: any) {
         const code = e?.code;
         if (code === "refresh_token_not_found") {
