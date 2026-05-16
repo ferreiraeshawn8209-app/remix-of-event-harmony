@@ -14,7 +14,13 @@ import { z } from "zod";
 
 const signUpSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .max(100)
+    .regex(/[A-Z]/, { message: "Password must contain an uppercase letter" })
+    .regex(/[a-z]/, { message: "Password must contain a lowercase letter" })
+    .regex(/[0-9]/, { message: "Password must contain a number" }),
   fullName: z.string().trim().min(1, { message: "Name is required" }).max(100),
   phone: z.string().optional(),
 });
