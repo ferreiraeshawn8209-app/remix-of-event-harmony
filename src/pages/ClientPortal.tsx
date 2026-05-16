@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
+import { PlannerHub } from "@/components/planner/PlannerHub";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -319,17 +320,18 @@ export default function ClientPortal() {
             )}
           </section>
 
-          {/* Coming soon: events organisers / entertainment features */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Wand2 className="w-4 h-4 text-primary" /> Coming Soon
-            </h2>
-            <Card variant="glass">
-              <CardContent className="py-4 text-xs text-muted-foreground">
-                Event organisers and entertainment add-ons will appear here as we add them.
-              </CardContent>
-            </Card>
-          </section>
+          {/* Planning Tools */}
+          <PlannerHub
+            scopeKey={profile?.id || user.id}
+            quote={quotes[0] ? {
+              id: quotes[0].id,
+              event_type: quotes[0].event_type,
+              event_date: quotes[0].event_date,
+              venue: quotes[0].venue,
+              start_time: quotes[0].start_time,
+              end_time: quotes[0].end_time,
+            } : undefined}
+          />
         </main>
       </div>
     );
