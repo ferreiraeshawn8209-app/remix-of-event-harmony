@@ -510,6 +510,17 @@ export default function ClientPortal() {
                 </div>
               </div>
 
+              {/* Deposit policy */}
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 text-xs space-y-1">
+                <p className="font-semibold text-sm text-primary">30% Deposit Required</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  A <strong className="text-foreground">non-refundable 30% deposit</strong> ({formatCurrency(Number(q.deposit))}) secures your booking date.
+                  The <strong className="text-foreground">remaining balance</strong> ({formatCurrency(Number(q.balance))}) is payable
+                  <strong className="text-foreground"> on or before the day of your event</strong>, prior to the DJ performing.
+                  Accepted methods: EFT or cash. Quote validity: 7 days.
+                </p>
+              </div>
+
               {/* Banking */}
               <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs space-y-1">
                 <p className="font-semibold text-sm">Banking Details</p>
@@ -518,6 +529,14 @@ export default function ClientPortal() {
                 <p>Account No: 63189325905</p>
                 <p>Branch Code: 250655</p>
                 <p className="text-muted-foreground">Use your client code <strong className="font-mono">{q.client_code}</strong> as reference.</p>
+              </div>
+
+              {/* Company / Legal details */}
+              <div className="p-3 rounded-lg bg-muted/20 border border-border text-[11px] space-y-0.5 text-muted-foreground">
+                <p className="font-semibold text-foreground text-xs mb-1">BeatKulture Entertainment (Pty) Ltd</p>
+                <p>Registration No: 2025/533623/07</p>
+                <p>Contact: +27 65 528 5528</p>
+                <p>Based in Hatfield, Pretoria — serving all of South Africa.</p>
               </div>
 
               {/* Actions */}
@@ -780,7 +799,12 @@ function Questionnaire({
                   onCheckedChange={(c) => update("needs_special_effects", !!c)}
                 />
                 <div>
-                  <Label htmlFor="effects" className="cursor-pointer flex items-center gap-2"><Wand2 className="w-3 h-3" /> Special effects (smoke, fog, etc.)</Label>
+                  <Label htmlFor="effects" className="cursor-pointer flex items-center gap-2"><Wand2 className="w-3 h-3" /> Special effects</Label>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                    Includes options like <strong className="text-foreground">smoke machines, low fog (for first dances),
+                    laser lights, confetti cannons, bubble machines and uplighters</strong>. Perfect for weddings, birthdays
+                    and high-energy parties. We'll confirm the exact mix with you.
+                  </p>
                 </div>
               </div>
 
