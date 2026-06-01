@@ -1,46 +1,32 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { HeroSection } from "@/components/HeroSection";
-import { ServicesSection } from "@/components/ServicesSection";
-import { PackagesSection } from "@/components/PackagesSection";
-import { EquipmentShowcase } from "@/components/EquipmentShowcase";
-import { QuoteCalculator } from "@/components/QuoteCalculator";
-import { Footer } from "@/components/Footer";
-import { DbPackage } from "@/hooks/usePackages";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
+/**
+ * Root route is gated: visitors must sign in / sign up first.
+ * - Not authenticated  → /auth
+ * - Admin              → /admin
+ * - Client             → /client
+ */
 const Index = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [selectedPackage, setSelectedPackage] = useState<DbPackage | null>(null);
+  const { user, profile, isAdmin, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!location.hash) return;
-    const id = location.hash.slice(1);
-    window.setTimeout(() => {
-      const el = document.getElementById(id);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
-  }, [location.hash]);
-
-  const handlePackageSelect = (pkg: DbPackage) => {
-    setSelectedPackage(pkg);
-    window.setTimeout(() => {
-      document.getElementById('quote-calculator')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
+    if (isLoading) return;
+    if (!user) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+    // Wait for profile to resolve so we know if they're admin
+    if (!profile) return;
+    navigate(isAdmin ? "/admin" : "/client", { replace: true });
+  }, [user, profile, isAdmin, isLoading, navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <HeroSection onGetQuote={() => navigate("/#quote-calculator")} />
-      <ServicesSection />
-      <PackagesSection onSelectPackage={handlePackageSelect} />
-      <EquipmentShowcase />
-      <div id="quote-calculator" className="scroll-mt-24">
-        <QuoteCalculator selectedPackage={selectedPackage} onClearPackage={() => setSelectedPackage(null)} />
-      </div>
-      <Footer />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   );
 };
