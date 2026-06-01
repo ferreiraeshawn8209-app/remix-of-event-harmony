@@ -146,29 +146,37 @@ export default function ClientPortal() {
   // ─── DASHBOARD ────────────────────────────────────────────
   if (view === "dashboard") {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-24">
         <Header profile={profile} onSignOut={handleSignOut} />
         <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
-          {/* Welcome */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="font-display text-2xl font-bold">
+          {/* Welcome + Slogan */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+            <h1 className="font-display text-2xl md:text-3xl font-bold">
               Welcome, <span className="gradient-text">{profile?.full_name || user.email}</span>
             </h1>
-            <p className="text-sm text-muted-foreground">Browse our packages or request a tailored quote.</p>
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+              Pick one of our <span className="text-foreground font-semibold">ready-made packages</span> below —
+              or, if you'd prefer something <span className="text-foreground font-semibold">tailored to your needs</span>,
+              tap the button to request a <span className="text-primary font-semibold">custom quotation</span>.
+            </p>
           </motion.div>
 
-          {/* Mixcloud Player */}
-          <Card variant="glass" className="overflow-hidden">
+          {/* Mixcloud Player with caption */}
+          <Card variant="glass" className="overflow-hidden border-primary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Music className="w-4 h-4 text-primary" /> BeatKulture Live Mix
+                <Music className="w-4 h-4 text-primary" /> Have a listen to our mixes
               </CardTitle>
+              <CardDescription className="text-xs leading-relaxed">
+                Scroll through our DJ mixes to help you decide which DJ suits your event. Each mix shows the DJ who made it
+                and covers different styles — <span className="text-foreground">Amapiano, House, Afrikaans, English, Modern, Old School &amp; Mixed</span>.
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <iframe
                 width="100%"
-                height="60"
-                src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2FBeatkulture%2F"
+                height="120"
+                src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=%2FBeatkulture%2F"
                 frameBorder="0"
                 allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
                 title="BeatKulture Mixcloud Player"
@@ -197,68 +205,75 @@ export default function ClientPortal() {
             </section>
           )}
 
-          {/* CTA: Request Custom Quote */}
-          <Card variant="glass" className="border-primary/30">
-            <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold">Need something tailored?</p>
-                <p className="text-xs text-muted-foreground">Tell us about your event and we'll prepare a custom quote.</p>
-              </div>
-              <Button variant="hero" onClick={() => setView("questionnaire")}>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Request Custom Quote
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Packages */}
-          <section className="space-y-3">
+          {/* Packages — Corporate, Wedding, Private Party */}
+          <section className="space-y-4">
             <h2 className="text-sm font-semibold flex items-center gap-2">
-              <PartyPopper className="w-4 h-4 text-primary" /> Available Packages
+              <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
             </h2>
             {Object.keys(packagesByCategory).length === 0 ? (
               <p className="text-xs text-muted-foreground">No packages available right now.</p>
             ) : (
-              Object.entries(packagesByCategory).map(([cat, list]) => (
-                <div key={cat} className="space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{cat}</p>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {list.map(pkg => (
-                      <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
-                        {pkg.image_url && (
-                          <img src={pkg.image_url} alt={pkg.name} className="w-full h-32 object-cover" loading="lazy" />
-                        )}
-                        <CardHeader className="pb-2">
-                          <div className="flex items-start justify-between">
-                            <CardTitle className="text-base">{pkg.name}</CardTitle>
-                            {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
-                          </div>
-                          <CardDescription className="text-xs">{pkg.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <ul className="text-xs text-muted-foreground space-y-1">
-                            {(pkg.includes || []).slice(0, 5).map((it, i) => (
-                              <li key={i} className="flex items-start gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {it}
-                              </li>
-                            ))}
-                          </ul>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => setView("questionnaire")}
-                          >
-                            Request This Package
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
+              (["corporate", "wedding", "party", "other"] as const)
+                .filter(cat => packagesByCategory[cat])
+                .map(cat => (
+                  <div key={cat} className="space-y-2">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+                      {cat === "party" ? "Private Party" : cat.charAt(0).toUpperCase() + cat.slice(1)} Packages
+                    </p>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {packagesByCategory[cat].map(pkg => (
+                        <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
+                          {pkg.image_url && (
+                            <img src={pkg.image_url} alt={pkg.name} className="w-full h-32 object-cover" loading="lazy" />
+                          )}
+                          <CardHeader className="pb-2">
+                            <div className="flex items-start justify-between">
+                              <CardTitle className="text-base">{pkg.name}</CardTitle>
+                              {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
+                            </div>
+                            <CardDescription className="text-xs">{pkg.description}</CardDescription>
+                            <p className="text-primary font-bold text-sm pt-1">{formatCurrency(pkg.price)}</p>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <ul className="text-xs text-muted-foreground space-y-1">
+                              {(pkg.includes || []).slice(0, 5).map((it, i) => (
+                                <li key={i} className="flex items-start gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {it}
+                                </li>
+                              ))}
+                            </ul>
+                            <Button
+                              variant="hero"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => setView("questionnaire")}
+                            >
+                              Select &amp; Confirm
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))
             )}
           </section>
+
+          {/* CTA: Request Custom Quote */}
+          <Card variant="glass" className="border-primary/40 bg-primary/5">
+            <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold">Prefer something tailored?</p>
+                <p className="text-xs text-muted-foreground">
+                  Tell us about your event — venue, date, times, special effects — and we'll prepare a custom quote.
+                </p>
+              </div>
+              <Button variant="hero" onClick={() => setView("questionnaire")}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Request Custom Quotation
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* My Requests / Quotes */}
           <section className="space-y-3">
@@ -270,7 +285,6 @@ export default function ClientPortal() {
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             ) : (
               <div className="space-y-2">
-                {/* Pending requests (no quote yet) */}
                 {requests.filter(r => !r.quote_id).map(r => (
                   <Card key={r.id} variant="glass">
                     <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">
@@ -288,7 +302,6 @@ export default function ClientPortal() {
                   </Card>
                 ))}
 
-                {/* Existing quotes */}
                 {quotes.map(q => (
                   <Card key={q.id} variant="glass">
                     <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">
@@ -497,6 +510,17 @@ export default function ClientPortal() {
                 </div>
               </div>
 
+              {/* Deposit policy */}
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 text-xs space-y-1">
+                <p className="font-semibold text-sm text-primary">30% Deposit Required</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  A <strong className="text-foreground">non-refundable 30% deposit</strong> ({formatCurrency(Number(q.deposit))}) secures your booking date.
+                  The <strong className="text-foreground">remaining balance</strong> ({formatCurrency(Number(q.balance))}) is payable
+                  <strong className="text-foreground"> on or before the day of your event</strong>, prior to the DJ performing.
+                  Accepted methods: EFT or cash. Quote validity: 7 days.
+                </p>
+              </div>
+
               {/* Banking */}
               <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs space-y-1">
                 <p className="font-semibold text-sm">Banking Details</p>
@@ -505,6 +529,14 @@ export default function ClientPortal() {
                 <p>Account No: 63189325905</p>
                 <p>Branch Code: 250655</p>
                 <p className="text-muted-foreground">Use your client code <strong className="font-mono">{q.client_code}</strong> as reference.</p>
+              </div>
+
+              {/* Company / Legal details */}
+              <div className="p-3 rounded-lg bg-muted/20 border border-border text-[11px] space-y-0.5 text-muted-foreground">
+                <p className="font-semibold text-foreground text-xs mb-1">BeatKulture Entertainment (Pty) Ltd</p>
+                <p>Registration No: 2025/533623/07</p>
+                <p>Contact: +27 65 528 5528</p>
+                <p>Based in Hatfield, Pretoria — serving all of South Africa.</p>
               </div>
 
               {/* Actions */}
@@ -767,7 +799,12 @@ function Questionnaire({
                   onCheckedChange={(c) => update("needs_special_effects", !!c)}
                 />
                 <div>
-                  <Label htmlFor="effects" className="cursor-pointer flex items-center gap-2"><Wand2 className="w-3 h-3" /> Special effects (smoke, fog, etc.)</Label>
+                  <Label htmlFor="effects" className="cursor-pointer flex items-center gap-2"><Wand2 className="w-3 h-3" /> Special effects</Label>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                    Includes options like <strong className="text-foreground">smoke machines, low fog (for first dances),
+                    laser lights, confetti cannons, bubble machines and uplighters</strong>. Perfect for weddings, birthdays
+                    and high-energy parties. We'll confirm the exact mix with you.
+                  </p>
                 </div>
               </div>
 
