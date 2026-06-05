@@ -214,9 +214,9 @@ export function EquipmentManager() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/*,image/gif"
                       className="hidden"
-                      onChange={handleImageUpload}
+                      onChange={handleImagePick}
                     />
                     <Button
                       variant="outline"
