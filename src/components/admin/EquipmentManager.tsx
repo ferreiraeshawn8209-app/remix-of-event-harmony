@@ -231,6 +231,15 @@ export function EquipmentManager() {
                       )}
                       {uploading ? "Uploading..." : "Upload Image"}
                     </Button>
+                    <p className="text-[11px] text-muted-foreground">Crop on the next step. GIFs upload as-is.</p>
+                    <ImageCropDialog
+                      file={pendingFile}
+                      open={!!pendingFile}
+                      onClose={() => setPendingFile(null)}
+                      onConfirm={handleImageUpload}
+                      defaultAspect="4:3"
+                      title="Crop Equipment Image"
+                    />
                     <p className="text-xs text-muted-foreground">Or paste a URL:</p>
                     <Input
                       value={editingItem.image_url}
