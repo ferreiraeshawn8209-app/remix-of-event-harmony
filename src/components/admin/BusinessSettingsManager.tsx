@@ -27,9 +27,7 @@ function ImageSettingRow({
 
   useEffect(() => { setUrl(get(settingKey)); }, [get(settingKey)]);
 
-  const handleUpload = async () => {
-    const f = fileRef.current?.files?.[0];
-    if (!f) { toast({ title: "Choose a file first", variant: "destructive" }); return; }
+  const doUpload = async (f: File) => {
     setBusy(true);
     try {
       const publicUrl = await uploadSiteImage(f, settingKey);
@@ -41,6 +39,12 @@ function ImageSettingRow({
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });
     }
     setBusy(false);
+  };
+
+  const handlePick = () => {
+    const f = fileRef.current?.files?.[0];
+    if (!f) { toast({ title: "Choose a file first", variant: "destructive" }); return; }
+    setPendingFile(f);
   };
 
   const handleClear = async () => {
