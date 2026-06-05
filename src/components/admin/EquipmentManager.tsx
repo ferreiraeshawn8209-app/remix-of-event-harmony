@@ -50,6 +50,7 @@ export function EquipmentManager() {
   const { items, isLoading, saveItem, deleteItem, isSaving, isDeleting } = useEquipmentCatalog();
   const [editingItem, setEditingItem] = useState<EditForm | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = [...new Set(items.map((i) => i.category))];
