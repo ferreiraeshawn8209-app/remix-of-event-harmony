@@ -8,19 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { useSpecials } from "@/hooks/useSpecials";
 import { toast } from "@/hooks/use-toast";
 import { Image as ImageIcon, Upload, Trash2, Loader2, Sparkles } from "lucide-react";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 export function SpecialsManager() {
   const { specials, isLoading, uploadSpecial, toggleSpecial, deleteSpecial } = useSpecials();
   const [title, setTitle] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async () => {
-    const file = fileRef.current?.files?.[0];
-    if (!file) {
-      toast({ title: "No file selected", variant: "destructive" });
-      return;
-    }
+  const doUpload = async (file: File) => {
     setUploading(true);
     try {
       await uploadSpecial(file, title);
@@ -32,6 +29,16 @@ export function SpecialsManager() {
     }
     setUploading(false);
   };
+
+  const handlePick = () => {
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      toast({ title: "No file selected", variant: "destructive" });
+      return;
+    }
+    setPendingFile(file);
+  };
+
 
   return (
     <Card variant="glass">
