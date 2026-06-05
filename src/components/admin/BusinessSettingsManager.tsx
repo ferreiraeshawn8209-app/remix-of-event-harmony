@@ -192,11 +192,13 @@ export function BusinessSettingsManager() {
             label="Homepage Hero Image"
             description="Big background photo behind 'Your Event, Our Beat' on the homepage."
             settingKey="hero_image_url"
+            defaultAspect="16:9"
           />
           <ImageSettingRow
             label="Site Background Image"
             description="Optional global background tint shown across the app."
             settingKey="site_background_url"
+            defaultAspect="21:9"
           />
         </CardContent>
       </Card>
