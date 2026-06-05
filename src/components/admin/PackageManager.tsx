@@ -12,6 +12,7 @@ import { Loader2, Plus, Pencil, Trash2, Save, X, Star } from "lucide-react";
 import { usePackages, DbPackage } from "@/hooks/usePackages";
 import { formatCurrency } from "@/lib/pricing";
 import { toast } from "@/hooks/use-toast";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
