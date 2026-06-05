@@ -69,17 +69,15 @@ export function EquipmentManager() {
     });
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingItem) return;
-
+  const handleImageUpload = async (file: File) => {
+    if (!editingItem) return;
     setUploading(true);
     const ext = file.name.split(".").pop();
     const fileName = `${editingItem.item_key || Date.now()}-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("equipment-images")
-      .upload(fileName, file, { upsert: true });
+      .upload(fileName, file, { upsert: true, contentType: file.type });
 
     if (uploadError) {
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
@@ -95,6 +93,13 @@ export function EquipmentManager() {
     setUploading(false);
     toast({ title: "Image uploaded", description: "Image ready to save." });
   };
+
+  const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setPendingFile(file);
+    e.target.value = "";
+  };
+
 
   const handleSave = async () => {
     if (!editingItem || !editingItem.name.trim() || !editingItem.item_key.trim()) return;
