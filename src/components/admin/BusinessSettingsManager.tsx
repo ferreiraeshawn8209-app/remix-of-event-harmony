@@ -73,8 +73,8 @@ function ImageSettingRow({
         </div>
       )}
       <div className="flex flex-col sm:flex-row gap-2">
-        <input ref={fileRef} type="file" accept="image/*" className="text-xs flex-1" />
-        <Button size="sm" onClick={handleUpload} disabled={busy}>
+        <input ref={fileRef} type="file" accept="image/*,image/gif" className="text-xs flex-1" />
+        <Button size="sm" onClick={handlePick} disabled={busy}>
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
           Upload
         </Button>
@@ -82,6 +82,15 @@ function ImageSettingRow({
           <Button size="sm" variant="ghost" onClick={handleClear} disabled={busy}>Clear</Button>
         )}
       </div>
+      <p className="text-[11px] text-muted-foreground">You can crop on the next step. Animated GIFs upload as-is.</p>
+      <ImageCropDialog
+        file={pendingFile}
+        open={!!pendingFile}
+        onClose={() => setPendingFile(null)}
+        onConfirm={doUpload}
+        defaultAspect={defaultAspect}
+        title={`Crop ${label}`}
+      />
     </div>
   );
 }
