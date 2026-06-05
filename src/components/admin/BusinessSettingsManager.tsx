@@ -12,14 +12,17 @@ function ImageSettingRow({
   label,
   description,
   settingKey,
+  defaultAspect = "free",
 }: {
   label: string;
   description: string;
   settingKey: BusinessSettingKey;
+  defaultAspect?: "free" | "16:9" | "1:1" | "4:3" | "3:4" | "9:16" | "3:2" | "21:9";
 }) {
   const { get, setSetting } = useBusinessSettings();
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState(get(settingKey));
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setUrl(get(settingKey)); }, [get(settingKey)]);
