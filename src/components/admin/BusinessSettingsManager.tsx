@@ -6,26 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Save, Upload, Image as ImageIcon, Banknote } from "lucide-react";
 import { useBusinessSettings, uploadSiteImage, BusinessSettingKey } from "@/hooks/useBusinessSettings";
 import { toast } from "@/hooks/use-toast";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 function ImageSettingRow({
   label,
   description,
   settingKey,
+  defaultAspect = "free",
 }: {
   label: string;
   description: string;
   settingKey: BusinessSettingKey;
+  defaultAspect?: "free" | "16:9" | "1:1" | "4:3" | "3:4" | "9:16" | "3:2" | "21:9";
 }) {
   const { get, setSetting } = useBusinessSettings();
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState(get(settingKey));
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setUrl(get(settingKey)); }, [get(settingKey)]);
 
-  const handleUpload = async () => {
-    const f = fileRef.current?.files?.[0];
-    if (!f) { toast({ title: "Choose a file first", variant: "destructive" }); return; }
+  const doUpload = async (f: File) => {
     setBusy(true);
     try {
       const publicUrl = await uploadSiteImage(f, settingKey);
@@ -37,6 +39,12 @@ function ImageSettingRow({
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });
     }
     setBusy(false);
+  };
+
+  const handlePick = () => {
+    const f = fileRef.current?.files?.[0];
+    if (!f) { toast({ title: "Choose a file first", variant: "destructive" }); return; }
+    setPendingFile(f);
   };
 
   const handleClear = async () => {
@@ -65,8 +73,8 @@ function ImageSettingRow({
         </div>
       )}
       <div className="flex flex-col sm:flex-row gap-2">
-        <input ref={fileRef} type="file" accept="image/*" className="text-xs flex-1" />
-        <Button size="sm" onClick={handleUpload} disabled={busy}>
+        <input ref={fileRef} type="file" accept="image/*,image/gif" className="text-xs flex-1" />
+        <Button size="sm" onClick={handlePick} disabled={busy}>
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
           Upload
         </Button>
@@ -74,6 +82,15 @@ function ImageSettingRow({
           <Button size="sm" variant="ghost" onClick={handleClear} disabled={busy}>Clear</Button>
         )}
       </div>
+      <p className="text-[11px] text-muted-foreground">You can crop on the next step. Animated GIFs upload as-is.</p>
+      <ImageCropDialog
+        file={pendingFile}
+        open={!!pendingFile}
+        onClose={() => setPendingFile(null)}
+        onConfirm={doUpload}
+        defaultAspect={defaultAspect}
+        title={`Crop ${label}`}
+      />
     </div>
   );
 }
@@ -175,11 +192,13 @@ export function BusinessSettingsManager() {
             label="Homepage Hero Image"
             description="Big background photo behind 'Your Event, Our Beat' on the homepage."
             settingKey="hero_image_url"
+            defaultAspect="16:9"
           />
           <ImageSettingRow
             label="Site Background Image"
             description="Optional global background tint shown across the app."
             settingKey="site_background_url"
+            defaultAspect="21:9"
           />
         </CardContent>
       </Card>

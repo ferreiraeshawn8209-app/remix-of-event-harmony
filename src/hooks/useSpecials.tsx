@@ -32,7 +32,7 @@ export function useSpecials() {
     const path = `${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("specials-images")
-      .upload(path, file);
+      .upload(path, file, { contentType: file.type || undefined });
     if (uploadError) throw uploadError;
 
     const { data: urlData } = supabase.storage

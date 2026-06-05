@@ -12,6 +12,7 @@ import { Loader2, Plus, Pencil, Trash2, Save, X, Star } from "lucide-react";
 import { usePackages, DbPackage } from "@/hooks/usePackages";
 import { formatCurrency } from "@/lib/pricing";
 import { toast } from "@/hooks/use-toast";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -43,6 +44,7 @@ function PackageForm({
   const [imageUrl, setImageUrl] = useState(initial?.image_url || "");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const handleImageUpload = async (file: File) => {
     setUploading(true);
@@ -121,16 +123,25 @@ function PackageForm({
           <div className="flex gap-2 items-center">
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,image/gif"
               className="text-xs flex-1"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) setPendingFile(f); e.target.value = ""; }}
             />
             {imageUrl && (
               <Button variant="ghost" size="sm" type="button" onClick={() => setImageUrl("")}>Remove</Button>
             )}
           </div>
           {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+          <p className="text-[11px] text-muted-foreground">GIFs are uploaded as-is to preserve animation.</p>
         </div>
+        <ImageCropDialog
+          file={pendingFile}
+          open={!!pendingFile}
+          onClose={() => setPendingFile(null)}
+          onConfirm={handleImageUpload}
+          defaultAspect="16:9"
+          title="Crop Package Image"
+        />
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Switch checked={popular} onCheckedChange={setPopular} />

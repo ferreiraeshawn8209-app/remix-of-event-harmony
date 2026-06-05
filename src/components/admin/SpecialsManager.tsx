@@ -8,19 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { useSpecials } from "@/hooks/useSpecials";
 import { toast } from "@/hooks/use-toast";
 import { Image as ImageIcon, Upload, Trash2, Loader2, Sparkles } from "lucide-react";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 export function SpecialsManager() {
   const { specials, isLoading, uploadSpecial, toggleSpecial, deleteSpecial } = useSpecials();
   const [title, setTitle] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async () => {
-    const file = fileRef.current?.files?.[0];
-    if (!file) {
-      toast({ title: "No file selected", variant: "destructive" });
-      return;
-    }
+  const doUpload = async (file: File) => {
     setUploading(true);
     try {
       await uploadSpecial(file, title);
@@ -32,6 +29,16 @@ export function SpecialsManager() {
     }
     setUploading(false);
   };
+
+  const handlePick = () => {
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      toast({ title: "No file selected", variant: "destructive" });
+      return;
+    }
+    setPendingFile(file);
+  };
+
 
   return (
     <Card variant="glass">
@@ -59,14 +66,23 @@ export function SpecialsManager() {
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
+              accept="image/*,image/gif"
               className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
+            <p className="text-[11px] text-muted-foreground">You can crop on the next step. Animated GIFs upload as-is.</p>
           </div>
-          <Button onClick={handleUpload} disabled={uploading}>
+          <Button onClick={handlePick} disabled={uploading}>
             {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
             Upload Special
           </Button>
+          <ImageCropDialog
+            file={pendingFile}
+            open={!!pendingFile}
+            onClose={() => setPendingFile(null)}
+            onConfirm={doUpload}
+            defaultAspect="16:9"
+            title="Crop Special Banner"
+          />
         </div>
 
         {/* Existing Specials */}

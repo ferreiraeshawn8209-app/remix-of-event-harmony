@@ -44,6 +44,7 @@ export async function uploadSiteImage(file: File, prefix = "general"): Promise<s
   const { error } = await supabase.storage.from("site-images").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
+    contentType: file.type || undefined,
   });
   if (error) throw error;
   return supabase.storage.from("site-images").getPublicUrl(path).data.publicUrl;
