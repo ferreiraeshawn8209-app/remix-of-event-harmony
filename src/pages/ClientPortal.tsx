@@ -226,7 +226,9 @@ export default function ClientPortal() {
                       {packagesByCategory[cat].map(pkg => (
                         <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
                           {pkg.image_url && (
-                            <img src={pkg.image_url} alt={pkg.name} className="w-full h-32 object-cover" loading="lazy" />
+                            <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
+                            </div>
                           )}
                           <CardHeader className="pb-2">
                             <div className="flex items-start justify-between">
