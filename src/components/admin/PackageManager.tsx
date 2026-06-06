@@ -118,7 +118,9 @@ function PackageForm({
         <div className="space-y-2">
           <Label>Package Image</Label>
           {imageUrl && (
-            <img src={imageUrl} alt="Package" className="w-full max-h-40 object-cover rounded mb-2" />
+            <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center rounded mb-2 overflow-hidden">
+              <img src={imageUrl} alt="Package" className="w-full h-full object-contain" />
+            </div>
           )}
           <div className="flex gap-2 items-center">
             <input

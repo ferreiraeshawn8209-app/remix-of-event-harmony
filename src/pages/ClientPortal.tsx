@@ -193,7 +193,9 @@ export default function ClientPortal() {
               <div className="grid sm:grid-cols-2 gap-3">
                 {activeSpecials.map((s) => (
                   <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/20">
-                    <img src={s.image_url} alt={s.title || "Special"} className="w-full h-auto max-h-56 object-cover" />
+                    <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                      <img src={s.image_url} alt={s.title || "Special"} className="w-full h-full object-contain" />
+                    </div>
                     {s.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
                         <p className="text-white text-sm font-semibold">{s.title}</p>
@@ -224,7 +226,9 @@ export default function ClientPortal() {
                       {packagesByCategory[cat].map(pkg => (
                         <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
                           {pkg.image_url && (
-                            <img src={pkg.image_url} alt={pkg.name} className="w-full h-32 object-cover" loading="lazy" />
+                            <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
+                            </div>
                           )}
                           <CardHeader className="pb-2">
                             <div className="flex items-start justify-between">
