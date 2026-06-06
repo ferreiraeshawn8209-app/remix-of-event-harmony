@@ -998,6 +998,36 @@ export default function Admin() {
         </motion.div>
       </main>
 
+      {/* Decline / Reject reason dialog */}
+      <Dialog open={!!declineDialog} onOpenChange={(o) => { if (!o) { setDeclineDialog(null); setDeclineReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {declineDialog?.status === "rejected" ? "Reject Quote" : "Decline Quote"}
+            </DialogTitle>
+            <DialogDescription>
+              Add a short reason — this is archived for market research (e.g. "Too expensive", "Date unavailable", "Chose another DJ").
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={declineReason}
+            onChange={(e) => setDeclineReason(e.target.value)}
+            placeholder="Reason for declining / rejecting…"
+            rows={4}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeclineDialog(null); setDeclineReason(""); }}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDecline}>
+              <Archive className="w-4 h-4 mr-1" />
+              Archive Quote
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Quote Detail Modal */}
       {selectedQuote && (
         <QuoteDetailModal 
