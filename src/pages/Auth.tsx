@@ -34,7 +34,10 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [tab, setTab] = useState<"login" | "signup">("login");
+  const initialTab = (new URLSearchParams(window.location.search).get("tab") === "signup"
+    ? "signup"
+    : "login") as "login" | "signup";
+  const [tab, setTab] = useState<"login" | "signup">(initialTab);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
