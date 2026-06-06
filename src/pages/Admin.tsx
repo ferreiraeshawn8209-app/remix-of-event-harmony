@@ -366,17 +366,31 @@ export default function Admin() {
     }
   };
 
-  // Filter quotes
-  const filteredQuotes = quotes.filter(quote => {
-    const matchesSearch = 
-      quote.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quote.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (quote.venue?.toLowerCase() || "").includes(searchQuery.toLowerCase());
-    
+  const isArchivedStatus = (s?: string | null) => s === "declined" || s === "rejected";
+
+  // Active = everything not archived; Archived = declined/rejected
+  const activeQuotes = useMemo(() => quotes.filter(q => !isArchivedStatus(q.status)), [quotes]);
+  const archivedQuotes = useMemo(
+    () => quotes.filter(q => isArchivedStatus(q.status))
+      .sort((a: any, b: any) => new Date(b.declined_at || b.updated_at || 0).getTime() - new Date(a.declined_at || a.updated_at || 0).getTime()),
+    [quotes],
+  );
+
+  const matchesSearch = (quote: DatabaseQuote) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      quote.client_name.toLowerCase().includes(q) ||
+      quote.email.toLowerCase().includes(q) ||
+      (quote.venue?.toLowerCase() || "").includes(q)
+    );
+  };
+
+  const filteredQuotes = activeQuotes.filter(quote => {
     const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch(quote) && matchesStatus;
   });
+
+  const filteredArchived = archivedQuotes.filter(matchesSearch);
 
   // Stats
   const stats = {
