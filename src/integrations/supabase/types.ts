@@ -589,6 +589,8 @@ export type Database = {
           created_by: string | null
           custom_items: Json | null
           custom_items_cost: number | null
+          decline_reason: string | null
+          declined_at: string | null
           deposit: number | null
           deposit_paid: boolean
           deposit_paid_at: string | null
@@ -628,6 +630,8 @@ export type Database = {
           created_by?: string | null
           custom_items?: Json | null
           custom_items_cost?: number | null
+          decline_reason?: string | null
+          declined_at?: string | null
           deposit?: number | null
           deposit_paid?: boolean
           deposit_paid_at?: string | null
@@ -667,6 +671,8 @@ export type Database = {
           created_by?: string | null
           custom_items?: Json | null
           custom_items_cost?: number | null
+          decline_reason?: string | null
+          declined_at?: string | null
           deposit?: number | null
           deposit_paid?: boolean
           deposit_paid_at?: string | null
@@ -851,6 +857,8 @@ export type Database = {
           created_by: string | null
           custom_items: Json | null
           custom_items_cost: number | null
+          decline_reason: string | null
+          declined_at: string | null
           deposit: number | null
           deposit_paid: boolean
           deposit_paid_at: string | null
