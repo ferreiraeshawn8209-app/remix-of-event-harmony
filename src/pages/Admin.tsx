@@ -303,9 +303,8 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
+  const [declineDialog, setDeclineDialog] = useState<{ quoteId: string; status: string } | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
       navigate("/auth");
     } else if (!authLoading && user && !isAdmin) {
       toast({
