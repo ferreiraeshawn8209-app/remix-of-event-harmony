@@ -1,0 +1,1 @@
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS decline_reason text, ADD COLUMN IF NOT EXISTS declined_at timestamptz;

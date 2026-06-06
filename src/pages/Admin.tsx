@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Archive } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -300,6 +303,8 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
+  const [declineDialog, setDeclineDialog] = useState<{ quoteId: string; status: string } | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -320,6 +325,12 @@ export default function Admin() {
   };
 
   const handleStatusChange = async (quoteId: string, status: string) => {
+    // For declined/rejected, prompt for a reason before applying
+    if (status === "declined" || status === "rejected") {
+      setDeclineReason("");
+      setDeclineDialog({ quoteId, status });
+      return;
+    }
     try {
       await updateQuoteStatus(quoteId, status);
       toast({
@@ -331,6 +342,22 @@ export default function Admin() {
     }
   };
 
+  const confirmDecline = async () => {
+    if (!declineDialog) return;
+    if (!declineReason.trim()) {
+      toast({ title: "Reason required", description: "Please add a short reason — used for market research.", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateQuoteStatus(declineDialog.quoteId, declineDialog.status, declineReason.trim());
+      toast({ title: "Quote Archived", description: `Marked as ${declineDialog.status} with reason recorded.` });
+      setDeclineDialog(null);
+      setDeclineReason("");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleDeleteQuote = async (quoteId: string) => {
     try {
       await deleteQuote(quoteId);
@@ -339,17 +366,31 @@ export default function Admin() {
     }
   };
 
-  // Filter quotes
-  const filteredQuotes = quotes.filter(quote => {
-    const matchesSearch = 
-      quote.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quote.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (quote.venue?.toLowerCase() || "").includes(searchQuery.toLowerCase());
-    
+  const isArchivedStatus = (s?: string | null) => s === "declined" || s === "rejected";
+
+  // Active = everything not archived; Archived = declined/rejected
+  const activeQuotes = useMemo(() => quotes.filter(q => !isArchivedStatus(q.status)), [quotes]);
+  const archivedQuotes = useMemo(
+    () => quotes.filter(q => isArchivedStatus(q.status))
+      .sort((a: any, b: any) => new Date(b.declined_at || b.updated_at || 0).getTime() - new Date(a.declined_at || a.updated_at || 0).getTime()),
+    [quotes],
+  );
+
+  const matchesSearch = (quote: DatabaseQuote) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      quote.client_name.toLowerCase().includes(q) ||
+      quote.email.toLowerCase().includes(q) ||
+      (quote.venue?.toLowerCase() || "").includes(q)
+    );
+  };
+
+  const filteredQuotes = activeQuotes.filter(quote => {
     const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch(quote) && matchesStatus;
   });
+
+  const filteredArchived = archivedQuotes.filter(matchesSearch);
 
   // Stats
   const stats = {
@@ -525,7 +566,15 @@ export default function Admin() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
               <TabsTrigger value="requests">Quote Requests</TabsTrigger>
-              <TabsTrigger value="quotes">All Quotes</TabsTrigger>
+              <TabsTrigger value="quotes">Active Quotes</TabsTrigger>
+              <TabsTrigger value="archived" className="relative">
+                <Archive className="w-3.5 h-3.5 mr-1" /> Archived
+                {archivedQuotes.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground">
+                    {archivedQuotes.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="calendar">Calendar</TabsTrigger>
               <TabsTrigger value="finance">Finance</TabsTrigger>
               <TabsTrigger value="events">Events & QR</TabsTrigger>
@@ -607,12 +656,10 @@ export default function Admin() {
                           <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="all">All Active</SelectItem>
                           <SelectItem value="draft">Draft</SelectItem>
                           <SelectItem value="sent">Sent</SelectItem>
                           <SelectItem value="accepted">Accepted</SelectItem>
-                          <SelectItem value="declined">Declined</SelectItem>
-                          <SelectItem value="rejected">Rejected</SelectItem>
                           <SelectItem value="paid">Paid</SelectItem>
                         </SelectContent>
                       </Select>
@@ -657,6 +704,121 @@ export default function Admin() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="archived">
+              <Card variant="glass">
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Archive className="w-5 h-5 text-muted-foreground" /> Archived Quotes
+                      </CardTitle>
+                      <CardDescription>
+                        Declined &amp; rejected quotes with reasons — useful for market research.
+                      </CardDescription>
+                    </div>
+                    <div className="relative w-full sm:w-72">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search archived..."
+                        className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {filteredArchived.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Archive className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">Nothing archived yet</h3>
+                      <p className="text-muted-foreground text-sm">
+                        When you mark a quote as declined or rejected, it'll appear here with the reason.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredArchived.map((quote: any) => (
+                        <div key={quote.id} className="p-4 rounded-lg bg-muted/30 border border-border/40 space-y-3">
+                          <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div>
+                              <div className="font-medium">{quote.client_name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {quote.event_type || "Event"} • {quote.venue || "Venue TBD"}
+                                {quote.event_date && ` • ${new Date(quote.event_date).toLocaleDateString()}`}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Archived{" "}
+                                {quote.declined_at
+                                  ? new Date(quote.declined_at).toLocaleString()
+                                  : "(date unknown)"}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={statusColors[quote.status || "declined"]}>
+                                {quote.status}
+                              </Badge>
+                              <span className="text-sm font-semibold text-muted-foreground">
+                                {formatCurrency(Number(quote.total))}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="bg-background/50 rounded-md p-3 border border-border/40">
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
+                              Reason (market research)
+                            </p>
+                            <p className="text-sm whitespace-pre-wrap">
+                              {quote.decline_reason?.trim()
+                                ? quote.decline_reason
+                                : <span className="italic text-muted-foreground">No reason recorded.</span>}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <Link to={`/quote/${quote.id}`}>
+                                <Eye className="w-3.5 h-3.5 mr-1" /> View
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleStatusChange(quote.id, "draft")}
+                            >
+                              Restore to Draft
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete archived quote?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This permanently removes {quote.client_name}'s quote and its archived reason.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteQuote(quote.id)} disabled={isDeleting}>
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
 
             <TabsContent value="invoices">
               <Card variant="glass">
@@ -835,6 +997,36 @@ export default function Admin() {
           </Tabs>
         </motion.div>
       </main>
+
+      {/* Decline / Reject reason dialog */}
+      <Dialog open={!!declineDialog} onOpenChange={(o) => { if (!o) { setDeclineDialog(null); setDeclineReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {declineDialog?.status === "rejected" ? "Reject Quote" : "Decline Quote"}
+            </DialogTitle>
+            <DialogDescription>
+              Add a short reason — this is archived for market research (e.g. "Too expensive", "Date unavailable", "Chose another DJ").
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={declineReason}
+            onChange={(e) => setDeclineReason(e.target.value)}
+            placeholder="Reason for declining / rejecting…"
+            rows={4}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeclineDialog(null); setDeclineReason(""); }}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDecline}>
+              <Archive className="w-4 h-4 mr-1" />
+              Archive Quote
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Quote Detail Modal */}
       {selectedQuote && (

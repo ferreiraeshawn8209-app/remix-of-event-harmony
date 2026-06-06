@@ -237,10 +237,20 @@ export function useQuotes() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ quoteId, status }: { quoteId: string; status: string }) => {
+    mutationFn: async ({ quoteId, status, declineReason }: { quoteId: string; status: string; declineReason?: string }) => {
+      const patch: Record<string, any> = { status };
+      if (status === "declined" || status === "rejected") {
+        patch.decline_reason = declineReason ?? null;
+        patch.declined_at = new Date().toISOString();
+      } else {
+        // Clear archive metadata when moving back out of declined/rejected
+        patch.decline_reason = null;
+        patch.declined_at = null;
+      }
+
       const { data, error } = await supabase
         .from("quotes")
-        .update({ status })
+        .update(patch)
         .eq("id", quoteId)
         .select()
         .single();
@@ -282,8 +292,8 @@ export function useQuotes() {
     error: quotesQuery.error,
     createQuote: createQuoteMutation.mutateAsync,
     updateQuote: updateQuoteMutation.mutateAsync,
-    updateQuoteStatus: (quoteId: string, status: string) => 
-      updateStatusMutation.mutateAsync({ quoteId, status }),
+    updateQuoteStatus: (quoteId: string, status: string, declineReason?: string) =>
+      updateStatusMutation.mutateAsync({ quoteId, status, declineReason }),
     deleteQuote: deleteQuoteMutation.mutateAsync,
     isCreating: createQuoteMutation.isPending,
     isUpdating: updateQuoteMutation.isPending,
