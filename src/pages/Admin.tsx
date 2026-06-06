@@ -305,6 +305,9 @@ export default function Admin() {
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
   const [declineDialog, setDeclineDialog] = useState<{ quoteId: string; status: string } | null>(null);
   const [declineReason, setDeclineReason] = useState("");
+
+  useEffect(() => {
+    if (!authLoading && !user) {
       navigate("/auth");
     } else if (!authLoading && user && !isAdmin) {
       toast({
@@ -322,6 +325,12 @@ export default function Admin() {
   };
 
   const handleStatusChange = async (quoteId: string, status: string) => {
+    // For declined/rejected, prompt for a reason before applying
+    if (status === "declined" || status === "rejected") {
+      setDeclineReason("");
+      setDeclineDialog({ quoteId, status });
+      return;
+    }
     try {
       await updateQuoteStatus(quoteId, status);
       toast({
@@ -330,6 +339,22 @@ export default function Admin() {
       });
     } catch (error) {
       console.error("Error updating status:", error);
+    }
+  };
+
+  const confirmDecline = async () => {
+    if (!declineDialog) return;
+    if (!declineReason.trim()) {
+      toast({ title: "Reason required", description: "Please add a short reason — used for market research.", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateQuoteStatus(declineDialog.quoteId, declineDialog.status, declineReason.trim());
+      toast({ title: "Quote Archived", description: `Marked as ${declineDialog.status} with reason recorded.` });
+      setDeclineDialog(null);
+      setDeclineReason("");
+    } catch (e) {
+      console.error(e);
     }
   };
 
