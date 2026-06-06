@@ -566,7 +566,15 @@ export default function Admin() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
               <TabsTrigger value="requests">Quote Requests</TabsTrigger>
-              <TabsTrigger value="quotes">All Quotes</TabsTrigger>
+              <TabsTrigger value="quotes">Active Quotes</TabsTrigger>
+              <TabsTrigger value="archived" className="relative">
+                <Archive className="w-3.5 h-3.5 mr-1" /> Archived
+                {archivedQuotes.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground">
+                    {archivedQuotes.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="calendar">Calendar</TabsTrigger>
               <TabsTrigger value="finance">Finance</TabsTrigger>
               <TabsTrigger value="events">Events & QR</TabsTrigger>
