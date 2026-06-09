@@ -189,6 +189,14 @@ export default function ClientPortal() {
             </CardContent>
           </Card>
 
+          {/* Competitions */}
+          <CompetitionsBanner />
+
+          {/* YouTube Showcase */}
+          <YoutubeShowcase />
+
+
+
           {/* Specials */}
           {activeSpecials.length > 0 && (
             <section className="space-y-3">
