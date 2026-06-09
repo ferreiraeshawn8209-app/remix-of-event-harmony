@@ -27,6 +27,9 @@ import {
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
+import { YoutubeShowcase } from "@/components/YoutubeShowcase";
+import { CompetitionsBanner } from "@/components/CompetitionsBanner";
+import { PageBackground } from "@/components/PageBackground";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -146,9 +149,11 @@ export default function ClientPortal() {
   // ─── DASHBOARD ────────────────────────────────────────────
   if (view === "dashboard") {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-background pb-24 relative">
+        <PageBackground pageKey="bg_client_portal" />
         <Header profile={profile} onSignOut={handleSignOut} />
         <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
+
           {/* Welcome + Slogan */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
             <h1 className="font-display text-2xl md:text-3xl font-bold">
