@@ -8,7 +8,13 @@ export type BusinessSettingKey =
   | "bank_branch_code"
   | "bank_account_type"
   | "hero_image_url"
-  | "site_background_url";
+  | "site_background_url"
+  | "bg_landing"
+  | "bg_client_portal"
+  | "bg_admin"
+  | "bg_planner"
+  | "bg_auth"
+  | "bg_song_request";
 
 export function useBusinessSettings() {
   const qc = useQueryClient();

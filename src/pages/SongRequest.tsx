@@ -10,6 +10,7 @@ import { Music2, Star, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
+import { PageBackground } from "@/components/PageBackground";
 
 type Step = "review" | "request" | "success";
 
@@ -111,7 +112,8 @@ export default function SongRequest() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+      <PageBackground pageKey="bg_song_request" />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

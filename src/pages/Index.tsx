@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import heroImg from "@/assets/landing-hero.jpg";
 import logoImg from "@/assets/logo.png";
+import { PageBackground } from "@/components/PageBackground";
 
 /**
  * Public landing page.
@@ -43,6 +44,7 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      <PageBackground pageKey="bg_landing" />
       {/* Background image */}
       <img
         src={heroImg}

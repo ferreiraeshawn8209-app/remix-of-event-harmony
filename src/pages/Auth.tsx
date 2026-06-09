@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { Music, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { PageBackground } from "@/components/PageBackground";
 
 const signUpSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
@@ -171,7 +172,8 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      <PageBackground pageKey="bg_auth" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

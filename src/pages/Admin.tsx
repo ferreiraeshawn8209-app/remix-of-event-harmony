@@ -56,6 +56,9 @@ import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
 import { AlarmsManager } from "@/components/admin/AlarmsManager";
+import { YoutubeManager } from "@/components/admin/YoutubeManager";
+import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
+import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import {
   AlertDialog,
@@ -446,7 +449,8 @@ export default function Admin() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <PageBackground pageKey="bg_admin" />
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -585,6 +589,8 @@ export default function Admin() {
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="specials">Specials</TabsTrigger>
+              <TabsTrigger value="youtube">YouTube</TabsTrigger>
+              <TabsTrigger value="competitions">Competitions</TabsTrigger>
               <TabsTrigger value="business">Branding & Banking</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
               <TabsTrigger value="alarms" className="relative">
@@ -986,6 +992,16 @@ export default function Admin() {
             <TabsContent value="specials">
               <SpecialsManager />
             </TabsContent>
+
+            <TabsContent value="youtube">
+              <YoutubeManager />
+            </TabsContent>
+
+            <TabsContent value="competitions">
+              <CompetitionsManager />
+            </TabsContent>
+
+
 
             <TabsContent value="requests">
               <QuoteRequestsManager />

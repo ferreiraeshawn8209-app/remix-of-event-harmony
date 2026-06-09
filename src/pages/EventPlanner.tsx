@@ -15,6 +15,7 @@ import {
   Music, Loader2, Save, Heart, Mic, PartyPopper, ListMusic,
   Clock, Plus, Trash2, GripVertical, Briefcase, Gem
 } from "lucide-react";
+import { PageBackground } from "@/components/PageBackground";
 
 // ─── Types ───────────────────────────────────────────────
 interface ScheduleItem {
@@ -241,7 +242,8 @@ export default function EventPlanner() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <PageBackground pageKey="bg_planner" />
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">

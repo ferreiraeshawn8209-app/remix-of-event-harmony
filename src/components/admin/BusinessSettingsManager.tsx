@@ -202,6 +202,55 @@ export function BusinessSettingsManager() {
           />
         </CardContent>
       </Card>
+
+      <Card variant="glass">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-primary" /> Page Backgrounds
+          </CardTitle>
+          <CardDescription>
+            Choose a background image for each individual page. Leave any blank to use the default theme.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ImageSettingRow
+            label="Landing page background"
+            description="Behind the welcome / sign-in hero at /."
+            settingKey="bg_landing"
+            defaultAspect="21:9"
+          />
+          <ImageSettingRow
+            label="Client portal background"
+            description="Behind the signed-in client dashboard at /client."
+            settingKey="bg_client_portal"
+            defaultAspect="21:9"
+          />
+          <ImageSettingRow
+            label="Event planner background"
+            description="Behind the event planning tools."
+            settingKey="bg_planner"
+            defaultAspect="21:9"
+          />
+          <ImageSettingRow
+            label="Admin dashboard background"
+            description="Behind your admin pages."
+            settingKey="bg_admin"
+            defaultAspect="21:9"
+          />
+          <ImageSettingRow
+            label="Sign-in / sign-up background"
+            description="Behind /auth."
+            settingKey="bg_auth"
+            defaultAspect="21:9"
+          />
+          <ImageSettingRow
+            label="Song-request page background"
+            description="Behind the QR song-request page guests scan into."
+            settingKey="bg_song_request"
+            defaultAspect="21:9"
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
