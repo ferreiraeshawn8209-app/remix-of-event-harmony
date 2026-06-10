@@ -30,6 +30,7 @@ import { PlannerHub } from "@/components/planner/PlannerHub";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
+import { MixcloudRotator } from "@/components/MixcloudRotator";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -182,28 +183,8 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          {/* Mixcloud Player with caption */}
-          <Card variant="glass" className="overflow-hidden border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Music className="w-4 h-4 text-primary" /> Have a listen to our mixes
-              </CardTitle>
-              <CardDescription className="text-xs leading-relaxed">
-                Scroll through our DJ mixes to help you decide which DJ suits your event. Each mix shows the DJ who made it
-                and covers different styles — <span className="text-foreground">Amapiano, House, Afrikaans, English, Modern, Old School &amp; Mixed</span>.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <iframe
-                width="100%"
-                height="120"
-                src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=%2FBeatkulture%2F"
-                frameBorder="0"
-                allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
-                title="BeatKulture Mixcloud Player"
-              />
-            </CardContent>
-          </Card>
+          {/* Mixcloud Rotator — random genre each load + prev/next */}
+          <MixcloudRotator />
 
           {/* Competitions */}
           <CompetitionsBanner />
