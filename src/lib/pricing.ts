@@ -13,6 +13,14 @@ export interface CustomLineItem {
   qty: number;
 }
 
+/** Outsourced extras (catering, tables, chairs, etc.) — pass-through cost, NEVER discounted. */
+export interface ExtraLineItem {
+  name: string;
+  price: number;
+  qty: number;
+  supplier?: string;
+}
+
 export interface QuoteData {
   clientName: string;
   contactNo: string;
@@ -25,6 +33,7 @@ export interface QuoteData {
   djName: string;
   equipment: { [key: string]: number };
   customItems: CustomLineItem[];
+  extras: ExtraLineItem[];
   kidsCorner: boolean;
   kidsHours: number;
   travelDistance: number;
@@ -431,6 +440,7 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   djCost: number;
   equipmentCost: number;
   customItemsCost: number;
+  extrasCost: number;
   kidsCost: number;
   subtotal: number;
   travelCost: number;
@@ -459,26 +469,31 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
     equipmentCost += qty * item.price;
   });
 
-  // Custom items cost
+  // Custom items cost (BeatKulture-supplied — discountable)
   const customItemsCost = (data.customItems || []).reduce(
+    (sum, item) => sum + item.price * item.qty, 0
+  );
+
+  // Extras cost (OUTSOURCED — pass-through, NEVER discounted)
+  const extrasCost = (data.extras || []).reduce(
     (sum, item) => sum + item.price * item.qty, 0
   );
   
   // Kids corner
   const kidsCost = data.kidsCorner ? data.kidsHours * kidsRate : 0;
   
-  // Subtotal before travel and discount
+  // Subtotal of DISCOUNTABLE items only (DJ + equipment + custom + kids)
   const subtotal = djCost + equipmentCost + customItemsCost + kidsCost;
   
   // Travel cost
   const extraKm = Math.max(0, data.travelDistance - freeKm);
   const travelCost = extraKm * travelRate;
   
-  // Discount
+  // Discount — applies ONLY to DJ/equipment/custom/kids subtotal, NOT to extras or travel
   const discount = subtotal * (data.discountPercent / 100);
   
-  // Total
-  const total = subtotal + travelCost - discount;
+  // Total — extras added AFTER discount as a pass-through line
+  const total = subtotal + travelCost + extrasCost - discount;
   
   // Deposit
   const deposit = total * (depositPct / 100);
@@ -487,6 +502,7 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
     djCost,
     equipmentCost,
     customItemsCost,
+    extrasCost,
     kidsCost,
     subtotal,
     travelCost,
@@ -497,6 +513,7 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
     hours,
   };
 }
+
 
 export function formatCurrency(amount: number): string {
   return `R ${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

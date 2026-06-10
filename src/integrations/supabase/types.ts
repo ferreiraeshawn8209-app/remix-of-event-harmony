@@ -681,6 +681,8 @@ export type Database = {
           equipment_cost: number | null
           event_date: string | null
           event_type: string | null
+          extras: Json
+          extras_cost: number
           hours: number | null
           id: string
           kids_corner: boolean | null
@@ -722,6 +724,8 @@ export type Database = {
           equipment_cost?: number | null
           event_date?: string | null
           event_type?: string | null
+          extras?: Json
+          extras_cost?: number
           hours?: number | null
           id?: string
           kids_corner?: boolean | null
@@ -763,6 +767,8 @@ export type Database = {
           equipment_cost?: number | null
           event_date?: string | null
           event_type?: string | null
+          extras?: Json
+          extras_cost?: number
           hours?: number | null
           id?: string
           kids_corner?: boolean | null
@@ -953,6 +959,15 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      log_client_portal_visit: {
+        Args: {
+          _client_code: string
+          _email: string
+          _quote_id: string
+          _user_agent?: string
+        }
+        Returns: string
+      }
       lookup_quote_by_code: {
         Args: { _code: string; _email: string }
         Returns: {
@@ -982,6 +997,8 @@ export type Database = {
           equipment_cost: number | null
           event_date: string | null
           event_type: string | null
+          extras: Json
+          extras_cost: number
           hours: number | null
           id: string
           kids_corner: boolean | null

@@ -200,6 +200,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       djName: DJ_LIST[0],
       equipment: {},
       customItems: [],
+      extras: [],
       kidsCorner: false,
       kidsHours: 0,
       travelDistance: 0,
@@ -304,6 +305,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         djName: DJ_LIST[0],
         equipment: {},
         customItems: [],
+        extras: [],
         kidsCorner: false,
         kidsHours: 0,
         travelDistance: 0,
@@ -678,6 +680,92 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
               </CardContent>
             </Card>
 
+            {/* Outsourced Extras — NOT discounted */}
+            <Card variant="glass" className="border-amber-500/30">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  🍽️ Outsourced Extras
+                </CardTitle>
+                <CardDescription>
+                  Catering, tables, chairs, decor etc. arranged through our suppliers — pass-through cost,
+                  <span className="text-amber-400 font-semibold"> not eligible for the DJ discount</span>.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(quoteData.extras || []).map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-2 p-3 rounded-lg bg-muted/30">
+                    <Input
+                      placeholder="Item (e.g. 10-seater round table)"
+                      value={item.name}
+                      onChange={(e) => {
+                        const updated = [...quoteData.extras];
+                        updated[idx] = { ...updated[idx], name: e.target.value };
+                        setQuoteData({ ...quoteData, extras: updated });
+                      }}
+                      className="col-span-5"
+                    />
+                    <Input
+                      placeholder="Supplier"
+                      value={item.supplier || ""}
+                      onChange={(e) => {
+                        const updated = [...quoteData.extras];
+                        updated[idx] = { ...updated[idx], supplier: e.target.value };
+                        setQuoteData({ ...quoteData, extras: updated });
+                      }}
+                      className="col-span-3"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={item.price || ""}
+                      onChange={(e) => {
+                        const updated = [...quoteData.extras];
+                        updated[idx] = { ...updated[idx], price: Number(e.target.value) };
+                        setQuoteData({ ...quoteData, extras: updated });
+                      }}
+                      className="col-span-2"
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={item.qty}
+                      onChange={(e) => {
+                        const updated = [...quoteData.extras];
+                        updated[idx] = { ...updated[idx], qty: Math.max(1, Number(e.target.value)) };
+                        setQuoteData({ ...quoteData, extras: updated });
+                      }}
+                      className="col-span-1"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="col-span-1 text-destructive"
+                      onClick={() => {
+                        const updated = quoteData.extras.filter((_, i) => i !== idx);
+                        setQuoteData({ ...quoteData, extras: updated });
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setQuoteData({
+                      ...quoteData,
+                      extras: [...(quoteData.extras || []), { name: "", supplier: "", price: 0, qty: 1 }],
+                    });
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Outsourced Extra
+                </Button>
+              </CardContent>
+            </Card>
+
+
             {/* Additional Services */}
             <Card variant="glass">
               <CardHeader>
@@ -790,8 +878,15 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
 
                   {calculations.discount > 0 && (
                     <div className="flex justify-between text-sm text-success">
-                      <span>Discount ({quoteData.discountPercent}%)</span>
+                      <span>DJ Discount ({quoteData.discountPercent}%)</span>
                       <span>-{formatCurrency(calculations.discount)}</span>
+                    </div>
+                  )}
+
+                  {calculations.extrasCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Outsourced Extras <span className="text-[10px] text-amber-400">(no discount)</span></span>
+                      <span>{formatCurrency(calculations.extrasCost)}</span>
                     </div>
                   )}
 

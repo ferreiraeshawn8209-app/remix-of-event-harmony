@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "@/hooks/use-toast";
-import { QuoteData, calculateQuote, CustomLineItem } from "@/lib/pricing";
+import { QuoteData, calculateQuote, CustomLineItem, ExtraLineItem } from "@/lib/pricing";
 
 export interface DatabaseQuote {
   id: string;
@@ -19,6 +19,8 @@ export interface DatabaseQuote {
   equipment: Record<string, number>;
   custom_items: CustomLineItem[];
   custom_items_cost: number;
+  extras: ExtraLineItem[];
+  extras_cost: number;
   kids_corner: boolean;
   kids_hours: number;
   travel_distance: number;
@@ -68,6 +70,8 @@ export function useQuotes() {
         ...quote,
         equipment: (quote.equipment as Record<string, number>) || {},
         custom_items: (quote.custom_items as unknown as CustomLineItem[]) || [],
+        extras: ((quote as any).extras as unknown as ExtraLineItem[]) || [],
+        extras_cost: Number((quote as any).extras_cost) || 0,
       })) as DatabaseQuote[];
     },
     enabled: !!profile,
@@ -102,6 +106,7 @@ export function useQuotes() {
         dj_name: quoteData.djName,
         equipment: quoteData.equipment,
         custom_items: quoteData.customItems || [],
+        extras: quoteData.extras || [],
         kids_corner: quoteData.kidsCorner,
         kids_hours: quoteData.kidsHours,
         travel_distance: quoteData.travelDistance,
@@ -109,6 +114,7 @@ export function useQuotes() {
         dj_cost: calculations.djCost,
         equipment_cost: calculations.equipmentCost,
         custom_items_cost: calculations.customItemsCost,
+        extras_cost: calculations.extrasCost,
         kids_cost: calculations.kidsCost,
         subtotal: calculations.subtotal,
         travel_cost: calculations.travelCost,
@@ -168,6 +174,7 @@ export function useQuotes() {
         updateData.dj_cost = calculations.djCost;
         updateData.equipment_cost = calculations.equipmentCost;
         updateData.custom_items_cost = calculations.customItemsCost;
+        updateData.extras_cost = calculations.extrasCost;
         updateData.kids_cost = calculations.kidsCost;
         updateData.subtotal = calculations.subtotal;
         updateData.travel_cost = calculations.travelCost;
