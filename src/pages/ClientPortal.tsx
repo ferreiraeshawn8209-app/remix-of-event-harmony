@@ -110,6 +110,22 @@ export default function ClientPortal() {
     })();
   }, [profile?.id]);
 
+  // Log portal visit (admins get notified via DB trigger)
+  useEffect(() => {
+    if (!user || !profile) return;
+    const mostRecent = quotes[0];
+    supabase.rpc("log_client_portal_visit" as any, {
+      _quote_id: mostRecent?.id ?? null,
+      _client_code: mostRecent?.client_code ?? "",
+      _email: profile.email ?? user.email ?? "",
+      _user_agent: navigator.userAgent,
+    }).then(({ error }) => {
+      if (error) console.warn("Portal visit log failed:", error.message);
+    });
+    // run once per session per profile
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, profile?.id, quotes.length > 0]);
+
   // Equipment label cache (for line items)
   useEffect(() => {
     (async () => {
