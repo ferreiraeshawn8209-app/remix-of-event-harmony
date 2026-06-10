@@ -21,6 +21,7 @@ function dbQuoteToQuoteData(quote: DatabaseQuote): QuoteData {
     djName: quote.dj_name || DJ_LIST[0],
     equipment: quote.equipment || {},
     customItems: quote.custom_items || [],
+    extras: quote.extras || [],
     kidsCorner: quote.kids_corner || false,
     kidsHours: quote.kids_hours || 0,
     travelDistance: quote.travel_distance || 0,
