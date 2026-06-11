@@ -65,6 +65,20 @@ export function SpecialsManager() {
             />
           </div>
           <div className="space-y-2">
+            <Label>Auto-apply discount % to all packages (optional)</Label>
+            <Input
+              type="number"
+              min={0}
+              max={50}
+              placeholder="e.g. 15 — leave blank for image-only special"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              When set and the special is active, package prices on the landing page show before → after pricing automatically.
+            </p>
+          </div>
+          <div className="space-y-2">
             <Label>Special Image</Label>
             <input
               ref={fileRef}
