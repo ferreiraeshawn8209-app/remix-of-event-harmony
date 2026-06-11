@@ -152,6 +152,56 @@ export type Database = {
         }
         Relationships: []
       }
+      client_reviews: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          guest_email: string | null
+          guest_name: string | null
+          id: string
+          message: string | null
+          posted_to_bark: boolean
+          posted_to_facebook: boolean
+          rating: number
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          message?: string | null
+          posted_to_bark?: boolean
+          posted_to_facebook?: boolean
+          rating: number
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          message?: string | null
+          posted_to_bark?: boolean
+          posted_to_facebook?: boolean
+          rating?: number
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_entries: {
         Row: {
           competition_id: string
@@ -684,6 +734,8 @@ export type Database = {
           extras: Json
           extras_cost: number
           hours: number | null
+          human_jukebox: boolean
+          human_jukebox_hours: number
           id: string
           kids_corner: boolean | null
           kids_cost: number | null
@@ -727,6 +779,8 @@ export type Database = {
           extras?: Json
           extras_cost?: number
           hours?: number | null
+          human_jukebox?: boolean
+          human_jukebox_hours?: number
           id?: string
           kids_corner?: boolean | null
           kids_cost?: number | null
@@ -770,6 +824,8 @@ export type Database = {
           extras?: Json
           extras_cost?: number
           hours?: number | null
+          human_jukebox?: boolean
+          human_jukebox_hours?: number
           id?: string
           kids_corner?: boolean | null
           kids_cost?: number | null
@@ -867,6 +923,7 @@ export type Database = {
       specials: {
         Row: {
           created_at: string
+          discount_percent: number | null
           id: string
           image_url: string
           is_active: boolean
@@ -875,6 +932,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_percent?: number | null
           id?: string
           image_url: string
           is_active?: boolean
@@ -883,10 +941,50 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_percent?: number | null
           id?: string
           image_url?: string
           is_active?: boolean
           title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          client_name: string
+          created_at: string
+          event_type: string | null
+          id: string
+          is_live: boolean
+          message: string
+          photo_url: string | null
+          rating: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          is_live?: boolean
+          message: string
+          photo_url?: string | null
+          rating?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          event_type?: string | null
+          id?: string
+          is_live?: boolean
+          message?: string
+          photo_url?: string | null
+          rating?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -1000,6 +1098,8 @@ export type Database = {
           extras: Json
           extras_cost: number
           hours: number | null
+          human_jukebox: boolean
+          human_jukebox_hours: number
           id: string
           kids_corner: boolean | null
           kids_cost: number | null
