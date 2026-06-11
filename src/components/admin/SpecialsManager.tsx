@@ -11,8 +11,9 @@ import { Image as ImageIcon, Upload, Trash2, Loader2, Sparkles } from "lucide-re
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 export function SpecialsManager() {
-  const { specials, isLoading, uploadSpecial, toggleSpecial, deleteSpecial } = useSpecials();
+  const { specials, isLoading, uploadSpecial, toggleSpecial, updateDiscount, deleteSpecial } = useSpecials();
   const [title, setTitle] = useState("");
+  const [discount, setDiscount] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -20,9 +21,11 @@ export function SpecialsManager() {
   const doUpload = async (file: File) => {
     setUploading(true);
     try {
-      await uploadSpecial(file, title);
-      toast({ title: "Special uploaded!", description: "It's now visible on the client portal." });
+      const pct = discount ? Math.max(0, Math.min(50, Number(discount))) : null;
+      await uploadSpecial(file, title, pct);
+      toast({ title: "Special uploaded!", description: pct ? `Auto-applies ${pct}% off to all packages while active.` : "It's now visible on the landing page." });
       setTitle("");
+      setDiscount("");
       if (fileRef.current) fileRef.current.value = "";
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
