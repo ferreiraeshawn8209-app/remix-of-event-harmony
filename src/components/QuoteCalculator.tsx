@@ -888,6 +888,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                         <span>{formatCurrency(calculations.kidsCost)}</span>
                       </div>
                     )}
+                    {calculations.humanJukeboxCost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">🎙️ Human Jukebox</span>
+                        <span>{formatCurrency(calculations.humanJukeboxCost)}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />
