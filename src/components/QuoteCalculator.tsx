@@ -310,6 +310,8 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         extras: [],
         kidsCorner: false,
         kidsHours: 0,
+        humanJukebox: false,
+        humanJukeboxHours: 0,
         travelDistance: 0,
         discountPercent: 0,
       });
