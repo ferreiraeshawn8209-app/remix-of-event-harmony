@@ -109,6 +109,8 @@ export function useQuotes() {
         extras: quoteData.extras || [],
         kids_corner: quoteData.kidsCorner,
         kids_hours: quoteData.kidsHours,
+        human_jukebox: (quoteData as any).humanJukebox || false,
+        human_jukebox_hours: (quoteData as any).humanJukeboxHours || 0,
         travel_distance: quoteData.travelDistance,
         discount_percent: quoteData.discountPercent,
         dj_cost: calculations.djCost,
