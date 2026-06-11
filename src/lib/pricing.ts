@@ -36,6 +36,8 @@ export interface QuoteData {
   extras: ExtraLineItem[];
   kidsCorner: boolean;
   kidsHours: number;
+  humanJukebox: boolean;
+  humanJukeboxHours: number;
   travelDistance: number;
   discountPercent: number;
 }
@@ -436,12 +438,14 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   travel_rate_per_km?: number;
   free_travel_km?: number;
   deposit_percent?: number;
+  human_jukebox_rate?: number;
 }): {
   djCost: number;
   equipmentCost: number;
   customItemsCost: number;
   extrasCost: number;
   kidsCost: number;
+  humanJukeboxCost: number;
   subtotal: number;
   travelCost: number;
   discount: number;
@@ -455,13 +459,12 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   const travelRate = rates?.travel_rate_per_km ?? TRAVEL_RATE_PER_KM;
   const freeKm = rates?.free_travel_km ?? FREE_TRAVEL_KM;
   const depositPct = rates?.deposit_percent ?? DEPOSIT_PERCENT;
+  const hjRate = rates?.human_jukebox_rate ?? 250;
 
   const hours = calculateHours(data.startTime, data.endTime);
-  
-  // DJ cost
+
   const djCost = hours * djRate;
-  
-  // Equipment cost - use provided catalog or fallback to hardcoded
+
   const equipmentList = catalog || EQUIPMENT_CATALOG;
   let equipmentCost = 0;
   equipmentList.forEach(item => {
@@ -469,41 +472,34 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
     equipmentCost += qty * item.price;
   });
 
-  // Custom items cost (BeatKulture-supplied — discountable)
   const customItemsCost = (data.customItems || []).reduce(
     (sum, item) => sum + item.price * item.qty, 0
   );
 
-  // Extras cost (OUTSOURCED — pass-through, NEVER discounted)
   const extrasCost = (data.extras || []).reduce(
     (sum, item) => sum + item.price * item.qty, 0
   );
-  
-  // Kids corner
+
   const kidsCost = data.kidsCorner ? data.kidsHours * kidsRate : 0;
-  
-  // Subtotal of DISCOUNTABLE items only (DJ + equipment + custom + kids)
-  const subtotal = djCost + equipmentCost + customItemsCost + kidsCost;
-  
-  // Travel cost
+  const humanJukeboxCost = data.humanJukebox ? data.humanJukeboxHours * hjRate : 0;
+
+  // Subtotal of DISCOUNTABLE items (DJ + equipment + custom + kids + human jukebox)
+  const subtotal = djCost + equipmentCost + customItemsCost + kidsCost + humanJukeboxCost;
+
   const extraKm = Math.max(0, data.travelDistance - freeKm);
   const travelCost = extraKm * travelRate;
-  
-  // Discount — applies ONLY to DJ/equipment/custom/kids subtotal, NOT to extras or travel
+
   const discount = subtotal * (data.discountPercent / 100);
-  
-  // Total — extras added AFTER discount as a pass-through line
   const total = subtotal + travelCost + extrasCost - discount;
-  
-  // Deposit
   const deposit = total * (depositPct / 100);
-  
+
   return {
     djCost,
     equipmentCost,
     customItemsCost,
     extrasCost,
     kidsCost,
+    humanJukeboxCost,
     subtotal,
     travelCost,
     discount,

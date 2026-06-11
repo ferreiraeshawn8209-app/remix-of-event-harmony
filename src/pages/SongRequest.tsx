@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Music2, Star, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Music2, Star, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import { PageBackground } from "@/components/PageBackground";
+import { submitClientReview } from "@/hooks/useClientReviews";
 
 type Step = "review" | "request" | "success";
 
@@ -28,6 +29,15 @@ export default function SongRequest() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<Step>("review");
+
+  // Review state
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Song request state
   const [songTitle, setSongTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [guestName, setGuestName] = useState("");
@@ -43,12 +53,7 @@ export default function SongRequest() {
         .eq("id", eventId)
         .eq("is_active", true)
         .single();
-
-      if (error || !data) {
-        setEvent(null);
-      } else {
-        setEvent(data as EventData);
-      }
+      if (error || !data) setEvent(null); else setEvent(data as EventData);
       setLoading(false);
     }
     fetchEvent();
@@ -76,14 +81,43 @@ export default function SongRequest() {
     );
   }
 
-  const handleReviewClick = () => {
-    window.open(event.google_review_url || "https://g.page/r/beatkulture/review", "_blank");
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rating) {
+      toast({ title: "Please choose a star rating", variant: "destructive" });
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      await submitClientReview({
+        eventId: event.id,
+        rating,
+        guestName: reviewName.trim() || undefined,
+        message: reviewMessage.trim() || undefined,
+      });
+      if (rating >= 4) {
+        toast({ title: "Thanks for the love! 🎉", description: "You can now request a song." });
+        setGuestName(reviewName);
+        setStep("request");
+      } else {
+        toast({
+          title: "Thanks for your feedback",
+          description: "Song requests open at a 4-star review or higher. We'll work to do better next time!",
+          variant: "destructive",
+        });
+        // Reset review form so they can try again
+        setRating(0);
+        setReviewMessage("");
+      }
+    } catch (err: any) {
+      toast({ title: "Couldn't submit review", description: err.message, variant: "destructive" });
+    }
+    setSubmittingReview(false);
   };
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!songTitle.trim() || !artist.trim()) return;
-
     setIsSubmitting(true);
     const { error } = await supabase.from("song_requests").insert({
       event_id: event.id,
@@ -92,19 +126,20 @@ export default function SongRequest() {
       guest_name: guestName.trim() || null,
       message: message.trim() || null,
     });
-
     if (error) {
       toast({ title: "Error", description: "Failed to submit request. Please try again.", variant: "destructive" });
       setIsSubmitting(false);
       return;
     }
-
     setStep("success");
     setIsSubmitting(false);
   };
 
   const handleNewRequest = () => {
     setStep("review");
+    setRating(0);
+    setReviewMessage("");
+    setReviewName("");
     setSongTitle("");
     setArtist("");
     setMessage("");
@@ -132,46 +167,64 @@ export default function SongRequest() {
           <CardContent>
             <AnimatePresence mode="wait">
               {step === "review" && (
-                <motion.div
+                <motion.form
                   key="review"
+                  onSubmit={handleSubmitReview}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
+                  className="space-y-4"
                 >
-                  <div className="text-center space-y-3">
-                    <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30">
-                      <AlertCircle className="w-6 h-6 text-secondary mx-auto mb-2" />
-                       <h3 className="font-semibold text-lg">Leave a Review First</h3>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        To request a song, please leave us a quick review.
-                        This helps us grow and ensures quality service!
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-center gap-1 py-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-8 h-8 ${star <= 4 ? "text-yellow-500 fill-yellow-500" : "text-yellow-500"}`}
-                        />
-                      ))}
-                    </div>
+                  <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/30 text-center">
+                    <h3 className="font-semibold text-lg">Rate your night</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Leave us a 4-star or higher review to unlock song requests.
+                    </p>
                   </div>
 
-                   <Button variant="hero" className="w-full" size="lg" onClick={handleReviewClick}>
-                    <ExternalLink className="w-4 h-4" />
-                    Leave a Review
-                  </Button>
+                  <div className="flex items-center justify-center gap-1 py-2">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const active = (hoverRating || rating) >= star;
+                      return (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setRating(star)}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          className="p-1"
+                          aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                        >
+                          <Star className={`w-9 h-9 transition ${active ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`} />
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                  <Button variant="outline" className="w-full" onClick={() => setStep("request")}>
-                    <CheckCircle2 className="w-4 h-4" />
-                    I've Left My Review
+                  <div className="space-y-2">
+                    <Label htmlFor="reviewName">Your name (optional)</Label>
+                    <Input id="reviewName" value={reviewName} onChange={(e) => setReviewName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reviewMessage">Tell us about your experience (optional)</Label>
+                    <Textarea
+                      id="reviewMessage"
+                      rows={3}
+                      value={reviewMessage}
+                      onChange={(e) => setReviewMessage(e.target.value)}
+                      placeholder="Best DJ ever!"
+                    />
+                  </div>
+
+                  <Button type="submit" variant="hero" className="w-full" size="lg" disabled={submittingReview || !rating}>
+                    {submittingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4" />}
+                    {rating >= 4 ? "Submit review & continue" : rating ? "Submit review" : "Pick a rating"}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    A new review is required for each song request. Thank you! 🎵
+                    Reviews are shared with BeatKulture (and optionally posted to Facebook / Bark.com).
                   </p>
-                </motion.div>
+                </motion.form>
               )}
 
               {step === "request" && (
@@ -189,54 +242,25 @@ export default function SongRequest() {
 
                     <div className="space-y-2">
                       <Label htmlFor="guestName">Your Name</Label>
-                      <Input
-                        id="guestName"
-                        value={guestName}
-                        onChange={(e) => setGuestName(e.target.value)}
-                        placeholder="Your name (optional)"
-                      />
+                      <Input id="guestName" value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Your name (optional)" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="songTitle">Song Title *</Label>
-                      <Input
-                        id="songTitle"
-                        value={songTitle}
-                        onChange={(e) => setSongTitle(e.target.value)}
-                        placeholder="Enter song title"
-                        required
-                      />
+                      <Input id="songTitle" value={songTitle} onChange={(e) => setSongTitle(e.target.value)} placeholder="Enter song title" required />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="artist">Artist *</Label>
-                      <Input
-                        id="artist"
-                        value={artist}
-                        onChange={(e) => setArtist(e.target.value)}
-                        placeholder="Enter artist name"
-                        required
-                      />
+                      <Input id="artist" value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Enter artist name" required />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="message">Special Message (Optional)</Label>
-                      <Textarea
-                        id="message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Dedicated to someone special? Let us know!"
-                        rows={3}
-                      />
+                      <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Dedicated to someone special?" rows={3} />
                     </div>
 
-                    <Button
-                      type="submit"
-                      variant="hero"
-                      className="w-full"
-                      size="lg"
-                      disabled={isSubmitting || !songTitle.trim() || !artist.trim()}
-                    >
+                    <Button type="submit" variant="hero" className="w-full" size="lg" disabled={isSubmitting || !songTitle.trim() || !artist.trim()}>
                       <Music2 className="w-4 h-4" />
                       {isSubmitting ? "Submitting..." : "Submit Song Request"}
                     </Button>
@@ -270,7 +294,7 @@ export default function SongRequest() {
                     Request Another Song
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    Remember: A new review is required for each song request.
+                    A new review is required for each song request.
                   </p>
                 </motion.div>
               )}

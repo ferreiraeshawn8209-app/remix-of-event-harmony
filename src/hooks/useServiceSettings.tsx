@@ -8,6 +8,7 @@ export interface ServiceSettings {
   free_travel_km: number;
   overtime_multiplier: number;
   deposit_percent: number;
+  human_jukebox_rate: number;
 }
 
 const DEFAULTS: ServiceSettings = {
@@ -17,6 +18,7 @@ const DEFAULTS: ServiceSettings = {
   free_travel_km: 30,
   overtime_multiplier: 1.5,
   deposit_percent: 30,
+  human_jukebox_rate: 250,
 };
 
 export function useServiceSettings() {

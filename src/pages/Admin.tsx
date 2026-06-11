@@ -58,6 +58,8 @@ import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsMana
 import { AlarmsManager } from "@/components/admin/AlarmsManager";
 import { YoutubeManager } from "@/components/admin/YoutubeManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
+import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
+import { ReviewsManager } from "@/components/admin/ReviewsManager";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import {
@@ -591,6 +593,8 @@ export default function Admin() {
               <TabsTrigger value="specials">Specials</TabsTrigger>
               <TabsTrigger value="youtube">YouTube</TabsTrigger>
               <TabsTrigger value="competitions">Competitions</TabsTrigger>
+              <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
               <TabsTrigger value="business">Branding & Banking</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
               <TabsTrigger value="alarms" className="relative">
@@ -605,6 +609,14 @@ export default function Admin() {
 
             <TabsContent value="alarms">
               <AlarmsManager />
+            </TabsContent>
+
+            <TabsContent value="testimonials">
+              <TestimonialsManager />
+            </TabsContent>
+
+            <TabsContent value="reviews">
+              <ReviewsManager />
             </TabsContent>
 
             <TabsContent value="business">

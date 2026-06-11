@@ -11,8 +11,9 @@ import { Image as ImageIcon, Upload, Trash2, Loader2, Sparkles } from "lucide-re
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 
 export function SpecialsManager() {
-  const { specials, isLoading, uploadSpecial, toggleSpecial, deleteSpecial } = useSpecials();
+  const { specials, isLoading, uploadSpecial, toggleSpecial, updateDiscount, deleteSpecial } = useSpecials();
   const [title, setTitle] = useState("");
+  const [discount, setDiscount] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -20,9 +21,11 @@ export function SpecialsManager() {
   const doUpload = async (file: File) => {
     setUploading(true);
     try {
-      await uploadSpecial(file, title);
-      toast({ title: "Special uploaded!", description: "It's now visible on the client portal." });
+      const pct = discount ? Math.max(0, Math.min(50, Number(discount))) : null;
+      await uploadSpecial(file, title, pct);
+      toast({ title: "Special uploaded!", description: pct ? `Auto-applies ${pct}% off to all packages while active.` : "It's now visible on the landing page." });
       setTitle("");
+      setDiscount("");
       if (fileRef.current) fileRef.current.value = "";
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
@@ -60,6 +63,20 @@ export function SpecialsManager() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Auto-apply discount % to all packages (optional)</Label>
+            <Input
+              type="number"
+              min={0}
+              max={50}
+              placeholder="e.g. 15 — leave blank for image-only special"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              When set and the special is active, package prices on the landing page show before → after pricing automatically.
+            </p>
           </div>
           <div className="space-y-2">
             <Label>Special Image</Label>
@@ -111,6 +128,21 @@ export function SpecialsManager() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={50}
+                      className="w-20 h-8"
+                      placeholder="%"
+                      defaultValue={s.discount_percent ?? ""}
+                      onBlur={(e) => {
+                        const v = e.target.value === "" ? null : Number(e.target.value);
+                        if (v !== s.discount_percent) updateDiscount(s.id, v);
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">% off</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={s.is_active}

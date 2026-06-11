@@ -24,6 +24,8 @@ function dbQuoteToQuoteData(quote: DatabaseQuote): QuoteData {
     extras: quote.extras || [],
     kidsCorner: quote.kids_corner || false,
     kidsHours: quote.kids_hours || 0,
+    humanJukebox: (quote as any).human_jukebox || false,
+    humanJukeboxHours: (quote as any).human_jukebox_hours || 0,
     travelDistance: quote.travel_distance || 0,
     discountPercent: quote.discount_percent || 0,
   };

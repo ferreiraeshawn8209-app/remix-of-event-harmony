@@ -203,6 +203,8 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       extras: [],
       kidsCorner: false,
       kidsHours: 0,
+      humanJukebox: false,
+      humanJukeboxHours: 0,
       travelDistance: 0,
       discountPercent: 0,
     }
@@ -308,6 +310,8 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         extras: [],
         kidsCorner: false,
         kidsHours: 0,
+        humanJukebox: false,
+        humanJukeboxHours: 0,
         travelDistance: 0,
         discountPercent: 0,
       });
@@ -793,6 +797,30 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                     />
                   </div>
                 )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                  <div>
+                    <div className="font-medium">🎙️ Human Jukebox</div>
+                    <div className="text-sm text-muted-foreground">
+                      Dedicated guest song requests (R{serviceSettings.human_jukebox_rate}/hr)
+                    </div>
+                  </div>
+                  <Switch
+                    checked={quoteData.humanJukebox}
+                    onCheckedChange={(checked) => setQuoteData({ ...quoteData, humanJukebox: checked, humanJukeboxHours: checked ? 1 : 0 })}
+                  />
+                </div>
+                {quoteData.humanJukebox && (
+                  <div className="space-y-2 ml-4">
+                    <Label>Hours</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={quoteData.humanJukeboxHours}
+                      onChange={(e) => setQuoteData({ ...quoteData, humanJukeboxHours: Number(e.target.value) })}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -858,6 +886,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Kiddies Corner</span>
                         <span>{formatCurrency(calculations.kidsCost)}</span>
+                      </div>
+                    )}
+                    {calculations.humanJukeboxCost > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">🎙️ Human Jukebox</span>
+                        <span>{formatCurrency(calculations.humanJukeboxCost)}</span>
                       </div>
                     )}
                   </div>

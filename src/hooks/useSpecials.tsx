@@ -6,6 +6,7 @@ export interface Special {
   title: string;
   image_url: string;
   is_active: boolean;
+  discount_percent: number | null;
   created_at: string;
 }
 
@@ -27,7 +28,7 @@ export function useSpecials() {
   const activeSpecials = specials.filter(s => s.is_active);
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["specials"] });
 
-  const uploadSpecial = async (file: File, title: string) => {
+  const uploadSpecial = async (file: File, title: string, discountPercent?: number | null) => {
     const ext = file.name.split(".").pop();
     const path = `${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
@@ -43,7 +44,8 @@ export function useSpecials() {
       title,
       image_url: urlData.publicUrl,
       is_active: true,
-    });
+      discount_percent: discountPercent ?? null,
+    } as any);
     if (error) throw error;
     invalidate();
   };
@@ -54,11 +56,17 @@ export function useSpecials() {
     invalidate();
   };
 
+  const updateDiscount = async (id: string, discount_percent: number | null) => {
+    const { error } = await supabase.from("specials").update({ discount_percent } as any).eq("id", id);
+    if (error) throw error;
+    invalidate();
+  };
+
   const deleteSpecial = async (id: string) => {
     const { error } = await supabase.from("specials").delete().eq("id", id);
     if (error) throw error;
     invalidate();
   };
 
-  return { specials, activeSpecials, isLoading, uploadSpecial, toggleSpecial, deleteSpecial };
+  return { specials, activeSpecials, isLoading, uploadSpecial, toggleSpecial, updateDiscount, deleteSpecial };
 }
