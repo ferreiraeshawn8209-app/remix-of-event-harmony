@@ -6,6 +6,7 @@ export interface Special {
   title: string;
   image_url: string;
   is_active: boolean;
+  discount_percent: number | null;
   created_at: string;
 }
 
