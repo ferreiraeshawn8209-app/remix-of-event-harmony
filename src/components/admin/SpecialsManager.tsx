@@ -128,6 +128,21 @@ export function SpecialsManager() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={50}
+                      className="w-20 h-8"
+                      placeholder="%"
+                      defaultValue={s.discount_percent ?? ""}
+                      onBlur={(e) => {
+                        const v = e.target.value === "" ? null : Number(e.target.value);
+                        if (v !== s.discount_percent) updateDiscount(s.id, v);
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">% off</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={s.is_active}
