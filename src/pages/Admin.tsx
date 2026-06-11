@@ -58,6 +58,8 @@ import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsMana
 import { AlarmsManager } from "@/components/admin/AlarmsManager";
 import { YoutubeManager } from "@/components/admin/YoutubeManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
+import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
+import { ReviewsManager } from "@/components/admin/ReviewsManager";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import {
