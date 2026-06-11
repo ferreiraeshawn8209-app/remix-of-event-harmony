@@ -611,6 +611,14 @@ export default function Admin() {
               <AlarmsManager />
             </TabsContent>
 
+            <TabsContent value="testimonials">
+              <TestimonialsManager />
+            </TabsContent>
+
+            <TabsContent value="reviews">
+              <ReviewsManager />
+            </TabsContent>
+
             <TabsContent value="business">
               <BusinessSettingsManager />
             </TabsContent>
