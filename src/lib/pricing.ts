@@ -36,6 +36,8 @@ export interface QuoteData {
   extras: ExtraLineItem[];
   kidsCorner: boolean;
   kidsHours: number;
+  humanJukebox: boolean;
+  humanJukeboxHours: number;
   travelDistance: number;
   discountPercent: number;
 }
