@@ -593,6 +593,8 @@ export default function Admin() {
               <TabsTrigger value="specials">Specials</TabsTrigger>
               <TabsTrigger value="youtube">YouTube</TabsTrigger>
               <TabsTrigger value="competitions">Competitions</TabsTrigger>
+              <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
               <TabsTrigger value="business">Branding & Banking</TabsTrigger>
               <TabsTrigger value="admins">Admins</TabsTrigger>
               <TabsTrigger value="alarms" className="relative">
