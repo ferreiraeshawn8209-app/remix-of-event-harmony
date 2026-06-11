@@ -797,6 +797,30 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                     />
                   </div>
                 )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                  <div>
+                    <div className="font-medium">🎙️ Human Jukebox</div>
+                    <div className="text-sm text-muted-foreground">
+                      Dedicated guest song requests (R{serviceSettings.human_jukebox_rate}/hr)
+                    </div>
+                  </div>
+                  <Switch
+                    checked={quoteData.humanJukebox}
+                    onCheckedChange={(checked) => setQuoteData({ ...quoteData, humanJukebox: checked, humanJukeboxHours: checked ? 1 : 0 })}
+                  />
+                </div>
+                {quoteData.humanJukebox && (
+                  <div className="space-y-2 ml-4">
+                    <Label>Hours</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={quoteData.humanJukeboxHours}
+                      onChange={(e) => setQuoteData({ ...quoteData, humanJukeboxHours: Number(e.target.value) })}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
