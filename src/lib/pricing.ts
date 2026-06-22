@@ -512,5 +512,5 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
 
 
 export function formatCurrency(amount: number): string {
-  return `R ${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `R ${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })};
 }
