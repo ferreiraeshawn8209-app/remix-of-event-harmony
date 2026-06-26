@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { 
   Music, 
@@ -303,7 +303,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: DatabaseQuote | null; onC
 export default function Admin() {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
-  const { quotes, isLoading: quotesLoading, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { quotes, isLoading: quotesLoading, createQuote, isCreating, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
   const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
   const [searchQuery, setSearchQuery] = useState("");
@@ -369,6 +369,20 @@ export default function Admin() {
       await deleteQuote(quoteId);
     } catch (error) {
       console.error("Error deleting quote:", error);
+    }
+  };
+
+  const handleSaveQuote = async (quoteData: QuoteData, calculations: ReturnType<typeof calculateQuote>) => {
+    if (!profile) return;
+    try {
+      await createQuote({
+        quoteData,
+        calculations,
+        clientProfileId: profile.id,
+      });
+      setActiveTab("quotes");
+    } catch (error) {
+      console.error("Error creating quote:", error);
     }
   };
 
@@ -722,7 +736,7 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="new-quote">
-              <QuoteCalculator isAdmin={true} onSaveQuote={() => setActiveTab("quotes")} />
+              <QuoteCalculator isAdmin={true} onSaveQuote={handleSaveQuote} />
             </TabsContent>
 
             <TabsContent value="archived">

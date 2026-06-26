@@ -18,7 +18,9 @@ import {
   Trash2,
   QrCode
 } from "lucide-react";
-import { formatCurrency } from "@/lib/pricing";
+import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuotes } from "@/hooks/useQuotes";
 
 interface Quote {
   id: string;
@@ -70,6 +72,22 @@ const statusColors = {
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [quotes] = useState<Quote[]>(mockQuotes);
+  const { profile } = useAuth();
+  const { createQuote } = useQuotes();
+
+  const handleSaveQuote = async (quoteData: QuoteData, calculations: ReturnType<typeof calculateQuote>) => {
+    if (!profile) return;
+    try {
+      await createQuote({
+        quoteData,
+        calculations,
+        clientProfileId: profile.id,
+      });
+      setActiveTab("quotes");
+    } catch (error) {
+      console.error("Error creating quote:", error);
+    }
+  };
 
   const stats = [
     { label: "Total Quotes", value: quotes.length, icon: FileText, color: "text-primary" },
@@ -255,10 +273,7 @@ export function AdminDashboard() {
           <TabsContent value="new-quote">
             <QuoteCalculator 
               isAdmin={true} 
-              onSaveQuote={(data, calc) => {
-                console.log("Quote saved:", data, calc);
-                setActiveTab("quotes");
-              }}
+              onSaveQuote={handleSaveQuote}
             />
           </TabsContent>
 
