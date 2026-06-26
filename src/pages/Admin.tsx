@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Archive } from "lucide-react";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
-import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
+import { formatCurrency, QuoteData, calculateQuote, DJ_LIST } from "@/lib/pricing";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { 
   Music, 
@@ -63,6 +63,8 @@ import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { ReviewsManager } from "@/components/admin/ReviewsManager";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
+import { QuoteRequest } from "@/hooks/useQuoteRequests";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,6 +86,39 @@ const statusColors: Record<string, string> = {
   paid: "bg-primary/20 text-primary border-primary/30",
   expired: "bg-muted text-muted-foreground",
 };
+
+const emptyAdminQuote = (): QuoteData => ({
+  clientName: "",
+  contactNo: "",
+  email: "",
+  venue: "",
+  eventDate: "",
+  startTime: "18:00",
+  endTime: "00:00",
+  eventType: "",
+  djName: DJ_LIST[0],
+  equipment: {},
+  customItems: [],
+  extras: [],
+  kidsCorner: false,
+  kidsHours: 0,
+  humanJukebox: false,
+  humanJukeboxHours: 0,
+  travelDistance: 0,
+  discountPercent: 0,
+});
+
+const quoteDataFromRequest = (request: QuoteRequest): QuoteData => ({
+  ...emptyAdminQuote(),
+  clientName: request.client_name || "",
+  contactNo: request.contact_no || "",
+  email: request.email || "",
+  venue: request.venue_address || request.venue_name || "",
+  eventDate: request.event_date || "",
+  startTime: request.start_time?.slice(0, 5) || "18:00",
+  endTime: request.end_time?.slice(0, 5) || "00:00",
+  eventType: request.event_type || "",
+});
 
 function QuoteListItem({ 
   quote, 
@@ -302,10 +337,14 @@ function QuoteDetailModal({ quote, onClose }: { quote: DatabaseQuote | null; onC
 
 export default function Admin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
   const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
+  const [newQuoteInitialData, setNewQuoteInitialData] = useState<QuoteData>(() => emptyAdminQuote());
+  const [quoteBuilderKey, setQuoteBuilderKey] = useState(0);
+  const [activeQuoteRequestId, setActiveQuoteRequestId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
@@ -324,6 +363,52 @@ export default function Admin() {
       navigate("/dashboard");
     }
   }, [user, authLoading, isAdmin, navigate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    const fromRequest = params.get("fromRequest");
+
+    if (tab) {
+      setActiveTab(tab);
+    }
+
+    if (!fromRequest) return;
+
+    setActiveTab("new-quote");
+    setActiveQuoteRequestId(fromRequest);
+
+    const applyRequest = (request: QuoteRequest) => {
+      setNewQuoteInitialData(quoteDataFromRequest(request));
+      setQuoteBuilderKey((key) => key + 1);
+    };
+
+    try {
+      const stored = sessionStorage.getItem("prefill_quote_request");
+      if (stored) {
+        const parsed = JSON.parse(stored) as QuoteRequest;
+        if (parsed?.id === fromRequest) {
+          applyRequest(parsed);
+          return;
+        }
+      }
+    } catch {
+      // Continue with database fallback when browser storage is unavailable or stale.
+    }
+
+    supabase
+      .from("quote_requests")
+      .select("*")
+      .eq("id", fromRequest)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          toast({ title: "Request Load Failed", description: error.message, variant: "destructive" });
+          return;
+        }
+        if (data) applyRequest(data as QuoteRequest);
+      });
+  }, [location.search]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -375,12 +460,28 @@ export default function Admin() {
   const handleSaveQuote = async (quoteData: QuoteData, calculations: ReturnType<typeof calculateQuote>) => {
     if (!profile) return;
     try {
-      await createQuote({
+      const createdQuote = await createQuote({
         quoteData,
         calculations,
         clientProfileId: profile.id,
       });
+      if (activeQuoteRequestId && createdQuote?.id) {
+        const { error } = await supabase
+          .from("quote_requests")
+          .update({ status: "quoted", quote_id: createdQuote.id } as any)
+          .eq("id", activeQuoteRequestId);
+        if (error) throw error;
+        setActiveQuoteRequestId(null);
+        try {
+          sessionStorage.removeItem("prefill_quote_request");
+        } catch {
+          // Ignore storage cleanup failures.
+        }
+      }
+      setNewQuoteInitialData(emptyAdminQuote());
+      setQuoteBuilderKey((key) => key + 1);
       setActiveTab("quotes");
+      navigate("/admin", { replace: true });
     } catch (error) {
       console.error("Error creating quote:", error);
     }
@@ -736,7 +837,12 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="new-quote">
-              <QuoteCalculator isAdmin={true} onSaveQuote={handleSaveQuote} />
+              <QuoteCalculator
+                key={quoteBuilderKey}
+                isAdmin={true}
+                initialData={newQuoteInitialData}
+                onSaveQuote={handleSaveQuote}
+              />
             </TabsContent>
 
             <TabsContent value="archived">
