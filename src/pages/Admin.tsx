@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
 import { formatCurrency } from "@/lib/pricing";
+import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { 
   Music, 
   LogOut, 
@@ -500,11 +501,9 @@ export default function Admin() {
                   Client View
                 </Link>
               </Button>
-              <Button variant="hero" asChild>
-                <Link to="/#quote-calculator">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Quote
-                </Link>
+              <Button variant="hero" onClick={() => setActiveTab("new-quote")}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Quote
               </Button>
             </div>
           </div>
@@ -573,6 +572,7 @@ export default function Admin() {
             <TabsList className="bg-muted/50 border border-border/50 flex-wrap">
               <TabsTrigger value="requests">Quote Requests</TabsTrigger>
               <TabsTrigger value="quotes">Active Quotes</TabsTrigger>
+              <TabsTrigger value="new-quote">New Quote</TabsTrigger>
               <TabsTrigger value="archived" className="relative">
                 <Archive className="w-3.5 h-3.5 mr-1" /> Archived
                 {archivedQuotes.length > 0 && (
@@ -698,11 +698,9 @@ export default function Admin() {
                           ? "Create your first quote to get started." 
                           : "No quotes match your search criteria."}
                       </p>
-                      <Button variant="hero" asChild>
-                        <Link to="/#quote-calculator">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Create Quote
-                        </Link>
+                      <Button variant="hero" onClick={() => setActiveTab("new-quote")}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Quote
                       </Button>
                     </div>
                   ) : (
@@ -721,6 +719,10 @@ export default function Admin() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="new-quote">
+              <QuoteCalculator isAdmin={true} onSaveQuote={() => setActiveTab("quotes")} />
             </TabsContent>
 
             <TabsContent value="archived">
