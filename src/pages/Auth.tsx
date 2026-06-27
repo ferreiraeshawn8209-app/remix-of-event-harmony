@@ -68,14 +68,23 @@ export default function Auth() {
   const [signupPhone, setSignupPhone] = useState("");
 
   const explicitRedirect = new URLSearchParams(window.location.search).get("redirect");
-  const redirectTo = explicitRedirect || (isAdmin ? "/admin" : "/client");
 
   useEffect(() => {
-    // Wait for profile (and therefore isAdmin) to resolve before redirecting,
-    // otherwise admins get sent to /client before their role is known.
-    if (user && !authLoading && profile) {
-      navigate(explicitRedirect || (isAdmin ? "/admin" : "/client"));
+    if (!user || authLoading) return;
+
+    if (explicitRedirect) {
+      navigate(explicitRedirect);
+      return;
     }
+
+    // If profile is still hydrating, route to dashboard fallback instead of
+    // leaving the user on auth (appears as "not signing in").
+    if (!profile) {
+      navigate("/dashboard");
+      return;
+    }
+
+    navigate(isAdmin ? "/admin" : "/client");
   }, [user, authLoading, profile, isAdmin, navigate, explicitRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -191,9 +200,15 @@ export default function Auth() {
 
     if (error) {
       setIsLoading(false);
+      const unsupportedProvider =
+        error.message?.toLowerCase().includes("unsupported provider") ||
+        error.message?.toLowerCase().includes("provider is not enabled");
+
       toast({
-        title: "Google Sign-In Failed",
-        description: error.message,
+        title: unsupportedProvider ? "Google Provider Not Enabled" : "Google Sign-In Failed",
+        description: unsupportedProvider
+          ? "Google auth is disabled in Supabase. Enable Google under Authentication -> Providers, then try again."
+          : error.message,
         variant: "destructive",
       });
     }
