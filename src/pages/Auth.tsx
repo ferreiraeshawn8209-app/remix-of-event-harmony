@@ -43,6 +43,9 @@ export default function Auth() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
+  const authRedirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}auth`;
+  const resetRedirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}reset-password`;
+
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -152,7 +155,7 @@ export default function Auth() {
     }
     setForgotLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: resetRedirectUrl,
     });
     setForgotLoading(false);
     if (error) {
@@ -160,6 +163,26 @@ export default function Auth() {
     } else {
       toast({ title: "Reset Email Sent", description: "Check your inbox for a password reset link." });
       setShowForgotPassword(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: authRedirectUrl,
+      },
+    });
+
+    if (error) {
+      setIsLoading(false);
+      toast({
+        title: "Google Sign-In Failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -238,6 +261,21 @@ export default function Auth() {
                       "Sign In"
                     )}
                   </Button>
+                  <div className="relative my-3">
+                    <Separator />
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                      or
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleAuth}
+                    disabled={isLoading}
+                  >
+                    Continue with Google
+                  </Button>
                   <button
                     type="button"
                     className="w-full text-xs text-muted-foreground hover:text-primary transition-colors mt-2"
@@ -307,6 +345,21 @@ export default function Auth() {
                     ) : (
                       "Create Account"
                     )}
+                  </Button>
+                  <div className="relative my-3">
+                    <Separator />
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                      or
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleAuth}
+                    disabled={isLoading}
+                  >
+                    Continue with Google
                   </Button>
                 </form>
               </TabsContent>
