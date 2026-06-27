@@ -39,12 +39,24 @@ export default function Auth() {
     ? "signup"
     : "login") as "login" | "signup";
   const [tab, setTab] = useState<"login" | "signup">(initialTab);
+  const configuredBase = import.meta.env.BASE_URL || "/";
+  const normalizedConfiguredBase = configuredBase.endsWith("/")
+    ? configuredBase.slice(0, -1)
+    : configuredBase;
+  const runtimeBase =
+    normalizedConfiguredBase &&
+    normalizedConfiguredBase !== "/" &&
+    (window.location.pathname === normalizedConfiguredBase ||
+      window.location.pathname.startsWith(`${normalizedConfiguredBase}/`))
+      ? configuredBase
+      : "/";
+
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  const authRedirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}auth`;
-  const resetRedirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}reset-password`;
+  const authRedirectUrl = `${window.location.origin}${runtimeBase}auth`;
+  const resetRedirectUrl = `${window.location.origin}${runtimeBase}reset-password`;
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");

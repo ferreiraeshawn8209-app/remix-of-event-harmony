@@ -22,6 +22,18 @@ import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
+const configuredBase = import.meta.env.BASE_URL || "/";
+const normalizedConfiguredBase = configuredBase.endsWith("/")
+  ? configuredBase.slice(0, -1)
+  : configuredBase;
+const runtimeBasename =
+  normalizedConfiguredBase &&
+  normalizedConfiguredBase !== "/" &&
+  (window.location.pathname === normalizedConfiguredBase ||
+    window.location.pathname.startsWith(`${normalizedConfiguredBase}/`))
+    ? configuredBase
+    : "/";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -29,7 +41,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BackgroundAudio />
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <BrowserRouter basename={runtimeBasename}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />

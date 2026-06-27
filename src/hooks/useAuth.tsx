@@ -229,11 +229,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
+      const configuredBase = import.meta.env.BASE_URL || "/";
+      const normalizedConfiguredBase = configuredBase.endsWith("/")
+        ? configuredBase.slice(0, -1)
+        : configuredBase;
+      const runtimeBase =
+        normalizedConfiguredBase &&
+        normalizedConfiguredBase !== "/" &&
+        (window.location.pathname === normalizedConfiguredBase ||
+          window.location.pathname.startsWith(`${normalizedConfiguredBase}/`))
+          ? configuredBase
+          : "/";
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth`,
+          emailRedirectTo: `${window.location.origin}${runtimeBase}auth`,
           data: {
             full_name: fullName,
             phone: phone || null,
