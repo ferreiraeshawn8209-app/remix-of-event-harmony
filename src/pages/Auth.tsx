@@ -73,14 +73,14 @@ export default function Auth() {
     if (!user || authLoading) return;
 
     if (explicitRedirect) {
-      navigate(explicitRedirect);
+      navigate(explicitRedirect, { replace: true });
       return;
     }
 
-    // Keep the post-login path simple and deterministic.
-    // Profile/admin resolution can happen after navigation.
-    navigate("/client");
-  }, [user, authLoading, navigate, explicitRedirect]);
+    if (!profile) return;
+
+    navigate(isAdmin ? "/admin" : "/client", { replace: true });
+  }, [user, authLoading, profile, isAdmin, navigate, explicitRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
