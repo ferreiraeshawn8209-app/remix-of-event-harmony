@@ -35,8 +35,8 @@ export function QuoteRequestsManager() {
         sessionStorage.setItem("prefill_quote_request", JSON.stringify(r));
       } catch { /* ignore */ }
 
-      // Navigate to dashboard new-quote flow with hint
-      navigate(`/dashboard?fromRequest=${r.id}`);
+      // Open admin quote builder and include request id for prefill
+      navigate(`/admin?newQuote=1&newQuoteRequest=${r.id}`);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }

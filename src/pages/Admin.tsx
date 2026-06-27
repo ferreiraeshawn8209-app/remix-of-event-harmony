@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Archive } from "lucide-react";
@@ -302,10 +302,12 @@ function QuoteDetailModal({ quote, onClose }: { quote: DatabaseQuote | null; onC
 
 export default function Admin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
   const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
+  const [requestPrefill, setRequestPrefill] = useState<QuoteData | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
@@ -329,6 +331,70 @@ export default function Admin() {
     await signOut();
     navigate("/");
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const wantsNewQuote = params.has("newQuote") || params.has("newQuoteRequest");
+
+    if (!wantsNewQuote) return;
+
+    setActiveTab("new-quote");
+
+    const stored = sessionStorage.getItem("prefill_quote_request");
+    if (!stored) return;
+
+    try {
+      const req = JSON.parse(stored) as {
+        id: string;
+        client_name: string;
+        contact_no?: string | null;
+        email: string;
+        venue_name?: string | null;
+        venue_address?: string | null;
+        event_date?: string | null;
+        start_time?: string | null;
+        end_time?: string | null;
+        event_type?: string | null;
+        needs_sound?: boolean;
+        needs_lighting?: boolean;
+        needs_special_effects?: boolean;
+        needs_mic?: boolean;
+      };
+
+      const requestId = params.get("newQuoteRequest");
+      if (requestId && req.id !== requestId) return;
+
+      const venue = [req.venue_name, req.venue_address].filter(Boolean).join(" - ");
+
+      setRequestPrefill({
+        clientName: req.client_name || "",
+        contactNo: req.contact_no || "",
+        email: req.email || "",
+        venue,
+        eventDate: req.event_date || "",
+        startTime: req.start_time?.slice(0, 5) || "18:00",
+        endTime: req.end_time?.slice(0, 5) || "00:00",
+        eventType: req.event_type || "",
+        djName: "Aces",
+        equipment: {
+          partyrocker: req.needs_sound ? 2 : 0,
+          rgbStrobe: req.needs_lighting ? 1 : 0,
+          smokeMachine: req.needs_special_effects ? 1 : 0,
+          wirelessMic: req.needs_mic ? 1 : 0,
+        },
+        customItems: [],
+        extras: [],
+        kidsCorner: false,
+        kidsHours: 0,
+        humanJukebox: false,
+        humanJukeboxHours: 0,
+        travelDistance: 0,
+        discountPercent: 0,
+      });
+    } catch {
+      // Ignore malformed storage payloads and keep manual builder flow available.
+    }
+  }, [location.search]);
 
   const handleStatusChange = async (quoteId: string, status: string) => {
     // For declined/rejected, prompt for a reason before applying
@@ -515,7 +581,10 @@ export default function Admin() {
                   Client View
                 </Link>
               </Button>
-              <Button variant="hero" onClick={() => setActiveTab("new-quote")}>
+              <Button variant="hero" onClick={() => {
+                setRequestPrefill(undefined);
+                setActiveTab("new-quote");
+              }}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Quote
               </Button>
@@ -712,7 +781,10 @@ export default function Admin() {
                           ? "Create your first quote to get started." 
                           : "No quotes match your search criteria."}
                       </p>
-                      <Button variant="hero" onClick={() => setActiveTab("new-quote")}>
+                      <Button variant="hero" onClick={() => {
+                        setRequestPrefill(undefined);
+                        setActiveTab("new-quote");
+                      }}>
                         <Plus className="w-4 h-4 mr-2" />
                         Create Quote
                       </Button>
@@ -736,7 +808,11 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="new-quote">
-              <QuoteCalculator isAdmin={true} onSaveQuote={handleSaveQuote} />
+              <QuoteCalculator
+                isAdmin={true}
+                onSaveQuote={handleSaveQuote}
+                initialData={requestPrefill}
+              />
             </TabsContent>
 
             <TabsContent value="archived">
