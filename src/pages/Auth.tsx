@@ -77,15 +77,10 @@ export default function Auth() {
       return;
     }
 
-    // If profile is still hydrating, route to dashboard fallback instead of
-    // leaving the user on auth (appears as "not signing in").
-    if (!profile) {
-      navigate("/dashboard");
-      return;
-    }
-
-    navigate(isAdmin ? "/admin" : "/client");
-  }, [user, authLoading, profile, isAdmin, navigate, explicitRedirect]);
+    // Keep the post-login path simple and deterministic.
+    // Profile/admin resolution can happen after navigation.
+    navigate("/client");
+  }, [user, authLoading, navigate, explicitRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
