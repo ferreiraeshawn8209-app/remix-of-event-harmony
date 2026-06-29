@@ -46,18 +46,15 @@ function randomIndex(len: number, exclude?: number) {
 export function MixcloudRotator({ autoplayTrigger }: MixcloudRotatorProps) {
   // Pick a random starting mix each time the dashboard loads.
   const [index, setIndex] = useState<number>(() => randomIndex(MIXES.length));
-  const [autoplayNonce, setAutoplayNonce] = useState<number>(() => Date.now());
 
   useEffect(() => {
     if (!autoplayTrigger) return;
-    setIndex(randomIndex(MIXES.length));
-    setAutoplayNonce(Date.now());
+    // Re-selecting a different feed remounts the iframe and retries autoplay.
+    setIndex((currentIndex) => randomIndex(MIXES.length, currentIndex));
   }, [autoplayTrigger]);
 
   const current = MIXES[index];
-  const src = useMemo(() => {
-    return buildMixcloudEmbedSrc(current.feed, autoplayNonce);
-  }, [current.feed, autoplayNonce]);
+  const src = useMemo(() => buildMixcloudEmbedSrc(current.feed), [current.feed]);
 
   const next = () => setIndex((i) => (i + 1) % MIXES.length);
   const prev = () => setIndex((i) => (i - 1 + MIXES.length) % MIXES.length);
@@ -73,9 +70,8 @@ export function MixcloudRotator({ autoplayTrigger }: MixcloudRotatorProps) {
           A different BeatKulture mix every time you open this page — Amapiano, House, Afrikaans, English, Old
           School &amp; more.
           <span className="block mt-1">
-            Mixcloud does not expose a reliable API for true random track selection inside one feed, so
-            <span className="font-semibold text-foreground"> Surprise me </span>
-            rotates to another BeatKulture feed and retries autoplay.
+            Mixcloud does not expose a reliable API for true random track selection inside one feed, so{" "}
+            the player controls rotate to another BeatKulture feed and retry autoplay.
           </span>
           <span className="block mt-1 text-foreground/80">
             Now playing: <span className="text-primary font-semibold">{current.label}</span>{" "}
