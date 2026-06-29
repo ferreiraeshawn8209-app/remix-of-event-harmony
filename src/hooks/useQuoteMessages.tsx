@@ -38,13 +38,13 @@ export function useQuoteMessages(quoteId?: string | null) {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "quote_messages", filter: `quote_id=eq.${quoteId}` },
-        () => qc.invalidateQueries({ queryKey: key })
+        () => qc.invalidateQueries({ queryKey: ["quote_messages", quoteId] })
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [quoteId]);
+  }, [qc, quoteId]);
 
   const send = useMutation({
     mutationFn: async (input: { message: string; sender_role: "client" | "admin"; sender_name: string }) => {
@@ -58,7 +58,7 @@ export function useQuoteMessages(quoteId?: string | null) {
       });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["quote_messages", quoteId] }),
     onError: (e: any) => toast({ title: "Could not send", description: e.message, variant: "destructive" }),
   });
 

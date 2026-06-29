@@ -29,6 +29,7 @@ export function EventPhotoUploader({ quoteId, clientCode }: { quoteId: string; c
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchPhotos(); }, [quoteId]);
 
   const handleUpload = async (files: FileList | null) => {

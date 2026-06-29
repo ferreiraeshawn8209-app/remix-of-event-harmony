@@ -25,6 +25,7 @@ function ImageSettingRow({
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setUrl(get(settingKey)); }, [get(settingKey)]);
 
   const doUpload = async (f: File) => {

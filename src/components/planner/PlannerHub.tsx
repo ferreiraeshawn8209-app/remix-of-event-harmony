@@ -683,6 +683,7 @@ function WeatherWidget({ quote }: { quote?: PlannerCtx["quote"] }) {
     } finally { setLoading(false); }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchW(); }, []);
 
   const eventDay = quote?.event_date ? data?.daily?.time?.indexOf(quote.event_date) : -1;

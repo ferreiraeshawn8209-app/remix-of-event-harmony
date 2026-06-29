@@ -220,7 +220,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         contactNo: profile.phone || prev.contactNo,
       }));
     }
-  }, [profile]);
+  }, [initialData, profile, quoteData.clientName]);
 
   // Auto-fill from selected package
   useEffect(() => {

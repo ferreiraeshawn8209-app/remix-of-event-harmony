@@ -225,6 +225,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
 
     return () => subscription.unsubscribe();
+    // Auth bootstrap should run once on mount; auth callbacks handle session changes thereafter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
