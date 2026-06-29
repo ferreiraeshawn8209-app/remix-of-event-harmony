@@ -19,14 +19,14 @@ function ImageSettingRow({
   settingKey: BusinessSettingKey;
   defaultAspect?: "free" | "16:9" | "1:1" | "4:3" | "3:4" | "9:16" | "3:2" | "21:9";
 }) {
-  const { get, setSetting } = useBusinessSettings();
+  const { settings, setSetting } = useBusinessSettings();
   const [busy, setBusy] = useState(false);
-  const [url, setUrl] = useState(get(settingKey));
+  const currentUrl = settings[settingKey] || "";
+  const [url, setUrl] = useState(currentUrl);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setUrl(get(settingKey)); }, [get(settingKey)]);
+  useEffect(() => { setUrl(currentUrl); }, [currentUrl]);
 
   const doUpload = async (f: File) => {
     setBusy(true);

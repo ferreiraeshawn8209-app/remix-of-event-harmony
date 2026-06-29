@@ -116,21 +116,22 @@ export default function ClientPortal() {
   const userEmail = user?.email ?? "";
   const profileId = profile?.id;
   const profileEmail = profile?.email ?? "";
+  const mostRecentQuoteId = quotes[0]?.id ?? null;
+  const mostRecentClientCode = quotes[0]?.client_code ?? "";
 
   // Log portal visit (admins get notified via DB trigger)
   useEffect(() => {
     if (!userId || !profileId) return;
-    const mostRecent = quotes[0];
     supabase.rpc("log_client_portal_visit" as any, {
-      _quote_id: mostRecent?.id ?? null,
-      _client_code: mostRecent?.client_code ?? "",
+      _quote_id: mostRecentQuoteId,
+      _client_code: mostRecentClientCode,
       _email: profileEmail || userEmail,
       _user_agent: navigator.userAgent,
     }).then(({ error }) => {
       if (error) console.warn("Portal visit log failed:", error.message);
     });
     // run once per session per profile
-  }, [profileEmail, profileId, quotes, userEmail, userId]);
+  }, [mostRecentClientCode, mostRecentQuoteId, profileEmail, profileId, userEmail, userId]);
 
   // Equipment label cache (for line items)
   useEffect(() => {

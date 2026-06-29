@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -15,10 +15,10 @@ export interface QuoteMessage {
 
 export function useQuoteMessages(quoteId?: string | null) {
   const qc = useQueryClient();
-  const key = ["quote_messages", quoteId];
+  const queryKey = useMemo(() => ["quote_messages", quoteId], [quoteId]);
 
   const query = useQuery({
-    queryKey: key,
+    queryKey,
     enabled: !!quoteId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -38,13 +38,13 @@ export function useQuoteMessages(quoteId?: string | null) {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "quote_messages", filter: `quote_id=eq.${quoteId}` },
-        () => qc.invalidateQueries({ queryKey: ["quote_messages", quoteId] })
+        () => qc.invalidateQueries({ queryKey })
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [qc, quoteId]);
+  }, [qc, queryKey, quoteId]);
 
   const send = useMutation({
     mutationFn: async (input: { message: string; sender_role: "client" | "admin"; sender_name: string }) => {
@@ -58,7 +58,7 @@ export function useQuoteMessages(quoteId?: string | null) {
       });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["quote_messages", quoteId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
     onError: (e: any) => toast({ title: "Could not send", description: e.message, variant: "destructive" }),
   });
 

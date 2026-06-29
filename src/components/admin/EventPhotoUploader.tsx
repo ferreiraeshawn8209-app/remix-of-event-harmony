@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ export function EventPhotoUploader({ quoteId, clientCode }: { quoteId: string; c
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const fetchPhotos = async () => {
+  const fetchPhotos = useCallback(async () => {
     const { data } = await supabase
       .from("event_photos")
       .select("*")
@@ -27,10 +27,9 @@ export function EventPhotoUploader({ quoteId, clientCode }: { quoteId: string; c
       .order("created_at", { ascending: false });
     setPhotos((data as EventPhoto[]) || []);
     setLoading(false);
-  };
+  }, [quoteId]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchPhotos(); }, [quoteId]);
+  useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;

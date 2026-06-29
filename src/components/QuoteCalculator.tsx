@@ -212,15 +212,18 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
 
   // Pre-fill user data if logged in and not editing
   useEffect(() => {
-    if (!initialData && profile && !quoteData.clientName) {
-      setQuoteData(prev => ({
-        ...prev,
-        clientName: profile.full_name || prev.clientName,
-        email: profile.email || prev.email,
-        contactNo: profile.phone || prev.contactNo,
-      }));
+    if (!initialData && profile) {
+      setQuoteData(prev => {
+        if (prev.clientName) return prev;
+        return {
+          ...prev,
+          clientName: profile.full_name || prev.clientName,
+          email: profile.email || prev.email,
+          contactNo: profile.phone || prev.contactNo,
+        };
+      });
     }
-  }, [initialData, profile, quoteData.clientName]);
+  }, [initialData, profile]);
 
   // Auto-fill from selected package
   useEffect(() => {
