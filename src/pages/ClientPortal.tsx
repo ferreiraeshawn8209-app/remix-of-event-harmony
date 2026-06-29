@@ -116,8 +116,10 @@ export default function ClientPortal() {
   const userEmail = user?.email ?? "";
   const profileId = profile?.id;
   const profileEmail = profile?.email ?? "";
-  const mostRecentQuoteId = quotes[0]?.id ?? null;
-  const mostRecentClientCode = quotes[0]?.client_code ?? "";
+  const { mostRecentQuoteId, mostRecentClientCode } = useMemo(() => ({
+    mostRecentQuoteId: quotes[0]?.id ?? null,
+    mostRecentClientCode: quotes[0]?.client_code ?? "",
+  }), [quotes]);
 
   // Log portal visit (admins get notified via DB trigger)
   useEffect(() => {
