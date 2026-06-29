@@ -31,6 +31,7 @@ import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
