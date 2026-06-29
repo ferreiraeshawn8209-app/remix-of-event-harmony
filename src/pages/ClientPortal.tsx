@@ -125,7 +125,6 @@ export default function ClientPortal() {
       if (error) console.warn("Portal visit log failed:", error.message);
     });
     // run once per session per profile
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, profile?.id, quotes.length > 0]);
 
   // Equipment label cache (for line items)

@@ -683,7 +683,7 @@ function WeatherWidget({ quote }: { quote?: PlannerCtx["quote"] }) {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchW(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { fetchW(); }, []);
 
   const eventDay = quote?.event_date ? data?.daily?.time?.indexOf(quote.event_date) : -1;
   const codeMap: Record<number, string> = { 0: "☀️ Clear", 1: "🌤 Mostly clear", 2: "⛅ Partly cloudy", 3: "☁️ Overcast", 45: "🌫 Fog", 51: "🌦 Drizzle", 61: "🌧 Rain", 71: "❄️ Snow", 80: "🌧 Showers", 95: "⛈ Thunderstorm" };

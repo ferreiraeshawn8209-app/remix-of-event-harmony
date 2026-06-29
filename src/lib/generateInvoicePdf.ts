@@ -87,7 +87,7 @@ async function preloadEquipmentImages(
 
 function addLetterhead(doc: jsPDF, logoBase64: string | null, title: string, quote: DatabaseQuote) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 15;
+  const y = 15;
 
   // Logo
   if (logoBase64) {
