@@ -214,12 +214,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
   useEffect(() => {
     if (!initialData && profile) {
       setQuoteData(prev => {
-        if (prev.clientName) return prev;
+        if (prev.clientName && prev.email && prev.contactNo) return prev;
         return {
           ...prev,
-          clientName: profile.full_name || prev.clientName,
-          email: profile.email || prev.email,
-          contactNo: profile.phone || prev.contactNo,
+          clientName: prev.clientName || profile.full_name || "",
+          email: prev.email || profile.email || "",
+          contactNo: prev.contactNo || profile.phone || "",
         };
       });
     }

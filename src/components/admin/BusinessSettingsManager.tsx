@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,18 +22,14 @@ function ImageSettingRow({
   const { settings, setSetting } = useBusinessSettings();
   const [busy, setBusy] = useState(false);
   const currentUrl = settings[settingKey] || "";
-  const [url, setUrl] = useState(currentUrl);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => { setUrl(currentUrl); }, [currentUrl]);
 
   const doUpload = async (f: File) => {
     setBusy(true);
     try {
       const publicUrl = await uploadSiteImage(f, settingKey);
       await setSetting(settingKey, publicUrl);
-      setUrl(publicUrl);
       toast({ title: "Image updated" });
       if (fileRef.current) fileRef.current.value = "";
     } catch (e: any) {
@@ -52,7 +48,6 @@ function ImageSettingRow({
     setBusy(true);
     try {
       await setSetting(settingKey, "");
-      setUrl("");
       toast({ title: "Image cleared" });
     } catch (e: any) {
       toast({ title: "Failed", description: e.message, variant: "destructive" });
@@ -66,8 +61,8 @@ function ImageSettingRow({
         <Label className="text-base">{label}</Label>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      {url ? (
-        <img src={url} alt={label} className="w-full max-h-40 object-cover rounded" />
+      {currentUrl ? (
+        <img src={currentUrl} alt={label} className="w-full max-h-40 object-cover rounded" />
       ) : (
         <div className="w-full h-24 rounded bg-muted/30 flex items-center justify-center text-muted-foreground">
           <ImageIcon className="w-6 h-6" />
@@ -79,7 +74,7 @@ function ImageSettingRow({
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
           Upload
         </Button>
-        {url && (
+        {currentUrl && (
           <Button size="sm" variant="ghost" onClick={handleClear} disabled={busy}>Clear</Button>
         )}
       </div>
