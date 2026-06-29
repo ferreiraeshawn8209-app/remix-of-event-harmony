@@ -374,32 +374,105 @@ function TimelineScheduler({ storageKey, quote }: { storageKey: string; quote?: 
 // ============================================================
 // 5. MUSIC PLANNER
 // ============================================================
-type Song = { id: string; title: string; artist: string; moment: string };
-const MOMENTS = ["Cocktail", "Entrance", "Dinner", "First Dance", "Cake Cutting", "Dance Floor", "Last Song"];
+const MIN_SONGS = 35;
+
+type Song = {
+  id: string;
+  title: string;
+  artist: string;
+  moment: string;
+  orderNum?: string;   // e.g. "1st", "2nd" or exact time "18:00"
+  notes?: string;      // optional notes for DJ
+};
+
+const MOMENTS_BY_TYPE: Record<string, string[]> = {
+  wedding: [
+    "Entrance / Walkout",
+    "Ceremony",
+    "Garter Toss",
+    "Bride's First Dance",
+    "Couple's First Dance",
+    "Cake Cutting",
+    "Bouquet Toss",
+    "Cocktail / Reception",
+    "Dinner",
+    "Dance Floor",
+    "Closing / Last Dance",
+  ],
+  corporate: [
+    "Welcome Music",
+    "Background / Networking",
+    "Break Music",
+    "Presentation",
+    "Dinner / Gala",
+    "Dance Floor",
+    "Closing / Exit Music",
+  ],
+  party: [
+    "Opening Song",
+    "Peak Time",
+    "Background / Chill",
+    "Dance Floor",
+    "Closing Song",
+  ],
+  default: [
+    "Opening",
+    "Cocktail",
+    "Dinner",
+    "Dance Floor",
+    "Highlight Moment",
+    "Closing / Last Song",
+  ],
+};
+
+function getMoments(eventType?: string | null): string[] {
+  if (!eventType) return MOMENTS_BY_TYPE.default;
+  const lower = eventType.toLowerCase();
+  if (lower.includes("wedding")) return MOMENTS_BY_TYPE.wedding;
+  if (lower.includes("corporate") || lower.includes("company") || lower.includes("business")) return MOMENTS_BY_TYPE.corporate;
+  if (lower.includes("party") || lower.includes("birthday") || lower.includes("private")) return MOMENTS_BY_TYPE.party;
+  return MOMENTS_BY_TYPE.default;
+}
+
 function MusicPlanner({ storageKey, quote }: { storageKey: string; quote?: PlannerCtx["quote"] }) {
+  const moments = getMoments(quote?.event_type);
   const [songs, setSongs] = useLocal<Song[]>(storageKey, []);
   const [doNotPlay, setDoNotPlay] = useLocal<string>(storageKey + ":dnp", "");
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
-  const [moment, setMoment] = useState(MOMENTS[0]);
+  const [moment, setMoment] = useState(moments[0]);
+  const [orderNum, setOrderNum] = useState("");
+  const [notes, setNotes] = useState("");
+  const [showNotes, setShowNotes] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
+
+  const mustPlayCount = songs.length;
+  const progress = Math.min(100, Math.round((mustPlayCount / MIN_SONGS) * 100));
+  const remaining = Math.max(0, MIN_SONGS - mustPlayCount);
 
   const add = () => {
     if (!title.trim()) return;
-    setSongs([...songs, { id: crypto.randomUUID(), title, artist, moment }]);
-    setTitle(""); setArtist("");
+    setSongs([...songs, {
+      id: crypto.randomUUID(),
+      title: title.trim(),
+      artist: artist.trim(),
+      moment,
+      orderNum: orderNum.trim() || undefined,
+      notes: notes.trim() || undefined,
+    }]);
+    setTitle(""); setArtist(""); setOrderNum(""); setNotes("");
   };
 
   const aiSuggest = async () => {
     setLoadingAI(true);
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/event-assistant`;
+      const existing = songs.map(s => `${s.title} — ${s.artist}`).join(", ");
+      const prompt = `Suggest 8 crowd-pleaser songs for a ${quote?.event_type || "party"} in South Africa. Mix local + international hits.${existing ? ` Avoid duplicating these already added: ${existing}.` : ""} Format strictly as: "Title — Artist" one per line, no numbering, no extra text.`;
       const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: `Suggest 8 crowd-pleaser songs for a ${quote?.event_type || "party"} in South Africa. Mix local + international hits. Format strictly as: "Title — Artist" one per line, no numbering, no extra text.` }],
-        }),
+        body: JSON.stringify({ messages: [{ role: "user", content: prompt }] }),
       });
       if (!resp.ok || !resp.body) throw new Error("AI failed");
       const reader = resp.body.getReader(); const dec = new TextDecoder();
@@ -418,7 +491,7 @@ function MusicPlanner({ storageKey, quote }: { storageKey: string; quote?: Plann
       }
       const newSongs: Song[] = text.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 8).map(line => {
         const [t, a] = line.split("—").map(s => s?.trim());
-        return { id: crypto.randomUUID(), title: t || line, artist: a || "", moment: "Dance Floor" };
+        return { id: crypto.randomUUID(), title: t || line, artist: a || "", moment: moments.find(m => m.includes("Dance")) || moments[moments.length - 1] };
       });
       setSongs([...songs, ...newSongs]);
       toast({ title: `Added ${newSongs.length} AI suggestions 🎶` });
@@ -428,33 +501,124 @@ function MusicPlanner({ storageKey, quote }: { storageKey: string; quote?: Plann
   };
 
   return (
-    <div className="space-y-3">
-      <Card><CardContent className="py-3 space-y-2">
-        <div className="grid grid-cols-12 gap-2">
-          <Input className="col-span-4" placeholder="Song title" value={title} onChange={e => setTitle(e.target.value)} />
-          <Input className="col-span-3" placeholder="Artist" value={artist} onChange={e => setArtist(e.target.value)} />
-          <select className="col-span-3 h-10 rounded-md border border-input bg-background text-sm px-2" value={moment} onChange={e => setMoment(e.target.value)}>
-            {MOMENTS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <Button className="col-span-2" onClick={add}><Plus className="w-4 h-4" /></Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={aiSuggest} disabled={loadingAI}>
-          {loadingAI ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
-          AI Suggest Songs
-        </Button>
-      </CardContent></Card>
+    <div className="space-y-4">
+      {/* Progress toward 35-song minimum */}
+      <Card className={mustPlayCount >= MIN_SONGS ? "border-primary/40" : "border-border"}>
+        <CardContent className="py-3 space-y-1.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-semibold flex items-center gap-1">
+              <Music className="w-3 h-3" /> Must-play list ({mustPlayCount}/{MIN_SONGS} songs)
+            </span>
+            {mustPlayCount >= MIN_SONGS
+              ? <span className="text-primary font-semibold">✓ Minimum met!</span>
+              : <span className="text-muted-foreground">{remaining} more to go</span>}
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${mustPlayCount >= MIN_SONGS ? "bg-primary" : "bg-primary/50"}`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Minimum {MIN_SONGS} songs required. Build your list over multiple sessions — progress is saved automatically.
+          </p>
+        </CardContent>
+      </Card>
 
-      {MOMENTS.map(m => {
+      {/* Add song form */}
+      <Card>
+        <CardContent className="py-3 space-y-2">
+          <div className="grid grid-cols-12 gap-2">
+            <Input className="col-span-5 sm:col-span-4" placeholder="Song title *" value={title} onChange={e => setTitle(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && add()} />
+            <Input className="col-span-5 sm:col-span-3" placeholder="Artist" value={artist} onChange={e => setArtist(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && add()} />
+            <select
+              className="col-span-12 sm:col-span-3 h-10 rounded-md border border-input bg-background text-sm px-2"
+              value={moment}
+              onChange={e => setMoment(e.target.value)}
+            >
+              {moments.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <Button className="col-span-2 hidden sm:flex" onClick={add} disabled={!title.trim()}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Optional order / time + notes toggle */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs h-7 px-2"
+              onClick={() => setShowNotes(p => !p)}
+            >
+              {showNotes ? "Hide extras" : "+ Order / Notes"}
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={aiSuggest} disabled={loadingAI}>
+              {loadingAI ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
+              AI Suggest
+            </Button>
+            <Button variant="hero" size="sm" className="h-7 text-xs sm:hidden" onClick={add} disabled={!title.trim()}>
+              <Plus className="w-3 h-3 mr-1" /> Add
+            </Button>
+          </div>
+
+          {showNotes && (
+            <div className="grid sm:grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px]">Order / Exact time (e.g. "1st", "18:30")</Label>
+                <Input
+                  placeholder='e.g. "1st" or "18:30"'
+                  value={orderNum}
+                  onChange={e => setOrderNum(e.target.value)}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px]">Notes for DJ (optional)</Label>
+                <Input
+                  placeholder="e.g. slow fade-in, crowd surprise..."
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Songs grouped by moment */}
+      {moments.map(m => {
         const list = songs.filter(s => s.moment === m);
         if (list.length === 0) return null;
         return (
           <div key={m}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">{m}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 flex items-center gap-1">
+              <Music className="w-3 h-3" /> {m} <Badge variant="outline" className="text-[9px] ml-1">{list.length}</Badge>
+            </p>
             <div className="space-y-1">
-              {list.map(s => (
-                <div key={s.id} className="flex items-center justify-between gap-2 text-sm rounded-md border border-border px-3 py-1.5">
-                  <span><strong>{s.title}</strong>{s.artist ? ` — ${s.artist}` : ""}</span>
-                  <Button variant="ghost" size="icon" onClick={() => setSongs(songs.filter(x => x.id !== s.id))}><Trash2 className="w-3 h-3" /></Button>
+              {list.map((s, idx) => (
+                <div key={s.id} className="flex items-start gap-2 rounded-md border border-border px-3 py-2">
+                  <span className="text-[10px] text-muted-foreground w-4 shrink-0 mt-0.5">{idx + 1}.</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm"><strong>{s.title}</strong>{s.artist ? <span className="text-muted-foreground"> — {s.artist}</span> : ""}</p>
+                    {(s.orderNum || s.notes) && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5 flex gap-2 flex-wrap">
+                        {s.orderNum && <span>⏱ {s.orderNum}</span>}
+                        {s.notes && <span>📝 {s.notes}</span>}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 h-6 w-6"
+                    onClick={() => setSongs(songs.filter(x => x.id !== s.id))}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -462,13 +626,34 @@ function MusicPlanner({ storageKey, quote }: { storageKey: string; quote?: Plann
         );
       })}
 
+      {songs.length === 0 && (
+        <p className="text-xs text-muted-foreground text-center py-2">
+          No songs added yet. Use the form above to build your playlist.
+        </p>
+      )}
+
+      {/* Do NOT play */}
       <div className="space-y-1">
-        <Label className="text-xs">Do NOT play list</Label>
-        <Textarea value={doNotPlay} onChange={e => setDoNotPlay(e.target.value)} rows={2} placeholder="One per line: song or artist to avoid" />
+        <Label className="text-xs font-semibold">🚫 Do NOT play (songs / artists / styles to avoid)</Label>
+        <Textarea
+          value={doNotPlay}
+          onChange={e => setDoNotPlay(e.target.value)}
+          rows={3}
+          placeholder='One per line: e.g. "Anything by [artist]", "No slow songs before 21:00", "No heavy metal"'
+        />
       </div>
+
+      {/* Event type note */}
+      {quote?.event_type && (
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <Sparkles className="w-3 h-3 text-primary" />
+          Moments are tailored for your <strong>{quote.event_type}</strong>. The DJ will receive your full playlist and run sheet.
+        </p>
+      )}
     </div>
   );
 }
+
 
 // ============================================================
 // 6. WEATHER WIDGET (open-meteo, no API key)

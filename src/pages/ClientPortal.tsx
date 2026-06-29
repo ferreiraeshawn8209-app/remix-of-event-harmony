@@ -165,6 +165,8 @@ export default function ClientPortal() {
 
   // ─── DASHBOARD ────────────────────────────────────────────
   if (view === "dashboard") {
+    const depositPaidQuote = quotes.find(q => q.deposit_paid);
+
     return (
       <div className="min-h-screen bg-background pb-24 relative">
         <PageBackground pageKey="bg_client_portal" />
@@ -183,18 +185,44 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          {/* Mixcloud Rotator — random genre each load + prev/next */}
-          <MixcloudRotator />
+          {/* ① AI Event Assistance — always at top */}
+          <PlannerHub
+            scopeKey={profile?.id || user.id}
+            quote={quotes[0] ? {
+              id: quotes[0].id,
+              event_type: quotes[0].event_type,
+              event_date: quotes[0].event_date,
+              venue: quotes[0].venue,
+              start_time: quotes[0].start_time,
+              end_time: quotes[0].end_time,
+            } : undefined}
+          />
 
-          {/* Competitions */}
-          <CompetitionsBanner />
+          {/* Forced event planner prompt after deposit paid */}
+          {depositPaidQuote && (
+            <Card variant="glass" className="border-primary/50 bg-primary/5">
+              <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-6 h-6 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-sm">Complete your Event Planner</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
+                      Your deposit has been received — please complete your event planner including your song playlist
+                      (minimum 35 songs), songs you do not want played, and your event timeline.
+                      This is required before your event.
+                    </p>
+                  </div>
+                </div>
+                <Button variant="hero" size="sm" asChild>
+                  <Link to={`/event-planner/${depositPaidQuote.id}`}>
+                    <Calendar className="w-4 h-4 mr-2" /> Open Event Planner
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* YouTube Showcase */}
-          <YoutubeShowcase />
-
-
-
-          {/* Specials */}
+          {/* ② Special banner */}
           {activeSpecials.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold flex items-center gap-2">
@@ -217,7 +245,25 @@ export default function ClientPortal() {
             </section>
           )}
 
-          {/* Packages — Corporate, Wedding, Private Party */}
+          {/* ③ Get a Customized Quote */}
+          <Card variant="glass" className="border-primary/40 bg-primary/5">
+            <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold">Prefer something tailored?</p>
+                <p className="text-xs text-muted-foreground">
+                  Tell us about your event — venue, date, times, special effects — and we'll prepare a custom quote.
+                  If you need an event organiser, catering, furniture, or table décor, please mention it in the comments
+                  when applying — <span className="text-foreground font-semibold">BeatKulture provides that service.</span>
+                </p>
+              </div>
+              <Button variant="hero" onClick={() => setView("questionnaire")}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Request Custom Quotation
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* ④⑤⑥ Packages — Wedding → Corporate → Party */}
           <section className="space-y-4">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
@@ -225,7 +271,7 @@ export default function ClientPortal() {
             {Object.keys(packagesByCategory).length === 0 ? (
               <p className="text-xs text-muted-foreground">No packages available right now.</p>
             ) : (
-              (["corporate", "wedding", "party", "other"] as const)
+              (["wedding", "corporate", "party", "other"] as const)
                 .filter(cat => packagesByCategory[cat])
                 .map(cat => (
                   <div key={cat} className="space-y-2">
@@ -272,22 +318,6 @@ export default function ClientPortal() {
                 ))
             )}
           </section>
-
-          {/* CTA: Request Custom Quote */}
-          <Card variant="glass" className="border-primary/40 bg-primary/5">
-            <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold">Prefer something tailored?</p>
-                <p className="text-xs text-muted-foreground">
-                  Tell us about your event — venue, date, times, special effects — and we'll prepare a custom quote.
-                </p>
-              </div>
-              <Button variant="hero" onClick={() => setView("questionnaire")}>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Request Custom Quotation
-              </Button>
-            </CardContent>
-          </Card>
 
           {/* My Requests / Quotes */}
           <section className="space-y-3">
@@ -347,24 +377,25 @@ export default function ClientPortal() {
             )}
           </section>
 
-          {/* Planning Tools */}
-          <PlannerHub
-            scopeKey={profile?.id || user.id}
-            quote={quotes[0] ? {
-              id: quotes[0].id,
-              event_type: quotes[0].event_type,
-              event_date: quotes[0].event_date,
-              venue: quotes[0].venue,
-              start_time: quotes[0].start_time,
-              end_time: quotes[0].end_time,
-            } : undefined}
-          />
+          {/* ⑦ Competitions banner */}
+          <CompetitionsBanner />
+
+          {/* ⑧ Testimonials / Reviews */}
+          <TestimonialsSection quoteId={quotes[0]?.id} />
+
+          {/* ⑨ YouTube videos */}
+          <YoutubeShowcase />
+
+          {/* ⑩ Mixcloud player — last */}
+          <MixcloudRotator />
+
         </main>
       </div>
     );
   }
 
-  // ─── QUESTIONNAIRE ────────────────────────────────────────
+
+    // ─── QUESTIONNAIRE ────────────────────────────────────────
   if (view === "questionnaire") {
     return (
       <Questionnaire

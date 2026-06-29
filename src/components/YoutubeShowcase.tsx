@@ -14,12 +14,10 @@ export function YoutubeShowcase() {
     <Card variant="glass" className="overflow-hidden border-primary/20">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
-          <Youtube className="w-4 h-4 text-primary" /> Listen to our home-produced music
+          <Youtube className="w-4 h-4 text-primary" /> BeatKulture Videos
         </CardTitle>
         <CardDescription className="text-xs leading-relaxed">
-          Original productions in collaboration with{" "}
-          <span className="text-foreground font-semibold">BeatKulture Entertainment</span> &amp;{" "}
-          <span className="text-foreground font-semibold">DJ Shawn-E-Shawn</span>. Tap a thumbnail to play.
+          listen to our locally produced tracks and view example videos of lighting and effects descriptions
         </CardDescription>
       </CardHeader>
       <CardContent>
