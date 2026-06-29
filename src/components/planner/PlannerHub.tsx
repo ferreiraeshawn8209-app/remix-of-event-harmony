@@ -468,7 +468,12 @@ function MusicPlanner({ storageKey, quote }: { storageKey: string; quote?: Plann
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/event-assistant`;
       const existing = songs.map(s => `${s.title} — ${s.artist}`).join(", ");
-      const prompt = `Suggest 8 crowd-pleaser songs for a ${quote?.event_type || "party"} in South Africa. Mix local + international hits.${existing ? ` Avoid duplicating these already added: ${existing}.` : ""} Format strictly as: "Title — Artist" one per line, no numbering, no extra text.`;
+      const prompt = [
+        `Suggest 8 crowd-pleaser songs for a ${quote?.event_type || "party"} in South Africa.`,
+        "Mix local + international hits.",
+        existing ? `Avoid duplicating these already added: ${existing}.` : "",
+        'Format strictly as: "Title — Artist" one per line, no numbering, no extra text.',
+      ].filter(Boolean).join(" ");
       const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },

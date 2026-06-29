@@ -394,8 +394,7 @@ export default function ClientPortal() {
     );
   }
 
-
-    // ─── QUESTIONNAIRE ────────────────────────────────────────
+  // ─── QUESTIONNAIRE ────────────────────────────────────────
   if (view === "questionnaire") {
     return (
       <Questionnaire
