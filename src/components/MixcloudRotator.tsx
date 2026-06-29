@@ -24,6 +24,8 @@ interface MixcloudRotatorProps {
   autoplayTrigger?: string;
 }
 
+const MIXCLOUD_BACKUP_URL = "https://www.mixcloud.com/Beatkulture/uploads/";
+
 /** Anything under the /Beatkulture/ profile works. Edit this list in code. */
 const MIXES: MixEntry[] = [
   { feed: "/Beatkulture/",                              label: "Latest BeatKulture set",      genre: "Featured" },
@@ -90,6 +92,16 @@ export function MixcloudRotator({ autoplayTrigger }: MixcloudRotatorProps) {
           title={`BeatKulture Mixcloud — ${current.label}`}
         />
       </CardContent>
+      <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border/40 bg-muted/20">
+        <a
+          href={MIXCLOUD_BACKUP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          Having trouble with the player? Open on Mixcloud
+        </a>
+      </div>
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/40 bg-muted/20">
         <Button size="sm" variant="ghost" onClick={prev} className="flex-1">
           <SkipBack className="w-4 h-4 mr-1" /> Previous
