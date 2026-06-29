@@ -27,6 +27,7 @@ import {
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
@@ -185,10 +186,6 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-<<<<<<< HEAD
-          {/* Mixcloud Rotator — random genre each load + autoplay attempt on sign-in */}
-          <MixcloudRotator autoplayTrigger={user.id} />
-=======
           {/* ① AI Event Assistance — always at top */}
           <PlannerHub
             scopeKey={profile?.id || user.id}
@@ -201,7 +198,6 @@ export default function ClientPortal() {
               end_time: quotes[0].end_time,
             } : undefined}
           />
->>>>>>> origin/copilot/update-signed-in-client-layout
 
           {/* Forced event planner prompt after deposit paid */}
           {depositPaidQuote && (
@@ -392,7 +388,7 @@ export default function ClientPortal() {
           <YoutubeShowcase />
 
           {/* ⑩ Mixcloud player — last */}
-          <MixcloudRotator />
+          <MixcloudRotator autoplayTrigger={user.id} />
 
         </main>
       </div>
