@@ -387,7 +387,7 @@ export default function ClientPortal() {
           <YoutubeShowcase />
 
           {/* ⑩ Mixcloud player — last */}
-          <MixcloudRotator />
+          <MixcloudRotator autoplayTrigger={user.id} />
 
         </main>
       </div>
