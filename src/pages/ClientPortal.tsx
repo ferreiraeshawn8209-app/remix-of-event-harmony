@@ -183,8 +183,8 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          {/* Mixcloud Rotator — random genre each load + prev/next */}
-          <MixcloudRotator />
+          {/* Mixcloud Rotator — random genre each load + autoplay attempt on sign-in */}
+          <MixcloudRotator autoplayTrigger={user.id} />
 
           {/* Competitions */}
           <CompetitionsBanner />

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, SkipBack, SkipForward, Shuffle } from "lucide-react";
+import { buildMixcloudEmbedSrc } from "@/lib/mixcloud";
 
 /**
  * Curated rotating Mixcloud mixes for the client dashboard.
@@ -14,6 +15,13 @@ interface MixEntry {
   feed: string;
   label: string;
   genre: string;
+}
+
+interface MixcloudRotatorProps {
+  /**
+   * Changing this value forces a fresh autoplay attempt (for example on new sign-in).
+   */
+  autoplayTrigger?: string;
 }
 
 /** Anything under the /Beatkulture/ profile works. Edit this list in code. */
@@ -35,16 +43,21 @@ function randomIndex(len: number, exclude?: number) {
   return i;
 }
 
-export function MixcloudRotator() {
+export function MixcloudRotator({ autoplayTrigger }: MixcloudRotatorProps) {
   // Pick a random starting mix each time the dashboard loads.
   const [index, setIndex] = useState<number>(() => randomIndex(MIXES.length));
+  const [autoplayNonce, setAutoplayNonce] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    if (!autoplayTrigger) return;
+    setIndex(randomIndex(MIXES.length));
+    setAutoplayNonce(Date.now());
+  }, [autoplayTrigger]);
 
   const current = MIXES[index];
   const src = useMemo(() => {
-    const encoded = encodeURIComponent(current.feed);
-    // autoplay=1 only fires when user interacts; that's fine.
-    return `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=${encoded}`;
-  }, [current.feed]);
+    return buildMixcloudEmbedSrc(current.feed, autoplayNonce);
+  }, [current.feed, autoplayNonce]);
 
   const next = () => setIndex((i) => (i + 1) % MIXES.length);
   const prev = () => setIndex((i) => (i - 1 + MIXES.length) % MIXES.length);
@@ -57,8 +70,13 @@ export function MixcloudRotator() {
           <Music className="w-4 h-4 text-primary" /> Have a listen to our mixes
         </CardTitle>
         <CardDescription className="text-xs leading-relaxed">
-          A different mix every time you open this page — Amapiano, House, Afrikaans, English, Old School &amp;
-          more. Skip forward or back to find your vibe.
+          A different BeatKulture mix every time you open this page — Amapiano, House, Afrikaans, English, Old
+          School &amp; more.
+          <span className="block mt-1">
+            Mixcloud does not expose a reliable API for true random track selection inside one feed, so
+            <span className="font-semibold text-foreground"> Surprise me </span>
+            rotates to another BeatKulture feed and retries autoplay.
+          </span>
           <span className="block mt-1 text-foreground/80">
             Now playing: <span className="text-primary font-semibold">{current.label}</span>{" "}
             <span className="text-muted-foreground">· {current.genre}</span>
