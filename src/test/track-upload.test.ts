@@ -14,6 +14,12 @@ function makeFile(contents: string, name: string, type = "audio/mpeg") {
 }
 
 describe("track upload hardening", () => {
+  it("accepts .mp3 files when MIME type is missing", () => {
+    const file = makeFile("fake", "song.mp3", "");
+
+    expect(() => validateTrackFile(file)).not.toThrow();
+  });
+
   it("rejects invalid type when MIME does not match MP3", () => {
     const file = makeFile("fake", "song.mp3", "audio/wav");
 
