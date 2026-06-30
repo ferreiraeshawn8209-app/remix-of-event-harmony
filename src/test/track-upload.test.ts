@@ -6,6 +6,7 @@ import {
   mapStorageError,
   resolveMaxTrackUploadBytes,
   uploadTrackFile,
+  validateFallbackTrackUrl,
   validateTrackFile,
 } from "@/lib/trackUpload";
 
@@ -46,6 +47,14 @@ describe("track upload hardening", () => {
 
   it("uses default max upload setting when env is missing", () => {
     expect(resolveMaxTrackUploadBytes(0)).toBe(DEFAULT_MAX_TRACK_UPLOAD_MB * 1024 * 1024);
+  });
+
+  it("accepts valid direct MP3 fallback URLs", () => {
+    expect(validateFallbackTrackUrl("https://cdn.example/audio/mix.mp3")).toBe("https://cdn.example/audio/mix.mp3");
+  });
+
+  it("rejects non-MP3 fallback URLs", () => {
+    expect(() => validateFallbackTrackUrl("https://cdn.example/audio/mix.wav")).toThrow(".mp3");
   });
 
   it("retries transient upload error and succeeds", async () => {
