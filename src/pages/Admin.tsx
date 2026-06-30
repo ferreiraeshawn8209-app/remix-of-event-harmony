@@ -62,6 +62,7 @@ import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { ReviewsManager } from "@/components/admin/ReviewsManager";
 import { TracksManager } from "@/components/admin/TracksManager";
+import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import {
@@ -548,6 +549,7 @@ export default function Admin() {
               <Shield className="w-3 h-3" />
               Admin
             </Badge>
+            <SupabaseEnvBadge />
             <span className="text-sm text-muted-foreground hidden sm:inline">
               {profile.full_name}
             </span>
