@@ -71,7 +71,7 @@ const Index = () => {
       {/* Top bar */}
       <header className="container mx-auto px-4 py-5 flex items-center justify-between relative z-10">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logoImg} alt="BeatKulture Entertainment" className="w-10 h-10 object-contain" />
+          <img src={logoImg} alt="BeatKulture Entertainment logo" className="w-10 h-10 object-contain" />
           <div className="flex flex-col leading-tight">
             <span className="font-display font-bold text-base sm:text-lg">BEATKULTURE ENTERTAINMENT</span>
             <span className="text-[10px] sm:text-xs text-muted-foreground">One Beat. One Kulture. One Love.</span>
