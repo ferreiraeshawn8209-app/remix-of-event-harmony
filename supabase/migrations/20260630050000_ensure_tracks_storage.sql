@@ -5,7 +5,7 @@ VALUES (
   'tracks',
   'tracks',
   true,
-  52428800,
+  52428800, -- 50 MB per file
   ARRAY['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac']
 )
 ON CONFLICT (id) DO UPDATE
