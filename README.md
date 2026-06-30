@@ -71,3 +71,9 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## MP3 upload hardening notes
+
+- The admin track uploader accepts MP3 files only (`.mp3` + `audio/mpeg`/`audio/mp3`).
+- Configure max upload size with `VITE_MAX_TRACK_UPLOAD_MB` (defaults to `50` MB when unset).
+- If uploads fail with a missing bucket error, create the Supabase storage bucket named `tracks` and verify storage permissions for admin users.

@@ -9,44 +9,57 @@ import { Loader2, Music2, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTracks } from "@/hooks/useTracks";
 import { toast } from "@/hooks/use-toast";
+import { TrackUploadError, resolveMaxTrackUploadBytes, uploadTrackFile } from "@/lib/trackUpload";
 
 export function TracksManager() {
-  const { tracks, isLoading, create, update, remove } = useTracks();
+  const { tracks, isLoading, update, remove, refetch } = useTracks();
   const [title, setTitle] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const maxUploadMb = Math.round((resolveMaxTrackUploadBytes() / (1024 * 1024)) * 100) / 100;
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
 
-    const allowed = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/aac"];
-    if (!allowed.includes(file.type)) {
-      toast({ title: "Invalid file type", description: "Please upload an MP3, WAV, OGG, or AAC file.", variant: "destructive" });
-      return;
-    }
-
     const trackTitle = title.trim() || file.name.replace(/\.[^.]+$/, "");
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const result = await uploadTrackFile(
+        file,
+        trackTitle,
+        {
+          storage: supabase.storage.from("tracks"),
+          findTrackByUrl: async (url) => {
+            const { data } = await supabase
+              .from("tracks")
+              .select("id")
+              .eq("url", url)
+              .maybeSingle();
+            return data;
+          },
+          insertTrack: async (resolvedTitle, url) => {
+            const { error } = await supabase.from("tracks").insert({ title: resolvedTitle, url });
+            if (error) throw error;
+          },
+        },
+      );
 
-      const { error: uploadError } = await supabase.storage
-        .from("tracks")
-        .upload(path, file, { upsert: false, contentType: file.type });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("tracks").getPublicUrl(path);
-
-      await create(trackTitle, urlData.publicUrl);
+      await refetch();
       setTitle("");
-      toast({ title: "Track uploaded", description: `"${trackTitle}" is now available to clients.` });
+      if (result.status === "existing") {
+        toast({ title: "Track already uploaded", description: "This MP3 already exists and was not duplicated." });
+      } else {
+        toast({ title: "Track uploaded", description: `"${result.title}" is now available to clients.` });
+      }
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      const uploadError = err instanceof TrackUploadError ? err : new TrackUploadError("unknown", err?.message || "Upload failed");
+      const description = uploadError.adminDetails
+        ? `${uploadError.message} (${uploadError.adminDetails})`
+        : uploadError.message;
+      toast({ title: "Upload failed", description, variant: "destructive" });
     }
     setUploading(false);
   };
@@ -90,14 +103,14 @@ export function TracksManager() {
             >
               {uploading
                 ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading…</>
-                : <><Upload className="w-4 h-4 mr-2" /> Choose MP3 / WAV</>}
+                : <><Upload className="w-4 h-4 mr-2" /> Choose MP3</>}
             </Button>
-            <span className="text-xs text-muted-foreground">Max 50 MB · MP3, WAV, OGG, AAC</span>
+            <span className="text-xs text-muted-foreground">Max {maxUploadMb} MB · MP3 only</span>
           </div>
           <input
             ref={fileRef}
             type="file"
-            accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/aac"
+            accept=".mp3,audio/mpeg,audio/mp3"
             className="hidden"
             onChange={handleUpload}
           />
