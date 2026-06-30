@@ -61,6 +61,7 @@ import { YoutubeManager } from "@/components/admin/YoutubeManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { ReviewsManager } from "@/components/admin/ReviewsManager";
+import { TracksManager } from "@/components/admin/TracksManager";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import {
@@ -675,6 +676,7 @@ export default function Admin() {
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="specials">Specials</TabsTrigger>
               <TabsTrigger value="youtube">YouTube</TabsTrigger>
+              <TabsTrigger value="music">Music</TabsTrigger>
               <TabsTrigger value="competitions">Competitions</TabsTrigger>
               <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -1099,6 +1101,10 @@ export default function Admin() {
 
             <TabsContent value="youtube">
               <YoutubeManager />
+            </TabsContent>
+
+            <TabsContent value="music">
+              <TracksManager />
             </TabsContent>
 
             <TabsContent value="competitions">
