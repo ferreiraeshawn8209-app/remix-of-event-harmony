@@ -19,6 +19,12 @@ CREATE TABLE IF NOT EXISTS public.tracks (
 -- Add any columns that might be missing if the table was created with a subset
 -- (ALTER TABLE … ADD COLUMN IF NOT EXISTS is safe to run even when the column exists).
 ALTER TABLE public.tracks
+  ADD COLUMN IF NOT EXISTS title text NOT NULL DEFAULT '';
+
+ALTER TABLE public.tracks
+  ADD COLUMN IF NOT EXISTS url text NOT NULL DEFAULT '';
+
+ALTER TABLE public.tracks
   ADD COLUMN IF NOT EXISTS sort_order integer NOT NULL DEFAULT 0;
 
 ALTER TABLE public.tracks
