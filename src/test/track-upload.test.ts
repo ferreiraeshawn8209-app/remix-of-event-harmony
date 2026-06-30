@@ -3,6 +3,8 @@ import {
   DEFAULT_MAX_TRACK_UPLOAD_MB,
   TrackUploadError,
   buildDeterministicTrackPath,
+  mapStorageError,
+  resolveMaxTrackUploadBytes,
   uploadTrackFile,
   validateTrackFile,
 } from "@/lib/trackUpload";
@@ -29,6 +31,15 @@ describe("track upload hardening", () => {
     const file = makeFile("", "song.mp3");
 
     expect(() => validateTrackFile(file)).toThrow("empty");
+  });
+
+  it("maps permission and config-related storage failures", () => {
+    expect(mapStorageError({ code: "403", message: "permission denied" })).toMatchObject({ kind: "permission_or_config" });
+    expect(mapStorageError({ code: "unauthorized", message: "invalid signature" })).toMatchObject({ kind: "permission_or_config" });
+  });
+
+  it("uses default max upload setting when env is missing", () => {
+    expect(resolveMaxTrackUploadBytes(0)).toBe(DEFAULT_MAX_TRACK_UPLOAD_MB * 1024 * 1024);
   });
 
   it("retries transient upload error and succeeds", async () => {
@@ -87,6 +98,53 @@ describe("track upload hardening", () => {
     ).rejects.toMatchObject({ kind: "missing_bucket" });
 
     expect(upload).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails when uploaded object cannot be confirmed", async () => {
+    const file = makeFile("beat", "mix.mp3");
+
+    await expect(
+      uploadTrackFile(
+        file,
+        "Mix",
+        {
+          storage: {
+            upload: vi.fn().mockResolvedValue({ error: null }),
+            getPublicUrl: (path) => ({ data: { publicUrl: `https://cdn.example/tracks/${path}` } }),
+            list: vi.fn().mockResolvedValue({ data: [], error: null }),
+            remove: vi.fn().mockResolvedValue({ error: null }),
+          },
+          findTrackByUrl: vi.fn().mockResolvedValue(null),
+          insertTrack: vi.fn().mockResolvedValue(undefined),
+        },
+        { maxAttempts: 1, baseDelayMs: 0, jitterMs: 0, sleep: async () => {} },
+      ),
+    ).rejects.toMatchObject({ kind: "transient_network" });
+  });
+
+  it("exhausts retries for transient upload failures", async () => {
+    const file = makeFile("beat", "mix.mp3");
+    const upload = vi.fn().mockResolvedValue({ error: { code: "ETIMEDOUT", message: "timed out", status: 503 } });
+
+    await expect(
+      uploadTrackFile(
+        file,
+        "Mix",
+        {
+          storage: {
+            upload,
+            getPublicUrl: (path) => ({ data: { publicUrl: `https://cdn.example/tracks/${path}` } }),
+            list: vi.fn().mockResolvedValue({ data: [], error: null }),
+            remove: vi.fn().mockResolvedValue({ error: null }),
+          },
+          findTrackByUrl: vi.fn().mockResolvedValue(null),
+          insertTrack: vi.fn().mockResolvedValue(undefined),
+        },
+        { maxAttempts: 2, baseDelayMs: 0, jitterMs: 0, sleep: async () => {} },
+      ),
+    ).rejects.toMatchObject({ kind: "transient_network" });
+
+    expect(upload).toHaveBeenCalledTimes(2);
   });
 
   it("is idempotent for duplicate uploads", async () => {
@@ -155,11 +213,5 @@ describe("track upload hardening", () => {
     ).rejects.toMatchObject({ message: expect.stringContaining("cleaned up") });
 
     expect(remove).toHaveBeenCalledTimes(1);
-  });
-
-  it("uses default max upload setting when env is missing", () => {
-    const file = makeFile("x", "song.mp3");
-
-    expect(() => validateTrackFile(file, DEFAULT_MAX_TRACK_UPLOAD_MB * 1024 * 1024)).not.toThrow();
   });
 });
