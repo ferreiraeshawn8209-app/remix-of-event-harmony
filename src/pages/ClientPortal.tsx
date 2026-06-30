@@ -30,7 +30,7 @@ import { PlannerHub } from "@/components/planner/PlannerHub";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
-import { MixcloudRotator } from "@/components/MixcloudRotator";
+import { MusicPlayer } from "@/components/MusicPlayer";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 
 type View = "dashboard" | "questionnaire" | "quote";
@@ -386,8 +386,8 @@ export default function ClientPortal() {
           {/* ⑨ YouTube videos */}
           <YoutubeShowcase />
 
-          {/* ⑩ Mixcloud player — last */}
-          <MixcloudRotator autoplayTrigger={user.id} />
+          {/* ⑩ Music player — last */}
+          <MusicPlayer autoplayTrigger={user.id} />
 
         </main>
       </div>
