@@ -148,7 +148,7 @@ export default function Auth() {
       } else {
         toast({
           title: "Account Created!",
-          description: "Welcome to BEATKULTURE! You can now access your dashboard.",
+          description: "Welcome to BeatKulture Entertainment! You can now access your dashboard.",
         });
         // Redirect happens in the useEffect once the role is resolved.
       }
@@ -228,7 +228,7 @@ export default function Auth() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Music className="w-8 h-8 text-primary" />
-            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE</span>
+            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </div>
           <p className="text-muted-foreground">Access your quotes and event planning</p>
         </div>

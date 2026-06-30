@@ -64,7 +64,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© 2025 BeatKulture (PTY) LTD. All rights reserved.</p>
+          <p>© 2025 BeatKulture Entertainment (Pty) Ltd. All rights reserved.</p>
           <p>www.beatkulture.co.za</p>
         </div>
       </div>
