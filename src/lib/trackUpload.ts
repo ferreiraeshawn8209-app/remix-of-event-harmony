@@ -108,7 +108,8 @@ export function validateTrackFile(file: File, maxBytes = resolveMaxTrackUploadBy
 
   const hasMp3Extension = file.name.toLowerCase().endsWith(".mp3");
   const mimeType = normalizeType(file.type);
-  const hasMp3Mime = MP3_MIME_TYPES.has(mimeType);
+  const hasMp3Mime = !mimeType || MP3_MIME_TYPES.has(mimeType);
+
   if (!hasMp3Extension || !hasMp3Mime) {
     throw new TrackUploadError("invalid_file", "Please upload a valid MP3 file (.mp3).", `Detected file type: ${mimeType || "unknown"}`);
   }
