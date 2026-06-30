@@ -115,6 +115,31 @@ export function validateTrackFile(file: File, maxBytes = resolveMaxTrackUploadBy
   }
 }
 
+export function validateFallbackTrackUrl(rawUrl: string): string {
+  const value = rawUrl.trim();
+  if (!value) {
+    throw new TrackUploadError("invalid_file", "Enter a direct MP3 URL to use upload fallback mode.");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new TrackUploadError("invalid_file", "Please enter a valid public URL (https://...).");
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new TrackUploadError("invalid_file", "Only http(s) links are supported for fallback tracks.");
+  }
+
+  const pathname = parsed.pathname.toLowerCase();
+  if (!pathname.endsWith(".mp3")) {
+    throw new TrackUploadError("invalid_file", "Fallback links must point directly to an .mp3 file.");
+  }
+
+  return parsed.toString();
+}
+
 export function isTransientStorageError(error: unknown): boolean {
   const code = typeof error === "object" && error && "code" in error ? String((error as { code?: unknown }).code ?? "").toLowerCase() : "";
   const status = typeof error === "object" && error && "status" in error ? Number((error as { status?: unknown }).status) : undefined;

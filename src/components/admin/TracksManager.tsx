@@ -9,11 +9,12 @@ import { Loader2, Music2, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTracks } from "@/hooks/useTracks";
 import { toast } from "@/hooks/use-toast";
-import { TrackUploadError, resolveMaxTrackUploadBytes, uploadTrackFile } from "@/lib/trackUpload";
+import { TrackUploadError, resolveMaxTrackUploadBytes, uploadTrackFile, validateFallbackTrackUrl } from "@/lib/trackUpload";
 
 export function TracksManager() {
-  const { tracks, isLoading, update, remove, refetch } = useTracks();
+  const { tracks, isLoading, update, remove, refetch, create } = useTracks();
   const [title, setTitle] = useState("");
+  const [fallbackUrl, setFallbackUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const maxUploadMb = Math.round((resolveMaxTrackUploadBytes() / (1024 * 1024)) * 100) / 100;
@@ -59,9 +60,30 @@ export function TracksManager() {
       const description = uploadError.adminDetails
         ? `${uploadError.message} (${uploadError.adminDetails})`
         : uploadError.message;
-      toast({ title: "Upload failed", description, variant: "destructive" });
+      const fallbackHint = uploadError.kind === "missing_bucket" || uploadError.kind === "permission_or_config"
+        ? " Use the fallback URL field below to add a direct MP3 link while storage is being fixed."
+        : "";
+      toast({ title: "Upload failed", description: `${description}${fallbackHint}`, variant: "destructive" });
     }
     setUploading(false);
+  };
+
+  const handleFallbackCreate = async () => {
+    const fallbackTitle = title.trim() || "External MP3 track";
+
+    try {
+      const safeUrl = validateFallbackTrackUrl(fallbackUrl);
+      await create(fallbackTitle, safeUrl);
+      setTitle("");
+      setFallbackUrl("");
+      toast({
+        title: "Fallback track added",
+        description: "Clients can play this direct MP3 link even when storage uploads are unavailable.",
+      });
+    } catch (err: any) {
+      const uploadError = err instanceof TrackUploadError ? err : new TrackUploadError("unknown", err?.message || "Could not add fallback track");
+      toast({ title: "Fallback add failed", description: uploadError.message, variant: "destructive" });
+    }
   };
 
   const handleDelete = async (id: string, url: string) => {
@@ -114,6 +136,22 @@ export function TracksManager() {
             className="hidden"
             onChange={handleUpload}
           />
+          <div className="pt-3 border-t border-border/50 space-y-2">
+            <Label>Fallback direct MP3 URL (when storage upload is unavailable)</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                value={fallbackUrl}
+                onChange={(e) => setFallbackUrl(e.target.value)}
+                placeholder="https://example.com/path/to/track.mp3"
+              />
+              <Button variant="outline" disabled={uploading} onClick={handleFallbackCreate}>
+                Add by URL
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Use this backup path if bucket permissions/config are broken. The link must point directly to an MP3 file.
+            </p>
+          </div>
         </div>
 
         {/* Track list */}

@@ -77,3 +77,4 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 - The admin track uploader accepts MP3 files only (`.mp3` + `audio/mpeg`/`audio/mp3`).
 - Configure max upload size with `VITE_MAX_TRACK_UPLOAD_MB` (defaults to `50` MB when unset).
 - If uploads fail with a missing bucket error, create the Supabase storage bucket named `tracks` and verify storage permissions for admin users.
+- Admins can still keep the player usable by adding a direct public `.mp3` URL in the fallback field inside **Tracks Manager** (`Add by URL`) when storage uploads are unavailable.
