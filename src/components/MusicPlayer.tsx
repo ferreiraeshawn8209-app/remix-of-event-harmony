@@ -77,7 +77,9 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
     audio.play().then(() => {
       setIsPlaying(true);
       setAutoplayBlocked(false);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.warn("MusicPlayer: play() rejected:", err);
+    });
   }, []);
 
   const pause = useCallback(() => {
@@ -103,7 +105,9 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
   const handleEnded = useCallback(() => {
     if (tracks.length <= 1) {
       // Loop single track
-      audioRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
+      audioRef.current?.play().then(() => setIsPlaying(true)).catch((err) => {
+        console.warn("MusicPlayer: loop play() rejected:", err);
+      });
       return;
     }
     setIndex((i) => randomIndex(tracks.length, i));
@@ -137,6 +141,7 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <audio
           ref={audioRef}
+          aria-label="BeatKulture background music player"
           onEnded={handleEnded}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
