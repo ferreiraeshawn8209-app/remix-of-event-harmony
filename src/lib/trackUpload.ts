@@ -118,7 +118,7 @@ export function validateTrackFile(file: File, maxBytes = resolveMaxTrackUploadBy
 export function validateFallbackTrackUrl(rawUrl: string): string {
   const value = rawUrl.trim();
   if (!value) {
-    throw new TrackUploadError("invalid_file", "Enter a direct MP3 URL to use upload fallback mode.");
+    throw new TrackUploadError("invalid_file", "Please enter a direct MP3 URL.");
   }
 
   let parsed: URL;

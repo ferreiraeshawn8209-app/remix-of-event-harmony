@@ -18,6 +18,7 @@ export function TracksManager() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const maxUploadMb = Math.round((resolveMaxTrackUploadBytes() / (1024 * 1024)) * 100) / 100;
+  const shouldShowFallbackHint = (kind: TrackUploadError["kind"]) => kind === "missing_bucket" || kind === "permission_or_config";
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,7 +61,7 @@ export function TracksManager() {
       const description = uploadError.adminDetails
         ? `${uploadError.message} (${uploadError.adminDetails})`
         : uploadError.message;
-      const fallbackHint = uploadError.kind === "missing_bucket" || uploadError.kind === "permission_or_config"
+      const fallbackHint = shouldShowFallbackHint(uploadError.kind)
         ? " Use the fallback URL field below to add a direct MP3 link while storage is being fixed."
         : "";
       toast({ title: "Upload failed", description: `${description}${fallbackHint}`, variant: "destructive" });
@@ -81,7 +82,9 @@ export function TracksManager() {
         description: "Clients can play this direct MP3 link even when storage uploads are unavailable.",
       });
     } catch (err: any) {
-      const uploadError = err instanceof TrackUploadError ? err : new TrackUploadError("unknown", err?.message || "Could not add fallback track");
+      const uploadError = err instanceof TrackUploadError
+        ? err
+        : new TrackUploadError("unknown", err?.message || "Failed to add track from URL. Verify the URL is valid and publicly accessible.");
       toast({ title: "Fallback add failed", description: uploadError.message, variant: "destructive" });
     }
   };
