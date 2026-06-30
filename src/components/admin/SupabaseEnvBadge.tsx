@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Database } from "lucide-react";
-import { SUPABASE_URL } from "@/integrations/supabase/client";
+
+const SUPABASE_URL: string = import.meta.env.VITE_SUPABASE_URL ?? "";
+const MISSING_LABEL = "(VITE_SUPABASE_URL not set — check env vars)";
 
 function getProjectRef(url: string): string {
   try {
@@ -24,17 +26,18 @@ function getProjectRef(url: string): string {
  * Never displays the publishable key or any private credentials.
  */
 export function SupabaseEnvBadge() {
-  const projectRef = getProjectRef(SUPABASE_URL);
+  const projectRef = SUPABASE_URL ? getProjectRef(SUPABASE_URL) : "(unknown)";
+  const displayLabel = SUPABASE_URL || MISSING_LABEL;
 
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log("[Admin] Active Supabase project URL:", SUPABASE_URL || "(VITE_SUPABASE_URL not set)");
-  }, []);
+    console.log("[Admin] Active Supabase project URL:", displayLabel);
+  }, [displayLabel]);
 
   return (
     <span
       className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground/70 border border-border/40 rounded px-1.5 py-0.5 select-all"
-      title={SUPABASE_URL || "(VITE_SUPABASE_URL not set — check env vars)"}
+      title={displayLabel}
     >
       <Database className="w-3 h-3 shrink-0" />
       {projectRef}
