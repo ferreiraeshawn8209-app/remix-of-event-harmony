@@ -1,6 +1,9 @@
 export const DEFAULT_MAX_TRACK_UPLOAD_MB = 50;
 const DEFAULT_MAX_ATTEMPTS = 3;
 const DEFAULT_RETRY_BASE_DELAY_MS = 250;
+const TRANSIENT_HTTP_STATUS_CODES = new Set([408, 425, 429]);
+const FNV1A_32_OFFSET_BASIS = 2166136261;
+const FNV1A_32_PRIME = 16777619;
 
 const MP3_MIME_TYPES = new Set(["audio/mpeg", "audio/mp3"]);
 
@@ -116,10 +119,10 @@ export function isTransientStorageError(error: unknown): boolean {
   const status = typeof error === "object" && error && "status" in error ? Number((error as { status?: unknown }).status) : undefined;
   const message = typeof error === "object" && error && "message" in error ? String((error as { message?: unknown }).message ?? "").toLowerCase() : "";
 
-  if (typeof status === "number" && (status === 408 || status === 425 || status === 429 || status >= 500)) return true;
+  if (typeof status === "number" && (TRANSIENT_HTTP_STATUS_CODES.has(status) || status >= 500)) return true;
 
-  return ["timeout", "timed out", "network", "temporar", "unavailable", "econnreset", "etimedout"].some(
-    (token) => code.includes(token) || message.includes(token),
+  return ["timeout", "timed out", "network", "temporar", "unavailable", "econnreset", "etimedout"].some((token) =>
+    code.includes(token) || message.includes(token),
   );
 }
 
@@ -175,13 +178,16 @@ export function mapStorageError(error: unknown): TrackUploadError {
 
 export async function buildDeterministicTrackPath(file: File): Promise<string> {
   const blob = file as Blob & { arrayBuffer?: () => Promise<ArrayBuffer> };
-  const buffer = typeof blob.arrayBuffer === "function" ? await blob.arrayBuffer() : await new Response(file).arrayBuffer();
+  const buffer = typeof blob.arrayBuffer === "function"
+    ? await blob.arrayBuffer()
+    : await new Response(file).arrayBuffer();
   const bytes = new Uint8Array(buffer);
-  let hash = 2166136261;
+  // FNV-1a 32-bit hash keeps key generation deterministic across retries.
+  let hash = FNV1A_32_OFFSET_BASIS;
 
   for (const byte of bytes) {
     hash ^= byte;
-    hash = Math.imul(hash, 16777619);
+    hash = Math.imul(hash, FNV1A_32_PRIME);
   }
 
   const digest = (hash >>> 0).toString(16).padStart(8, "0");
