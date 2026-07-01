@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Music, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { PageBackground } from "@/components/PageBackground";
@@ -68,7 +67,6 @@ export default function Auth() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  const authRedirectUrl = `${window.location.origin}${runtimeBase}auth`;
   const resetRedirectUrl = `${window.location.origin}${runtimeBase}reset-password`;
 
   // Form states
@@ -227,32 +225,6 @@ export default function Auth() {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: authRedirectUrl,
-      },
-    });
-
-    if (error) {
-      setIsLoading(false);
-      const unsupportedProvider =
-        error.message?.toLowerCase().includes("unsupported provider") ||
-        error.message?.toLowerCase().includes("provider is not enabled");
-
-      toast({
-        title: unsupportedProvider ? "Google Provider Not Enabled" : "Google Sign-In Failed",
-        description: unsupportedProvider
-          ? "Google auth is disabled in Supabase. Enable Google under Authentication -> Providers, then try again."
-          : error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -327,21 +299,6 @@ export default function Auth() {
                     ) : (
                       "Sign In"
                     )}
-                  </Button>
-                  <div className="relative my-3">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                      or
-                    </span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleAuth}
-                    disabled={isLoading}
-                  >
-                    Continue with Google
                   </Button>
                   <button
                     type="button"
@@ -522,21 +479,6 @@ export default function Auth() {
                     ) : (
                       "Create Account"
                     )}
-                  </Button>
-                  <div className="relative my-3">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                      or
-                    </span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleAuth}
-                    disabled={isLoading}
-                  >
-                    Continue with Google
                   </Button>
                 </form>
               </TabsContent>
