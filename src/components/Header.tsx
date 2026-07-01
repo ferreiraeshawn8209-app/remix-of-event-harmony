@@ -4,8 +4,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 import { Badge } from "@/components/ui/badge";
-import logoImg from "@/assets/logo.png";
+import defaultLogo from "@/assets/logo.png";
+
 
 type NavItem = {
   id: "home" | "quote" | "admin";
@@ -24,6 +26,8 @@ export function Header() {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { get } = useBusinessSettings();
+  const logoImg = get("brand_logo_url") || defaultLogo;
 
   const handleSignOut = async () => {
     await signOut();
@@ -50,12 +54,13 @@ export function Header() {
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <img src={logoImg} alt="BeatKulture" className="w-10 h-10 object-contain" />
+            <img src={logoImg} alt="BeatKulture Entertainment" className="w-10 h-10 object-contain" />
             <div className="flex flex-col">
-              <span className="font-display font-bold text-lg leading-tight">BEATKULTURE ENTERTAINMENT</span>
+              <span className="font-display font-bold text-base sm:text-lg leading-tight">BeatKulture Entertainment</span>
               <span className="text-xs text-muted-foreground">One Beat. One Kulture. One Love.</span>
             </div>
           </Link>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">

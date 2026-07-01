@@ -189,6 +189,12 @@ export function BusinessSettingsManager() {
         </CardHeader>
         <CardContent className="space-y-4">
           <ImageSettingRow
+            label="Brand Logo (shown site-wide)"
+            description="Your BeatKulture Entertainment logo — displayed in the header on every page and on PDFs. Animated GIFs are supported."
+            settingKey="brand_logo_url"
+            defaultAspect="1:1"
+          />
+          <ImageSettingRow
             label="Homepage Hero Image"
             description="Big background photo behind 'Your Event, Our Beat' on the homepage."
             settingKey="hero_image_url"
@@ -201,6 +207,7 @@ export function BusinessSettingsManager() {
             defaultAspect="21:9"
           />
         </CardContent>
+
       </Card>
 
       <Card variant="glass">

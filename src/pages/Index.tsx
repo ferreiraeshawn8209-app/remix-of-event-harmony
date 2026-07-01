@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import { Loader2, Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import logoImg from "@/assets/logo.png";
+import defaultLogo from "@/assets/logo.png";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 import { PageBackground } from "@/components/PageBackground";
 import { CoordinatorChat } from "@/components/landing/CoordinatorChat";
+import { LandingIntro } from "@/components/landing/LandingIntro";
 import { UpcomingEventsTicker } from "@/components/landing/UpcomingEventsTicker";
 import { SpecialsBanner } from "@/components/landing/SpecialsBanner";
 import { PackagesShowcase } from "@/components/landing/PackagesShowcase";
@@ -15,12 +17,15 @@ import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 
+
 /**
  * Public landing page — authenticated visitors are redirected to /admin or /client.
  */
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading } = useAuth();
+  const { get } = useBusinessSettings();
+  const logoImg = get("brand_logo_url") || defaultLogo;
 
   useEffect(() => {
     if (isLoading) return;
@@ -28,6 +33,7 @@ const Index = () => {
       navigate(isAdmin ? "/admin" : "/client", { replace: true });
     }
   }, [user, profile, isAdmin, isLoading, navigate]);
+
 
   if (isLoading || (user && !profile)) {
     return (
@@ -52,10 +58,11 @@ const Index = () => {
       {/* Top bar */}
       <header className="container mx-auto px-4 py-5 flex items-center justify-between relative z-10">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logoImg} alt="BeatKulture" className="w-10 h-10 object-contain" />
+          <img src={logoImg} alt="BeatKulture Entertainment" className="w-10 h-10 object-contain" />
           <div className="flex flex-col leading-tight">
-            <span className="font-display font-bold text-base sm:text-lg">BEATKULTURE</span>
+            <span className="font-display font-bold text-base sm:text-lg">BeatKulture Entertainment</span>
             <span className="text-[10px] sm:text-xs text-muted-foreground">One Beat. One Kulture. One Love.</span>
+
           </div>
         </Link>
         <div className="flex items-center gap-2">
@@ -115,8 +122,12 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Intro / About */}
+      <LandingIntro />
+
       {/* Events ticker */}
       <UpcomingEventsTicker />
+
 
       {/* Specials */}
       <SpecialsBanner />
