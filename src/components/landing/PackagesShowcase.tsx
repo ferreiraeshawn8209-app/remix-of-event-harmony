@@ -9,6 +9,14 @@ import { formatCurrency } from "@/lib/pricing";
 import { motion } from "framer-motion";
 
 const CATEGORY_ORDER: Record<string, number> = { wedding: 1, corporate: 2, party: 3 };
+const CATEGORY_TITLES: Record<string, string> = {
+  wedding: "Wedding Packages",
+  corporate: "Corporate Packages",
+  party: "Party Packages",
+};
+
+const categoryHeading = (category: string) =>
+  CATEGORY_TITLES[category] || `${category.charAt(0).toUpperCase() + category.slice(1)} Packages`;
 
 export function PackagesShowcase() {
   const { packages, isLoading } = usePackages();
@@ -57,13 +65,18 @@ export function PackagesShowcase() {
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading packages…</p>}
 
       {/* Grouped by category in the requested order */}
-      {(["wedding", "corporate", "party"] as const).map((cat) => {
+      {Array.from(new Set(active.map((p) => p.category)))
+        .sort(
+          (a, b) =>
+            (CATEGORY_ORDER[a] || 9) - (CATEGORY_ORDER[b] || 9) ||
+            a.localeCompare(b),
+        )
+        .map((cat) => {
         const list = active.filter((p) => p.category === cat);
         if (!list.length) return null;
-        const titleMap: Record<string, string> = { wedding: "Wedding Packages", corporate: "Corporate Packages", party: "Party Packages" };
         return (
           <div key={cat} className="mb-12">
-            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{titleMap[cat]}</h3>
+            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{categoryHeading(cat)}</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {list.map((p) => {
                 const discounted = applyDiscount(p.price, percent);
