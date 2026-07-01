@@ -138,7 +138,7 @@ export function PlannerHub({ scopeKey, quote }: PlannerCtx) {
   const daysUntil = getDaysUntil(quote?.event_date);
 
   return (
-    <Card variant="glass" className="border-primary/20">
+    <Card variant="glass" className="border-primary/30 bg-gradient-to-b from-background/80 via-primary/5 to-fuchsia-500/10">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="w-5 h-5 text-primary" /> Event Planning Tools
@@ -150,21 +150,21 @@ export function PlannerHub({ scopeKey, quote }: PlannerCtx) {
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <ScrollArea className="w-full">
-            <TabsList className="inline-flex h-auto p-1 mb-4 flex-nowrap">
-              <TabsTrigger value="concierge" className="gap-1 text-xs"><Sparkles className="w-3.5 h-3.5" />Concierge</TabsTrigger>
-              <TabsTrigger value="design" className="gap-1 text-xs"><Palette className="w-3.5 h-3.5" />Design</TabsTrigger>
-              <TabsTrigger value="discovery" className="gap-1 text-xs"><Search className="w-3.5 h-3.5" />Discovery</TabsTrigger>
-              <TabsTrigger value="ai" className="gap-1 text-xs"><Bot className="w-3.5 h-3.5" />AI Assistant</TabsTrigger>
-              <TabsTrigger value="budget" className="gap-1 text-xs"><Wallet className="w-3.5 h-3.5" />Budget</TabsTrigger>
-              <TabsTrigger value="floor" className="gap-1 text-xs"><LayoutGrid className="w-3.5 h-3.5" />Floor</TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-1 text-xs"><ListChecks className="w-3.5 h-3.5" />Timeline</TabsTrigger>
-              <TabsTrigger value="music" className="gap-1 text-xs"><Music className="w-3.5 h-3.5" />Music</TabsTrigger>
-              <TabsTrigger value="weather" className="gap-1 text-xs"><CloudSun className="w-3.5 h-3.5" />Weather</TabsTrigger>
-              <TabsTrigger value="vendors" className="gap-1 text-xs"><Search className="w-3.5 h-3.5" />Vendors</TabsTrigger>
-              <TabsTrigger value="checklist" className="gap-1 text-xs"><ClipboardList className="w-3.5 h-3.5" />Checklist</TabsTrigger>
-              <TabsTrigger value="invite" className="gap-1 text-xs"><Mail className="w-3.5 h-3.5" />Invitation</TabsTrigger>
-              <TabsTrigger value="notes" className="gap-1 text-xs"><StickyNote className="w-3.5 h-3.5" />Notes</TabsTrigger>
-              <TabsTrigger value="qr" className="gap-1 text-xs"><QrCode className="w-3.5 h-3.5" />QR Songs</TabsTrigger>
+            <TabsList className="inline-flex h-auto p-1 mb-4 flex-nowrap border border-primary/30 bg-primary/10 backdrop-blur">
+              <TabsTrigger value="concierge" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Sparkles className="w-3.5 h-3.5" />Concierge</TabsTrigger>
+              <TabsTrigger value="design" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Palette className="w-3.5 h-3.5" />Design</TabsTrigger>
+              <TabsTrigger value="discovery" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Search className="w-3.5 h-3.5" />Discovery</TabsTrigger>
+              <TabsTrigger value="ai" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Bot className="w-3.5 h-3.5" />AI Assistant</TabsTrigger>
+              <TabsTrigger value="budget" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Wallet className="w-3.5 h-3.5" />Budget</TabsTrigger>
+              <TabsTrigger value="floor" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><LayoutGrid className="w-3.5 h-3.5" />Floor</TabsTrigger>
+              <TabsTrigger value="timeline" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><ListChecks className="w-3.5 h-3.5" />Timeline</TabsTrigger>
+              <TabsTrigger value="music" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Music className="w-3.5 h-3.5" />Music</TabsTrigger>
+              <TabsTrigger value="weather" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><CloudSun className="w-3.5 h-3.5" />Weather</TabsTrigger>
+              <TabsTrigger value="vendors" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Search className="w-3.5 h-3.5" />Vendors</TabsTrigger>
+              <TabsTrigger value="checklist" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><ClipboardList className="w-3.5 h-3.5" />Checklist</TabsTrigger>
+              <TabsTrigger value="invite" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><Mail className="w-3.5 h-3.5" />Invitation</TabsTrigger>
+              <TabsTrigger value="notes" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><StickyNote className="w-3.5 h-3.5" />Notes</TabsTrigger>
+              <TabsTrigger value="qr" className="gap-1 text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-fuchsia-500 data-[state=active]:to-primary data-[state=active]:text-white"><QrCode className="w-3.5 h-3.5" />QR Songs</TabsTrigger>
             </TabsList>
           </ScrollArea>
 
@@ -260,7 +260,7 @@ function ConciergeOverview({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-accent/10 to-background p-5">
+      <div className="rounded-2xl border border-fuchsia-400/40 bg-gradient-to-br from-fuchsia-500/20 via-primary/20 to-background p-5 shadow-[0_18px_40px_-28px_hsl(289_100%_62%)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/40 px-3 py-1 text-xs font-medium text-primary">
@@ -291,15 +291,25 @@ function ConciergeOverview({
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => (
-          <Card key={card.title} variant="glass" className="overflow-hidden border-border/60">
+        {cards.map((card, index) => (
+          <Card
+            key={card.title}
+            variant="glass"
+            className={`overflow-hidden border-border/60 ${
+              index % 3 === 0
+                ? "bg-gradient-to-br from-fuchsia-500/15 to-primary/10"
+                : index % 3 === 1
+                  ? "bg-gradient-to-br from-primary/15 to-cyan-500/10"
+                  : "bg-gradient-to-br from-amber-500/15 to-fuchsia-500/10"
+            }`}
+          >
             <CardContent className="space-y-3 py-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold">{card.title}</p>
-                <Badge variant="outline" className="text-[10px]">{card.tag}</Badge>
+                <Badge variant="outline" className="text-[10px] border-white/40 bg-white/20">{card.tag}</Badge>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">{card.body}</p>
-              <Button size="sm" variant="outline" onClick={() => onOpenTab(card.key)}>
+              <Button size="sm" variant="outline" className="border-fuchsia-400/40 hover:bg-fuchsia-500/10" onClick={() => onOpenTab(card.key)}>
                 Open tool
               </Button>
             </CardContent>
@@ -314,6 +324,20 @@ function ConciergeOverview({
 // 1. AI ASSISTANT
 // ============================================================
 type Msg = { role: "user" | "assistant"; content: string };
+
+function AIPulseAvatar({ className = "" }: { className?: string }) {
+  return (
+    <div className={`relative ${className}`}>
+      <span className="absolute inset-0 rounded-full bg-fuchsia-500/35 blur-sm animate-pulse" />
+      <span className="absolute inset-[-3px] rounded-full border border-fuchsia-300/40 animate-spin [animation-duration:4s]" />
+      <span className="absolute inset-[3px] rounded-full border border-cyan-300/40 animate-spin [animation-duration:6s] [animation-direction:reverse]" />
+      <span className="relative z-10 flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-500 to-cyan-400 text-white shadow-[0_0_18px_rgba(217,70,239,0.45)]">
+        <Bot className="w-[60%] h-[60%]" />
+      </span>
+    </div>
+  );
+}
+
 function AIAssistant({ scopeKey, quote }: PlannerCtx) {
   const [messages, setMessages] = useLocal<Msg[]>(`bk:planner:${scopeKey}:chat`, [
     { role: "assistant", content: "Hi! 👋 I'm your BeatKulture Event Assistant. Ask me anything about planning your event — songs, timelines, budget, vendors, you name it. Don't forget to subscribe to **@beatkulturesa** on YouTube for the latest mixes by DJ Shawn-E-Shawn! 🎧" },
@@ -399,8 +423,11 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
-        <p className="text-xs font-semibold text-foreground">Guided event planning</p>
+      <div className="rounded-lg border border-fuchsia-400/30 bg-gradient-to-r from-fuchsia-500/10 to-primary/10 p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <AIPulseAvatar className="h-8 w-8 shrink-0" />
+          <p className="text-xs font-semibold text-foreground">Guided event planning</p>
+        </div>
         <div className="flex flex-wrap gap-2">
           {guidedPrompts.map((prompt) => (
             <Button
@@ -419,9 +446,14 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
       <div ref={scrollRef} className="h-72 overflow-y-auto rounded-lg border border-border bg-muted/20 p-3 space-y-3">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-              m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"
-            }`}>{m.content || (loading && i === messages.length - 1 ? "…" : "")}</div>
+            <div className={`flex items-end gap-2 max-w-[92%] ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+              {m.role === "assistant" && <AIPulseAvatar className="h-8 w-8 shrink-0 mb-0.5" />}
+              <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
+                m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-fuchsia-400/25"
+              }`}>
+                {m.content || (loading && i === messages.length - 1 ? "…" : "")}
+              </div>
+            </div>
           </div>
         ))}
       </div>

@@ -601,25 +601,32 @@ export default function ClientPortal() {
             </section>
           )}
 
-          <Card variant="glass" className="border-accent/60 bg-gradient-to-r from-primary/15 via-accent/20 to-primary/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_14px_40px_-22px_hsl(var(--accent))]">
+          <Card
+            variant="glass"
+            className="relative overflow-hidden border-2 border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-500/20 via-purple-500/25 to-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.14),0_18px_40px_-20px_hsl(289_100%_62%)]"
+          >
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-fuchsia-400/30 blur-xl" />
             <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-accent">Need a customised quote?</p>
+                <p className="font-semibold text-fuchsia-100 flex items-center gap-2">
+                  <Wand2 className="w-4 h-4 text-fuchsia-200" />
+                  Need a customised quote?
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Start the same final questionnaire flow and BeatKulture Entertainment will build your custom quote from the event details already saved on your account.
                 </p>
               </div>
               <Button
                 variant="default"
-                className="bg-accent text-accent-foreground hover:bg-accent/90"
+                className="relative bg-gradient-to-r from-fuchsia-500 via-purple-500 to-primary text-white border border-white/30 hover:from-fuchsia-400 hover:via-purple-400 hover:to-primary/90 shadow-[0_10px_24px_-12px_hsl(289_100%_62%)]"
                 disabled={!eventProfileReady}
                 onClick={() => {
                   setQuestionnairePrefill({ package_id: null, package_name: null });
                   setView("questionnaire");
                 }}
               >
-                <FileText className="w-4 h-4 mr-2" />
-                Request Custom Quote
+                <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+                Create My Signature Quote
               </Button>
             </CardContent>
           </Card>

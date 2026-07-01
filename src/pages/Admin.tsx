@@ -66,7 +66,9 @@ import { TracksManager } from "@/components/admin/TracksManager";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
+import { useSpecials } from "@/hooks/useSpecials";
 import { useBrandingLogo } from "@/hooks/useBranding";
+import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -310,6 +312,7 @@ export default function Admin() {
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
   const { packages } = usePackages();
+  const { activeSpecials } = useSpecials();
   const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
   const [requestPrefill, setRequestPrefill] = useState<QuoteData | undefined>(undefined);
@@ -406,6 +409,7 @@ export default function Admin() {
         ...(req.requires_low_fog_machine ? [{ name: "Low fog machine surcharge", price: 700, qty: 1 }] : []),
         ...(req.requires_cold_spark_machines ? [{ name: "Cold spark surcharge", price: 1800, qty: 1 }] : []),
       ];
+      const autoDiscountPercent = inferAutoDiscountPercent(req.event_type || "", activeSpecials);
 
       setRequestPrefill({
         clientName: req.client_name || "",
@@ -425,7 +429,7 @@ export default function Admin() {
         humanJukebox: false,
         humanJukeboxHours: 0,
         travelDistance: 0,
-        discountPercent: 0,
+        discountPercent: autoDiscountPercent,
       });
       setPendingRequestMeta({
         requestId: req.id,
@@ -437,7 +441,7 @@ export default function Admin() {
     } catch {
       // Ignore malformed storage payloads and keep manual builder flow available.
     }
-  }, [location.search, packages]);
+  }, [location.search, packages, activeSpecials]);
 
   const handleStatusChange = async (quoteId: string, status: string) => {
     // For declined/rejected, prompt for a reason before applying
