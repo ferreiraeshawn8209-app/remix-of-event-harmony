@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { PageBackground } from "@/components/PageBackground";
 import { useBrandingLogo } from "@/hooks/useBranding";
@@ -44,30 +43,17 @@ const signInSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
+  const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn, resetPassword } = useAuth();
   const logoImg = useBrandingLogo();
   const [isLoading, setIsLoading] = useState(false);
   const initialTab = (new URLSearchParams(window.location.search).get("tab") === "signup"
     ? "signup"
     : "login") as "login" | "signup";
   const [tab, setTab] = useState<"login" | "signup">(initialTab);
-  const configuredBase = import.meta.env.BASE_URL || "/";
-  const normalizedConfiguredBase = configuredBase.endsWith("/")
-    ? configuredBase.slice(0, -1)
-    : configuredBase;
-  const runtimeBase =
-    normalizedConfiguredBase &&
-    normalizedConfiguredBase !== "/" &&
-    (window.location.pathname === normalizedConfiguredBase ||
-      window.location.pathname.startsWith(`${normalizedConfiguredBase}/`))
-      ? configuredBase
-      : "/";
 
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
-
-  const resetRedirectUrl = `${window.location.origin}${runtimeBase}reset-password`;
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
@@ -127,7 +113,6 @@ export default function Auth() {
           title: "Welcome Back!",
           description: "You have successfully logged in.",
         });
-        // Redirect happens in the useEffect once the role is resolved.
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -192,7 +177,6 @@ export default function Auth() {
           title: "Account Created!",
           description: "Welcome to BeatKulture Entertainment. Your event profile is ready for quoting.",
         });
-        // Redirect happens in the useEffect once the role is resolved.
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -212,11 +196,11 @@ export default function Auth() {
       toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
       return;
     }
+
     setForgotLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
-      redirectTo: resetRedirectUrl,
-    });
+    const { error } = await resetPassword(forgotEmail.trim());
     setForgotLoading(false);
+
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -486,7 +470,6 @@ export default function Auth() {
           </CardContent>
         </Card>
 
-        {/* Forgot Password Overlay */}
         {showForgotPassword && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowForgotPassword(false)}>
             <Card variant="glass" className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
