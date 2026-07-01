@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const MIXCLOUD_USERNAME = "beatkulture";
-const MIXCLOUD_EMBED_URL = `https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2F${MIXCLOUD_USERNAME}%2F`;
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
+import { buildMixcloudMiniEmbedSrc } from "@/lib/mixcloud";
 
 export function BackgroundAudio() {
   const [playing, setPlaying] = useState(false);
+  const { get } = useBusinessSettings();
+  const mixcloudEmbedUrl = buildMixcloudMiniEmbedSrc(get("mixcloud_url"));
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center">
@@ -14,7 +15,7 @@ export function BackgroundAudio() {
       {playing && (
         <div className="flex-1 bg-card/95 backdrop-blur border-t border-border">
           <iframe
-            src={MIXCLOUD_EMBED_URL}
+            src={mixcloudEmbedUrl}
             width="100%"
             height="60"
             allow="autoplay"

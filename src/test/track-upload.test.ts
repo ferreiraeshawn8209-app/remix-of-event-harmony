@@ -117,26 +117,30 @@ describe("track upload hardening", () => {
     expect(upload).toHaveBeenCalledTimes(1);
   });
 
-  it("fails when uploaded object cannot be confirmed", async () => {
+  it("succeeds without requiring storage list confirmation", async () => {
     const file = makeFile("beat", "mix.mp3");
+    const list = vi.fn().mockResolvedValue({ data: [], error: { code: "403", message: "permission denied" } });
+    const insertTrack = vi.fn().mockResolvedValue(undefined);
 
-    await expect(
-      uploadTrackFile(
-        file,
-        "Mix",
-        {
-          storage: {
-            upload: vi.fn().mockResolvedValue({ error: null }),
-            getPublicUrl: (path) => ({ data: { publicUrl: `https://cdn.example/tracks/${path}` } }),
-            list: vi.fn().mockResolvedValue({ data: [], error: null }),
-            remove: vi.fn().mockResolvedValue({ error: null }),
-          },
-          findTrackByUrl: vi.fn().mockResolvedValue(null),
-          insertTrack: vi.fn().mockResolvedValue(undefined),
+    const result = await uploadTrackFile(
+      file,
+      "Mix",
+      {
+        storage: {
+          upload: vi.fn().mockResolvedValue({ error: null }),
+          getPublicUrl: (path) => ({ data: { publicUrl: `https://cdn.example/tracks/${path}` } }),
+          list,
+          remove: vi.fn().mockResolvedValue({ error: null }),
         },
-        { maxAttempts: 1, baseDelayMs: 0, jitterMs: 0, sleep: async () => {} },
-      ),
-    ).rejects.toMatchObject({ kind: "transient_network" });
+        findTrackByUrl: vi.fn().mockResolvedValue(null),
+        insertTrack,
+      },
+      { maxAttempts: 1, baseDelayMs: 0, jitterMs: 0, sleep: async () => {} },
+    );
+
+    expect(result.status).toBe("uploaded");
+    expect(insertTrack).toHaveBeenCalledTimes(1);
+    expect(list).not.toHaveBeenCalled();
   });
 
   it("exhausts retries for transient upload failures", async () => {
