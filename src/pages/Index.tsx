@@ -55,7 +55,7 @@ const Index = () => {
         <Link to="/" className="flex items-center gap-3">
           <img src={logoImg} alt="BeatKulture" className="w-10 h-10 object-contain" />
           <div className="flex flex-col leading-tight">
-            <span className="font-display font-bold text-base sm:text-lg">BEATKULTURE</span>
+            <span className="font-display font-bold text-base sm:text-lg">BEATKULTURE ENTERTAINMENT</span>
             <span className="text-[10px] sm:text-xs text-muted-foreground">One Beat. One Kulture. One Love.</span>
           </div>
         </Link>

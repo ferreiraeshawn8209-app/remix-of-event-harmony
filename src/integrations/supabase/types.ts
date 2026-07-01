@@ -645,6 +645,8 @@ export type Database = {
           quote_id: string | null
           start_time: string | null
           status: string
+          terms_accepted: boolean
+          terms_accepted_at: string | null
           updated_at: string
           venue_address: string | null
           venue_name: string | null
@@ -671,6 +673,8 @@ export type Database = {
           quote_id?: string | null
           start_time?: string | null
           status?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_name?: string | null
@@ -697,6 +701,8 @@ export type Database = {
           quote_id?: string | null
           start_time?: string | null
           status?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_name?: string | null

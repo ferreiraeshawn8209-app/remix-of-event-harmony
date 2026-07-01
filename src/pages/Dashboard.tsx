@@ -158,7 +158,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-6 h-6 text-primary" />
-            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
+            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </Link>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
