@@ -464,6 +464,88 @@ export type Database = {
           },
         ]
       }
+      event_playlist_items: {
+        Row: {
+          artist: string | null
+          created_at: string
+          cue_time_seconds: number | null
+          id: string
+          moment: string
+          notes: string | null
+          playlist_id: string
+          song_title: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          artist?: string | null
+          created_at?: string
+          cue_time_seconds?: number | null
+          id?: string
+          moment?: string
+          notes?: string | null
+          playlist_id: string
+          song_title: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          artist?: string | null
+          created_at?: string
+          cue_time_seconds?: number | null
+          id?: string
+          moment?: string
+          notes?: string | null
+          playlist_id?: string
+          song_title?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "event_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_playlists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          quote_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          quote_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          quote_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_playlists_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -500,6 +582,45 @@ export type Database = {
           name?: string
           updated_at?: string
           venue?: string | null
+        }
+        Relationships: []
+      }
+      music_tracks: {
+        Row: {
+          active: boolean
+          artist: string | null
+          created_at: string
+          duration_seconds: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          artist?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          artist?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          sort_order?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1048,7 +1169,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_banking_details: {
+        Args: never
+        Returns: {
+          key: string
+          value: string
+        }[]
+      }
       get_my_profile_id: { Args: never; Returns: string }
+      get_public_business_settings: {
+        Args: never
+        Returns: {
+          key: string
+          value: string
+        }[]
+      }
+      get_service_settings: {
+        Args: never
+        Returns: {
+          setting_key: string
+          setting_value: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
