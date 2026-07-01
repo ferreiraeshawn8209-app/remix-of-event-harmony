@@ -102,6 +102,8 @@ interface QuestionnairePayload {
   package_id: string | null;
   package_name: string | null;
   notes: string | null;
+  terms_accepted: boolean;
+  terms_accepted_at: string;
 }
 
 interface QuoteData {
@@ -1213,6 +1215,7 @@ function Questionnaire({
   onSubmit: (payload: QuestionnairePayload) => Promise<void>;
   submitting: boolean;
 }) {
+  const termsUrl = supabase.storage.from("documents").getPublicUrl("terms-and-conditions.pdf").data.publicUrl;
   const [form, setForm] = useState({
     venue_provides_sound: false,
     requires_microphones: false,
@@ -1223,6 +1226,7 @@ function Questionnaire({
     requires_low_fog_machine: false,
     requires_cold_spark_machines: false,
     notes: "",
+    terms_accepted: false,
   });
 
   const update = (key: string, value: boolean | string) => setForm((previous) => ({ ...previous, [key]: value }));
@@ -1232,6 +1236,15 @@ function Questionnaire({
       toast({
         title: "Event profile incomplete",
         description: "Please complete your saved event details before requesting a quote.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!form.terms_accepted) {
+      toast({
+        title: "Terms acceptance required",
+        description: "Please agree to the Terms & Conditions before sending your quote request.",
         variant: "destructive",
       });
       return;
@@ -1271,6 +1284,8 @@ function Questionnaire({
       package_id: selectedPackage?.id || null,
       package_name: selectedPackage?.name || null,
       notes: form.notes.trim() || null,
+      terms_accepted: true,
+      terms_accepted_at: new Date().toISOString(),
     });
   };
 
@@ -1386,6 +1401,28 @@ function Questionnaire({
                   </div>
                 ))
               )}
+            </div>
+
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  checked={form.terms_accepted}
+                  onCheckedChange={(value) => update("terms_accepted", !!value)}
+                  id="terms-acceptance"
+                />
+                <div className="space-y-1">
+                  <label htmlFor="terms-acceptance" className="text-sm font-medium cursor-pointer">
+                    I agree to BeatKulture Entertainment's Terms & Conditions.
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    By continuing, you confirm acceptance of our booking, payment, and service terms.
+                    {" "}
+                    <a href={termsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      View Terms & Conditions
+                    </a>
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-2">

@@ -32,6 +32,8 @@ export interface QuoteRequest {
   package_id: string | null;
   package_name: string | null;
   notes: string | null;
+  terms_accepted: boolean;
+  terms_accepted_at: string;
   status: string; // pending | in_progress | quoted | declined
   quote_id: string | null;
   created_at: string;
@@ -63,9 +65,33 @@ export function useQuoteRequests(clientId?: string | null) {
       // Admin in-app notification is created automatically by DB trigger.
       // Trigger AI alarm cadence so the lead is not forgotten.
       if (data?.id) {
-        supabase.functions.invoke("generate-alarms", {
-          body: { category: "followup_request", quote_request_id: data.id },
-        }).catch((e) => console.warn("alarm gen (lead) failed", e));
+        void Promise.allSettled([
+          supabase.functions.invoke("generate-alarms", {
+            body: { category: "followup_request", quote_request_id: data.id },
+          }),
+          supabase.functions.invoke("notify-admin-quote-request", {
+            body: {
+              requestId: data.id,
+              clientName: data.client_name,
+              clientEmail: data.email,
+              eventType: data.event_type,
+              eventDate: data.event_date,
+              packageName: data.package_name,
+            },
+          }),
+        ]).then((results) => {
+          const [alarmResult, emailResult] = results;
+          if (alarmResult.status === "rejected") {
+            console.warn("alarm gen (lead) failed", alarmResult.reason);
+          } else if (alarmResult.value.error) {
+            console.warn("alarm gen (lead) failed", alarmResult.value.error);
+          }
+          if (emailResult.status === "rejected") {
+            console.warn("admin quote request email failed", emailResult.reason);
+          } else if (emailResult.value.error) {
+            console.warn("admin quote request email failed", emailResult.value.error);
+          }
+        });
       }
       return data as QuoteRequest;
     },

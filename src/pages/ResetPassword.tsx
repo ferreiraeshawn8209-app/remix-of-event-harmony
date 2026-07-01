@@ -75,7 +75,7 @@ export default function ResetPassword() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <KeyRound className="w-8 h-8 text-primary" />
-            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE</span>
+            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </div>
           <p className="text-muted-foreground">Set your new password</p>
         </div>
