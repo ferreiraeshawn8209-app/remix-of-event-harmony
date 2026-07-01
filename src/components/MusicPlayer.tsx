@@ -30,6 +30,21 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
   const [initialized, setInitialized] = useState(false);
   const mixcloudFallbackUrl = resolveMixcloudProfileUrl(mixcloudUrl);
 
+  const ensureCurrentTrackLoaded = useCallback(() => {
+    const audio = audioRef.current;
+    const track = tracks[index];
+    if (!audio || !track) return null;
+
+    if (audio.src !== track.url) {
+      audio.src = track.url;
+      audio.load();
+    } else if (audio.readyState === 0) {
+      audio.load();
+    }
+
+    return audio;
+  }, [index, tracks]);
+
   // Pick a random track once tracks are loaded
   useEffect(() => {
     if (tracks.length === 0) return;
@@ -50,14 +65,9 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
 
   // Attempt autoplay whenever the index changes (after init)
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !initialized || tracks.length === 0) return;
-
-    const track = tracks[index];
-    if (!track) return;
-
-    audio.src = track.url;
-    audio.load();
+    if (!initialized || tracks.length === 0) return;
+    const audio = ensureCurrentTrackLoaded();
+    if (!audio) return;
 
     const attempt = audio.play();
     if (attempt !== undefined) {
@@ -72,10 +82,10 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
           setAutoplayBlocked(true);
         });
     }
-  }, [index, initialized, tracks]);
+  }, [index, initialized, tracks, ensureCurrentTrackLoaded]);
 
   const play = useCallback(() => {
-    const audio = audioRef.current;
+    const audio = ensureCurrentTrackLoaded();
     if (!audio) return;
     audio.play().then(() => {
       setIsPlaying(true);
@@ -83,7 +93,26 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
     }).catch((err) => {
       console.warn("MusicPlayer: play() rejected:", err);
     });
-  }, []);
+  }, [ensureCurrentTrackLoaded]);
+
+  // If autoplay is blocked, retry as soon as the user interacts anywhere on the page.
+  useEffect(() => {
+    if (!autoplayBlocked) return;
+
+    const unlockAndPlay = () => {
+      play();
+    };
+
+    window.addEventListener("pointerdown", unlockAndPlay, { once: true });
+    window.addEventListener("keydown", unlockAndPlay, { once: true });
+    window.addEventListener("touchstart", unlockAndPlay, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAndPlay);
+      window.removeEventListener("keydown", unlockAndPlay);
+      window.removeEventListener("touchstart", unlockAndPlay);
+    };
+  }, [autoplayBlocked, play]);
 
   // If autoplay is blocked, retry as soon as the user interacts anywhere on the page.
   useEffect(() => {
