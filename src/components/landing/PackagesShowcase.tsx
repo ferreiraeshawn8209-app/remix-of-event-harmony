@@ -95,7 +95,11 @@ export function PackagesShowcase() {
               </p>
             </div>
             <Button variant="hero" size="lg" asChild>
-              <Link to="/auth?tab=signup"><Sparkles className="w-4 h-4" /> Start my quote</Link>
+              <Link
+                to={`/auth?tab=signup&redirect=${encodeURIComponent("/client?custom=1")}`}
+              >
+                <Sparkles className="w-4 h-4" /> Start my quote
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -125,7 +129,7 @@ export function PackagesShowcase() {
                       <CardContent className="p-5 flex flex-col flex-1">
                         {p.image_url && (
                           <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-lg bg-muted/40">
-                            <img src={p.image_url} alt={p.name} className="w-full h-64 object-cover" loading="lazy" />
+                            <img src={p.image_url} alt={p.name} className="w-full h-44 object-contain p-2" loading="lazy" />
                           </div>
                         )}
                         {p.popular && <Badge className="self-start mb-2">Most popular</Badge>}

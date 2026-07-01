@@ -486,7 +486,14 @@ export default function ClientPortal() {
   useEffect(() => {
     if (!user || !profile?.id || loadingQuotes || view !== "dashboard") return;
     const params = new URLSearchParams(location.search);
+    const requestedCustomQuote = params.get("custom") === "1";
     const selectedPackageId = params.get("package");
+    if (requestedCustomQuote) {
+      setQuestionnairePrefill({ package_id: null, package_name: null });
+      setView("questionnaire");
+      navigate("/client", { replace: true });
+      return;
+    }
     if (!selectedPackageId) return;
 
     const selectedPackage = packages.find((pkg) => pkg.id === selectedPackageId && pkg.is_active);
@@ -659,13 +666,13 @@ export default function ClientPortal() {
 
           <Card
             variant="glass"
-            className="relative overflow-hidden border-2 border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-500/20 via-purple-500/25 to-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.14),0_18px_40px_-20px_hsl(289_100%_62%)]"
+            className="relative overflow-hidden border-2 border-purple-400/80 bg-gradient-to-r from-purple-600/30 via-fuchsia-500/25 to-orange-500/20 shadow-[0_0_0_1px_rgba(255,255,255,0.2),0_22px_48px_-18px_rgba(255,107,0,0.75)]"
           >
-            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-fuchsia-400/30 blur-xl" />
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-orange-400/40 blur-xl" />
             <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-fuchsia-100 flex items-center gap-2">
-                  <Wand2 className="w-4 h-4 text-fuchsia-200" />
+                <p className="font-semibold text-purple-50 flex items-center gap-2">
+                  <Wand2 className="w-4 h-4 text-orange-300" />
                   Need a customised quote?
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -674,7 +681,7 @@ export default function ClientPortal() {
               </div>
               <Button
                 variant="default"
-                className="relative bg-gradient-to-r from-fuchsia-500 via-purple-500 to-primary text-white border border-white/30 hover:from-fuchsia-400 hover:via-purple-400 hover:to-primary/90 shadow-[0_10px_24px_-12px_hsl(289_100%_62%)]"
+                className="relative bg-gradient-to-r from-purple-500 via-fuchsia-500 to-orange-500 text-white border border-white/40 hover:from-purple-400 hover:via-fuchsia-400 hover:to-orange-400 shadow-[0_12px_28px_-10px_rgba(255,107,0,0.8)]"
                 disabled={!eventProfileReady}
                 onClick={() => {
                   setQuestionnairePrefill({ package_id: null, package_name: null });
@@ -705,8 +712,8 @@ export default function ClientPortal() {
                       {packagesByCategory[category].map((pkg) => (
                         <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
                           {pkg.image_url && (
-                            <div className="w-full h-64 bg-muted/40 flex items-center justify-center">
-                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="w-full h-40 bg-muted/40 flex items-center justify-center p-2">
+                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
                             </div>
                           )}
                           <CardHeader className="pb-2">

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -65,12 +66,18 @@ export function useQuoteRequests(clientId?: string | null) {
       if (error) throw error;
       // Admin in-app notification is created automatically by DB trigger.
       // Trigger AI alarm cadence so the lead is not forgotten.
+      let adminEmailNotified = true;
       if (data?.id) {
-        void Promise.allSettled([
-          supabase.functions.invoke("generate-alarms", {
-            body: { category: "followup_request", quote_request_id: data.id },
-          }),
-          supabase.functions.invoke("notify-admin-quote-request", {
+        const alarmResult = await supabase.functions.invoke("generate-alarms", {
+          body: { category: "followup_request", quote_request_id: data.id },
+        });
+        if (alarmResult.error) {
+          console.warn("alarm gen (lead) failed", alarmResult.error);
+        }
+
+        let emailError: unknown = null;
+        for (let attempt = 1; attempt <= 2; attempt += 1) {
+          const emailResult = await supabase.functions.invoke("notify-admin-quote-request", {
             body: {
               requestId: data.id,
               clientName: data.client_name,
@@ -79,32 +86,58 @@ export function useQuoteRequests(clientId?: string | null) {
               eventDate: data.event_date,
               packageName: data.package_name,
             },
-          }),
-        ]).then((results) => {
-          const [alarmResult, emailResult] = results;
-          if (alarmResult.status === "rejected") {
-            console.warn("alarm gen (lead) failed", alarmResult.reason);
-          } else if (alarmResult.value.error) {
-            console.warn("alarm gen (lead) failed", alarmResult.value.error);
+          });
+
+          if (!emailResult.error) {
+            emailError = null;
+            break;
           }
-          if (emailResult.status === "rejected") {
-            console.warn("admin quote request email failed", emailResult.reason);
-          } else if (emailResult.value.error) {
-            console.warn("admin quote request email failed", emailResult.value.error);
-          }
-        });
+
+          emailError = emailResult.error;
+        }
+
+        if (emailError) {
+          adminEmailNotified = false;
+          console.warn("admin quote request email failed", emailError);
+        }
       }
-      return data as QuoteRequest;
+      return { request: data as QuoteRequest, adminEmailNotified };
     },
-    onSuccess: () => {
+    onSuccess: ({ adminEmailNotified }) => {
       queryClient.invalidateQueries({ queryKey: ["quote_requests"] });
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
       toast({ title: "Request Submitted", description: "We'll prepare your quote and let you know when it's ready." });
+      if (!adminEmailNotified) {
+        toast({
+          title: "Admin email alert delayed",
+          description: "Your request was submitted. In-app admin notifications are active while email retries continue.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (e: any) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     },
   });
+
+  useEffect(() => {
+    const channelName = clientId ? `quote_requests_client_${clientId}` : "quote_requests_admin";
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "quote_requests" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["quote_requests"] });
+          queryClient.invalidateQueries({ queryKey: ["quote_requests", clientId || "admin"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, clientId]);
 
   const updateRequest = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<QuoteRequest> }) => {
