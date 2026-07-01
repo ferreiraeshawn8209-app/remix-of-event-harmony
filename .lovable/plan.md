@@ -1,50 +1,42 @@
-## Landing Page Restructure
+## Wave 5 Plan
 
-New section order on `/` (signed-out and as a teaser for signed-in clients):
+### 1. Backgrounds & GIFs
+- Create `page-backgrounds` public bucket (allow `image/*` including `image/gif`).
+- Fix `PageBackground.tsx` so GIFs animate (currently the linear-gradient overlay is fine but images occasionally fail because of missing bucket / CORS). Add fallback + `img` element for GIFs so animation is preserved and preloaded.
+- Ensure `Admin → Branding` uploads to the correct bucket with correct content-type.
 
-1. **AI Event Coordinator hero** — a chat widget pinned at the top with a friendly persona (working name: **"Kulture"**). Auto-greets the visitor, introduces 4 features (Custom Quotes, Event Planner, QR Song Requests, AI Coordinator) and nudges them to pick a package. Backed by a new `chat-coordinator` edge function using Lovable AI (`google/gemini-3-flash-preview`), system-prompted with current packages, active special, and contact info.
-2. **Upcoming Events / Bookings ticker** — horizontally scrolling strip of upcoming events (date • event type • city) from the `events` table, anonymised (no client names).
-3. **Specials banner** — existing `SpecialsManager` image carousel.
-4. **Packages** — in this exact order, each card admin-editable:
-   1. **Customized Quote** (expanded description + "Build my quote" CTA → `/auth?tab=signup`)
-   2. **Wedding Package**
-   3. **Corporate Package**
-   4. **Party Package**
-   - **Auto-discount**: if an active special with a numeric `discount_percent` exists, each package shows **strikethrough original** → **discounted price** + a small "SPECIAL −X%" pill. AI Coordinator is told about the active discount so it can mention it in chat.
-5. **Testimonials** — new `testimonials` table (name, event type, rating, quote, optional photo, sort_order, is_live). Admin tab to manage; landing renders a 3-up carousel.
-6. **YouTube Showcase** — existing component.
-7. **Mixcloud Rotator** — already random per visit; ensure Prev / Surprise / Next buttons are visible, and add session-level "don't repeat" memory.
-8. **Competitions banner** — moved to bottom, above footer.
+### 2. Music library (admin uploads + client playback)
+- New `music_tracks` table: `title, artist, file_url, mime_type, duration_seconds, sort_order, active`.
+- New public bucket `music-library` allowing `audio/mpeg`, `audio/wav`, `audio/mp3`.
+- Admin tab **Music Library**: upload MP3/WAV, list/delete, toggle active.
+- Global `<MusicPlayer/>` mounted in authenticated layout (ClientPortal + Admin): loads active tracks, shuffles, autoplays on login (muted-by-default with a "Tap to play" prompt for browser autoplay policies), continuous playback, next/prev/shuffle controls, floating mini-player replacing/augmenting `BackgroundAudio`.
 
-`PageBackground pageKey="bg_landing"` already provides the admin-uploaded backdrop — no change.
+### 3. Branding: BeatKulture Entertainment + admin logo upload
+- Add `brand_logo_url` to `business_settings`.
+- Admin → Branding: upload logo (accepts GIF). Shown in header on all pages, PDFs, invoices (fallback to bundled `logo.png`).
+- Update all "BEATKULTURE" wordmarks → "BeatKulture Entertainment".
 
-## Wave 4 — Song Requests + Human Jukebox
+### 4. Post-acceptance playlist system
+- New tables:
+  - `event_playlists` (quote_id, name, notes).
+  - `event_playlist_items` (playlist_id, moment, song_title, artist, cue_time_seconds, notes, sort_order).
+- Moments enum: `arrival, ceremony, first_dance, cake_cut, party, last_song, custom`.
+- Unlock condition: quote status = `accepted` (or deposit paid).
+- Client UI `/planner` → new **Music Planner** panel: add songs per moment with cue points, drag-reorder.
+- AI assist: `plan-playlist` edge function using Gemini → suggests songs & cue points per moment given event details.
 
-- **Review gate**: `/request/:eventId` shows the existing 5-star review form first; only a **4★ or 5★** review unlocks the song-request form. Stored in new `client_reviews` table with `posted_to_facebook` / `posted_to_bark` admin checkboxes and a "WhatsApp this review" share button (uses your `+27 65 528 5528`).
-- **Admin notification trigger** on `client_reviews` insert → admin bell + (later) WhatsApp push when Twilio is connected.
-- **Human Jukebox add-on**: new package add-on flag in `service_settings` (`human_jukebox_rate` default `R250.00/hr`). Quote calculator adds a "🎙️ Human Jukebox (R250/hr × hours)" optional line item, discountable=true (counts as DJ service). On the event's song-request page, when the booking has `human_jukebox=true`, the QR page shows a "Human Jukebox active — your request is guaranteed within the next track" badge.
+### 5. Landing intro
+- New `LandingIntro` section (below hero, above events ticker): 2-3 short paragraphs describing BeatKulture Entertainment, services (weddings, corporate, private, kids), and app features (AI coordinator, quotes, planner, QR requests, competitions, YouTube reel).
 
-## Database changes (single migration)
+### 6. Animated / interactive AI ("Kulture")
+- Add animated avatar (pulse ring, gradient blob, typing dots) to CoordinatorChat.
+- Floating chat bubble available on all pages (not only landing).
+- Quick-reply chips ("Get a Quote", "See Packages", "Book a Date", "Song Requests").
+- Sparkle/emoji reactions on assistant messages.
 
-- `testimonials` table + RLS (public read where is_live, admin write) + GRANTs.
-- `client_reviews` table + RLS (anon insert allowed for the event's QR page, admin read) + GRANTs + notification trigger.
-- `quotes.human_jukebox boolean default false`, `quotes.human_jukebox_hours numeric default 0`.
-- `service_settings` row: `human_jukebox_rate = 250`.
-- `specials.discount_percent numeric null` (nullable so existing image-only specials still work).
+### Files
+**Create:** `src/components/MusicPlayer.tsx`, `src/components/admin/MusicLibraryManager.tsx`, `src/hooks/useMusicTracks.tsx`, `src/hooks/useEventPlaylist.tsx`, `src/components/planner/MusicPlaylistPlanner.tsx`, `src/components/landing/LandingIntro.tsx`, `src/components/KultureBubble.tsx`, `supabase/functions/plan-playlist/index.ts`, migration.
 
-## Edge function
+**Edit:** `Admin.tsx`, `ClientPortal.tsx`, `EventPlanner.tsx`, `Index.tsx`, `Header.tsx`/logo usage, `BusinessSettingsManager.tsx`, `PageBackground.tsx`, `CoordinatorChat.tsx`, `generateInvoicePdf.ts`, `useBusinessSettings.tsx`.
 
-- `chat-coordinator` — streams Lovable AI replies, given live package/special context from the DB. Public (no JWT). Surfaces 429/402 errors as toasts client-side.
-
-## Files
-
-**New**: `supabase/functions/chat-coordinator/index.ts`, `src/components/landing/CoordinatorChat.tsx`, `src/components/landing/UpcomingEventsTicker.tsx`, `src/components/landing/PackagesShowcase.tsx`, `src/components/landing/TestimonialsCarousel.tsx`, `src/components/admin/TestimonialsManager.tsx`, `src/components/admin/ReviewsManager.tsx`, `src/hooks/useTestimonials.tsx`, `src/hooks/useClientReviews.tsx`, `src/lib/activeDiscount.ts`, plus the migration.
-
-**Edited**: `src/pages/Index.tsx` (new section order), `src/pages/SongRequest.tsx` (review-gate), `src/pages/Admin.tsx` (Testimonials + Reviews tabs), `src/components/QuoteCalculator.tsx` + `src/lib/pricing.ts` (Human Jukebox add-on), `src/components/MixcloudRotator.tsx` (no-repeat memory), `src/hooks/useSpecials.tsx` + `src/components/admin/SpecialsManager.tsx` (discount_percent field), `src/integrations/supabase/types.ts`.
-
-## Out of scope (deferred)
-
-- Twilio WhatsApp push (still waiting for connector approval).
-- Auto-post reviews to Facebook / Bark.com — needs OAuth setup; for now reviews land in admin + WhatsApp-share button.
-
-Shall I proceed?
+Proceed?
