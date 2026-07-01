@@ -269,21 +269,6 @@ export async function uploadTrackFile(
     });
 
     if (!uploadError) {
-      const slash = path.lastIndexOf("/");
-      const folder = slash > -1 ? path.slice(0, slash) : "";
-      const fileName = slash > -1 ? path.slice(slash + 1) : path;
-      const { data: listed, error: listError } = await deps.storage.list(folder, { limit: 1, search: fileName });
-      if (listError) throw mapStorageError(listError);
-
-      const exists = (listed || []).some((entry) => entry.name === fileName);
-      if (!exists) {
-        throw new TrackUploadError(
-          "transient_network",
-          "Upload could not be confirmed in storage. Please retry.",
-          `missing object path=${path}`,
-        );
-      }
-
       try {
         await deps.insertTrack(title, publicUrl);
       } catch (dbError) {
