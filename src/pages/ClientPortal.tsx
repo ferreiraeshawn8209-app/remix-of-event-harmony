@@ -641,8 +641,8 @@ export default function ClientPortal() {
                       {packagesByCategory[category].map((pkg) => (
                         <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
                           {pkg.image_url && (
-                            <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
+                            <div className="w-full h-64 bg-muted/40 flex items-center justify-center">
+                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" loading="lazy" />
                             </div>
                           )}
                           <CardHeader className="pb-2">
@@ -655,7 +655,7 @@ export default function ClientPortal() {
                           </CardHeader>
                           <CardContent className="space-y-3">
                             <ul className="text-xs text-muted-foreground space-y-1">
-                              {(pkg.includes || []).slice(0, 5).map((item, index) => (
+                              {(pkg.includes || []).map((item, index) => (
                                 <li key={index} className="flex items-start gap-1">
                                   <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {item}
                                 </li>
