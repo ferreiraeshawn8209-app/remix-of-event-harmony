@@ -32,6 +32,7 @@ export interface QuoteRequest {
   package_id: string | null;
   package_name: string | null;
   notes: string | null;
+  payment_preference: "deposit" | "monthly_installments";
   terms_accepted: boolean;
   terms_accepted_at: string;
   status: string; // pending | in_progress | quoted | declined
@@ -115,11 +116,26 @@ export function useQuoteRequests(clientId?: string | null) {
     },
   });
 
+  const deleteRequest = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("quote_requests").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote_requests"] });
+      toast({ title: "Request deleted", description: "Quote request removed from admin dashboard." });
+    },
+    onError: (e: any) => {
+      toast({ title: "Delete failed", description: e.message, variant: "destructive" });
+    },
+  });
+
   return {
     requests: requestsQuery.data || [],
     isLoading: requestsQuery.isLoading,
     createRequest: createRequest.mutateAsync,
     isCreating: createRequest.isPending,
     updateRequest: updateRequest.mutateAsync,
+    deleteRequest: deleteRequest.mutateAsync,
   };
 }

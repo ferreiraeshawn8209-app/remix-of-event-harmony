@@ -66,7 +66,7 @@ export function TracksManager() {
           break;
         } catch (err) {
           const uploadError = err instanceof TrackUploadError ? err : new TrackUploadError("unknown", "Upload failed");
-          if (uploadError.kind === "missing_bucket") {
+          if (uploadError.kind === "missing_bucket" || uploadError.kind === "permission_or_config") {
             lastError = uploadError;
             continue;
           }

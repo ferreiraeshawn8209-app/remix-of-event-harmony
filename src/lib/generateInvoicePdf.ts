@@ -308,8 +308,9 @@ function addTotals(doc: jsPDF, quote: DatabaseQuote, y: number) {
   addTotal("TOTAL", formatCurrency(Number(quote.total)), true);
   doc.setFontSize(9);
   y += 2;
-  addTotal("30% Non-Refundable Deposit", formatCurrency(Number(quote.deposit)), true, [0, 100, 200]);
-  addTotal("Remaining Balance", formatCurrency(Number(quote.balance)));
+  const isMonthlyInstallments = quote.payment_structure === "monthly_installments";
+  addTotal(isMonthlyInstallments ? "First Installment" : "30% Non-Refundable Deposit", formatCurrency(Number(quote.deposit)), true, [0, 100, 200]);
+  addTotal(isMonthlyInstallments ? "Remaining Installments" : "Remaining Balance", formatCurrency(Number(quote.balance)));
 
   return y;
 }
@@ -332,10 +333,12 @@ function addPaymentStatus(doc: jsPDF, quote: DatabaseQuote, y: number) {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
+  const isMonthlyInstallments = quote.payment_structure === "monthly_installments";
+  const firstPaymentLabel = isMonthlyInstallments ? "First installment" : "Deposit";
 
   if (quote.deposit_paid) {
     doc.setTextColor(34, 139, 34);
-    doc.text(`✓ Deposit of ${formatCurrency(Number(quote.deposit))} PAID`, 24, y + 10);
+    doc.text(`✓ ${firstPaymentLabel} of ${formatCurrency(Number(quote.deposit))} PAID`, 24, y + 10);
     if (quote.deposit_paid_at) {
       doc.text(`  Paid on: ${new Date(quote.deposit_paid_at).toLocaleDateString("en-ZA")}`, 24, y + 15);
     }
@@ -345,20 +348,32 @@ function addPaymentStatus(doc: jsPDF, quote: DatabaseQuote, y: number) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(100);
-    doc.text("Full balance must be paid before the scheduled performance begins.", 24, y + 26);
+    doc.text(
+      isMonthlyInstallments
+        ? "All remaining installments must be settled by event day."
+        : "Full balance must be paid before the scheduled performance begins.",
+      24,
+      y + 26,
+    );
   } else {
     doc.setTextColor(200, 100, 0);
-    doc.text(`⏳ Deposit of ${formatCurrency(Number(quote.deposit))} is required to confirm booking.`, 24, y + 10);
+    doc.text(`⏳ ${firstPaymentLabel} of ${formatCurrency(Number(quote.deposit))} is required to confirm booking.`, 24, y + 10);
     doc.setFontSize(7);
     doc.setTextColor(100);
-    doc.text("A 30% non-refundable deposit secures your booking. No performance without full payment.", 24, y + 16);
+    doc.text(
+      isMonthlyInstallments
+        ? "Monthly installments apply. Final installment is due on event day."
+        : "A 30% non-refundable deposit secures your booking. No performance without full payment.",
+      24,
+      y + 16,
+    );
   }
 
   doc.setTextColor(0);
   return y + boxHeight + 4;
 }
 
-function addPaymentTerms(doc: jsPDF, y: number) {
+function addPaymentTerms(doc: jsPDF, quote: DatabaseQuote, y: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   if (y > 245) { doc.addPage(); y = 20; }
@@ -373,8 +388,13 @@ function addPaymentTerms(doc: jsPDF, y: number) {
   doc.text("PAYMENT TERMS & CONDITIONS", 24, y + 3);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text("1. A 30% non-refundable deposit is required to confirm and secure your booking.", 24, y + 9);
-  doc.text("2. The remaining balance must be paid IN FULL before the scheduled performance begins.", 24, y + 13.5);
+  if (quote.payment_structure === "monthly_installments") {
+    doc.text("1. The first installment is required to confirm and secure your booking.", 24, y + 9);
+    doc.text("2. Remaining installments are due monthly, with the final payment due on event day.", 24, y + 13.5);
+  } else {
+    doc.text("1. A 30% non-refundable deposit is required to confirm and secure your booking.", 24, y + 9);
+    doc.text("2. The remaining balance must be paid IN FULL before the scheduled performance begins.", 24, y + 13.5);
+  }
   doc.text("3. No performance will take place without full payment confirmation.", 24, y + 18);
   doc.setTextColor(0);
 
@@ -441,7 +461,7 @@ export async function generateInvoicePdf(
   y = addLineItems(doc, quote, y, catalogItems, equipmentImages);
   y = addTotals(doc, quote, y);
   y = addPaymentStatus(doc, quote, y);
-  addPaymentTerms(doc, y);
+  addPaymentTerms(doc, quote, y);
   addFooter(doc);
 
   // Add full T&Cs as additional pages
@@ -477,7 +497,7 @@ export async function generateQuotePdf(
   y = addClientAndEventDetails(doc, quote, y, "PREPARED FOR");
   y = addLineItems(doc, quote, y, catalogItems, equipmentImages);
   y = addTotals(doc, quote, y);
-  addPaymentTerms(doc, y);
+  addPaymentTerms(doc, quote, y);
   addFooter(doc, "This quote is valid for 7 days from the date of issue.");
 
   // Add full T&Cs as additional pages
@@ -516,7 +536,7 @@ export function sharePdfViaWhatsApp(
     link.click();
 
     const message = encodeURIComponent(
-      `Hi ${quote.client_name},\n\nPlease find your ${type} from BeatKulture Entertainment attached.\n\nTotal: ${formatCurrency(Number(quote.total))}\nDeposit (30%): ${formatCurrency(Number(quote.deposit))}\n\nThank you for choosing BeatKulture! 🎵`
+      `Hi ${quote.client_name},\n\nPlease find your ${type} from BeatKulture Entertainment attached.\n\nTotal: ${formatCurrency(Number(quote.total))}\n${quote.payment_structure === "monthly_installments" ? "First installment" : "Deposit (30%)"}: ${formatCurrency(Number(quote.deposit))}\n\nThank you for choosing BeatKulture! 🎵`
     );
     const phone = quote.contact_no?.replace(/\s+/g, "").replace(/^\+?27/, "27") || "";
     const waUrl = phone
@@ -538,7 +558,7 @@ export function shareViaEmail(
 
   const subject = encodeURIComponent(`BeatKulture ${type === "quote" ? "Quote" : "Invoice"} - ${quote.client_name}`);
   const body = encodeURIComponent(
-    `Hi ${quote.client_name},\n\nPlease find your ${type} from BeatKulture Entertainment attached.\n\nTotal: ${formatCurrency(Number(quote.total))}\nDeposit (30%): ${formatCurrency(Number(quote.deposit))}\n\nThank you for choosing BeatKulture!\n\nPlease download the PDF that was just saved and attach it to this email.`
+    `Hi ${quote.client_name},\n\nPlease find your ${type} from BeatKulture Entertainment attached.\n\nTotal: ${formatCurrency(Number(quote.total))}\n${quote.payment_structure === "monthly_installments" ? "First installment" : "Deposit (30%)"}: ${formatCurrency(Number(quote.deposit))}\n\nThank you for choosing BeatKulture!\n\nPlease download the PDF that was just saved and attach it to this email.`
   );
 
   window.open(`mailto:${quote.email}?subject=${subject}&body=${body}`, "_self");
