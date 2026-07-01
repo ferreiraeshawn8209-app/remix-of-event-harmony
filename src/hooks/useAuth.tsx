@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -64,6 +64,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hydrationRequestRef = useRef(0);
   const pendingAuthEventRef = useRef<"signup" | "signin" | null>(null);
   const lastNotifiedAccessTokenRef = useRef<string | null>(null);
+  const notificationRetryTimerRef = useRef<number | null>(null);
+
+  const notifyAdminAuthEvent = useCallback(async (eventType: "signup" | "signin") => {
+    const invoke = async () => {
+      const { error } = await supabase.rpc("notify_admin_on_app_auth", { _event: eventType });
+      if (error) {
+        console.error("Error notifying admin of auth event:", error);
+        return false;
+      }
+      return true;
+    };
+
+    const succeeded = await invoke();
+    if (!succeeded) {
+      if (notificationRetryTimerRef.current) {
+        window.clearTimeout(notificationRetryTimerRef.current);
+      }
+      notificationRetryTimerRef.current = window.setTimeout(() => {
+        void invoke();
+      }, 1500);
+    }
+  }, []);
 
   const hydrateAuthState = async (currentSession: Session | null, deferProfileFetch = false) => {
     const requestId = ++hydrationRequestRef.current;
@@ -280,11 +302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             lastNotifiedAccessTokenRef.current = currentSession.access_token;
             const authEvent = pendingAuthEventRef.current ?? "signin";
             pendingAuthEventRef.current = null;
-            void supabase.rpc("notify_admin_on_app_auth", { _event: authEvent }).then(({ error }) => {
-              if (error) {
-                console.error("Error notifying admin of auth event:", error);
-              }
-            });
+            void notifyAdminAuthEvent(authEvent);
           }
         }
 
@@ -332,8 +350,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+      if (notificationRetryTimerRef.current) {
+        window.clearTimeout(notificationRetryTimerRef.current);
+      }
+    };
+  }, [notifyAdminAuthEvent]);
 
   const signUp = async (
     email: string,

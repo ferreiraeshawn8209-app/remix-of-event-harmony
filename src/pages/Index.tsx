@@ -9,11 +9,14 @@ import { CoordinatorChat } from "@/components/landing/CoordinatorChat";
 import { UpcomingEventsTicker } from "@/components/landing/UpcomingEventsTicker";
 import { SpecialsBanner } from "@/components/landing/SpecialsBanner";
 import { PackagesShowcase } from "@/components/landing/PackagesShowcase";
+import { ExtraFeaturesSection } from "@/components/landing/ExtraFeaturesSection";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { useBrandingLogo } from "@/hooks/useBranding";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
+import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
 /**
  * Public landing page — authenticated visitors are redirected to /admin or /client.
@@ -22,6 +25,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading } = useAuth();
   const logoImg = useBrandingLogo();
+  const { get } = useBusinessSettings();
+  const mixcloudUrl = resolveMixcloudProfileUrl(get("mixcloud_url"));
 
   useEffect(() => {
     if (isLoading) return;
@@ -119,6 +124,8 @@ const Index = () => {
       {/* Packages — visible on landing before auth flow */}
       <div id="packages"><PackagesShowcase /></div>
 
+      <ExtraFeaturesSection />
+
       <section className="container mx-auto px-4 pb-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="glass-card rounded-xl p-4">
@@ -149,7 +156,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-12"><YoutubeShowcase /></section>
 
       {/* Mixcloud rotator */}
-      <section className="container mx-auto px-4 py-8 max-w-3xl"><MixcloudRotator /></section>
+      <section className="container mx-auto px-4 py-8 max-w-3xl"><MixcloudRotator backupUrl={mixcloudUrl} /></section>
 
       {/* Competitions at the bottom */}
       <section className="container mx-auto px-4 py-12"><CompetitionsBanner /></section>

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +11,24 @@ import { useTracks } from "@/hooks/useTracks";
 import { toast } from "@/hooks/use-toast";
 import { TrackUploadError, resolveMaxTrackUploadBytes, uploadTrackFile, validateFallbackTrackUrl } from "@/lib/trackUpload";
 import { TRACK_BUCKET_CANDIDATES } from "@/lib/trackStorage";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
+import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
 export function TracksManager() {
   const { tracks, isLoading, update, remove, refetch, create } = useTracks();
+  const { get: getSetting, setSetting } = useBusinessSettings();
   const [title, setTitle] = useState("");
   const [fallbackUrl, setFallbackUrl] = useState("");
+  const [mixcloudUrl, setMixcloudUrl] = useState(resolveMixcloudProfileUrl(getSetting("mixcloud_url")));
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const maxUploadMb = Math.round((resolveMaxTrackUploadBytes() / (1024 * 1024)) * 100) / 100;
   const shouldShowFallbackHint = (kind: TrackUploadError["kind"]) => kind === "missing_bucket" || kind === "permission_or_config";
+  const persistedMixcloudUrl = getSetting("mixcloud_url");
+
+  useEffect(() => {
+    setMixcloudUrl(resolveMixcloudProfileUrl(persistedMixcloudUrl));
+  }, [persistedMixcloudUrl]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,6 +118,24 @@ export function TracksManager() {
     }
   };
 
+  const saveMixcloudUrl = async () => {
+    const safeUrl = resolveMixcloudProfileUrl(mixcloudUrl);
+    try {
+      await setSetting("mixcloud_url", safeUrl);
+      setMixcloudUrl(safeUrl);
+      toast({
+        title: "Mixcloud URL saved",
+        description: "Client and landing Mixcloud links now use this URL.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Save failed",
+        description: err?.message || "Could not save Mixcloud URL.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDelete = async (id: string, url: string) => {
     try {
       await remove(id, url);
@@ -173,6 +200,22 @@ export function TracksManager() {
             </div>
             <p className="text-xs text-muted-foreground">
               Use this backup path if bucket permissions/config are broken. The link must point directly to an MP3/WAV file.
+            </p>
+          </div>
+          <div className="pt-3 border-t border-border/50 space-y-2">
+            <Label>Mixcloud profile URL (public links shown to clients)</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                value={mixcloudUrl}
+                onChange={(e) => setMixcloudUrl(e.target.value)}
+                placeholder="https://www.mixcloud.com/Beatkulture/uploads/"
+              />
+              <Button variant="outline" disabled={uploading} onClick={saveMixcloudUrl}>
+                Save Mixcloud URL
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This URL is used by the Mixcloud links in the landing page and client music player.
             </p>
           </div>
         </div>

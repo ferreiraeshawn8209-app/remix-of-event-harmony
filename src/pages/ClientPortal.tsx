@@ -48,7 +48,10 @@ import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { ExtraFeaturesScroller } from "@/components/client/ExtraFeaturesScroller";
 import { generateMonthlyPlan } from "@/lib/paymentPlanCalculator";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
+import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -271,11 +274,11 @@ function formatEventSetting(value: string | null | undefined) {
   return value === "outdoor" ? "Outdoor" : "Indoor";
 }
 
-function ClientMusicDock({ autoplayTrigger }: { autoplayTrigger: string }) {
+function ClientMusicDock({ autoplayTrigger, mixcloudUrl }: { autoplayTrigger: string; mixcloudUrl: string }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
       <div className="mx-auto max-w-3xl">
-        <MusicPlayer autoplayTrigger={autoplayTrigger} />
+        <MusicPlayer autoplayTrigger={autoplayTrigger} mixcloudUrl={mixcloudUrl} />
       </div>
     </div>
   );
@@ -397,6 +400,8 @@ export default function ClientPortal() {
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
   const { requests, createRequest, isCreating } = useQuoteRequests(profile?.id);
+  const { get: getSetting } = useBusinessSettings();
+  const mixcloudUrl = resolveMixcloudProfileUrl(getSetting("mixcloud_url"));
 
   const [view, setView] = useState<View>("dashboard");
   const [quotes, setQuotes] = useState<QuoteData[]>([]);
@@ -601,6 +606,8 @@ export default function ClientPortal() {
             </section>
           )}
 
+          <ExtraFeaturesScroller />
+
           <Card
             variant="glass"
             className="relative overflow-hidden border-2 border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-500/20 via-purple-500/25 to-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.14),0_18px_40px_-20px_hsl(289_100%_62%)]"
@@ -665,7 +672,8 @@ export default function ClientPortal() {
                             <ul className="text-xs text-muted-foreground space-y-1">
                               {(pkg.includes || []).map((item, index) => (
                                 <li key={index} className="flex items-start gap-1">
-                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {item}
+                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                                  <span className="whitespace-pre-wrap">{item}</span>
                                 </li>
                               ))}
                             </ul>
@@ -751,7 +759,7 @@ export default function ClientPortal() {
           <TestimonialsSection quoteId={quotes[0]?.id} />
           <YoutubeShowcase />
         </main>
-        <ClientMusicDock autoplayTrigger={user.id} />
+        <ClientMusicDock autoplayTrigger={user.id} mixcloudUrl={mixcloudUrl} />
       </div>
     );
   }
@@ -775,7 +783,7 @@ export default function ClientPortal() {
           onSubmit={handleQuestionnaireSubmit}
           submitting={submittingQuestionnaire || isCreating}
         />
-        <ClientMusicDock autoplayTrigger={user.id} />
+        <ClientMusicDock autoplayTrigger={user.id} mixcloudUrl={mixcloudUrl} />
       </div>
     );
   }
@@ -1169,7 +1177,7 @@ export default function ClientPortal() {
             </div>
           )}
         </main>
-        <ClientMusicDock autoplayTrigger={user.id} />
+        <ClientMusicDock autoplayTrigger={user.id} mixcloudUrl={mixcloudUrl} />
       </div>
     );
   }

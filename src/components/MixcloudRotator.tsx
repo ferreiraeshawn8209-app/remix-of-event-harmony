@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, SkipBack, SkipForward, Shuffle } from "lucide-react";
-import { buildMixcloudEmbedSrc } from "@/lib/mixcloud";
+import { buildMixcloudEmbedSrc, resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
 /**
  * Curated rotating Mixcloud mixes for the client dashboard.
@@ -22,9 +22,8 @@ interface MixcloudRotatorProps {
    * Changing this value forces a fresh autoplay attempt (for example on new sign-in).
    */
   autoplayTrigger?: string;
+  backupUrl?: string | null;
 }
-
-const MIXCLOUD_BACKUP_URL = "https://www.mixcloud.com/Beatkulture/uploads/";
 
 /** Anything under the /Beatkulture/ profile works. Edit this list in code. */
 const MIXES: MixEntry[] = [
@@ -45,7 +44,8 @@ function randomIndex(len: number, exclude?: number) {
   return i;
 }
 
-export function MixcloudRotator({ autoplayTrigger }: MixcloudRotatorProps) {
+export function MixcloudRotator({ autoplayTrigger, backupUrl }: MixcloudRotatorProps) {
+  const mixcloudBackupUrl = resolveMixcloudProfileUrl(backupUrl);
   // Pick a random starting mix each time the dashboard loads.
   const [index, setIndex] = useState<number>(() => randomIndex(MIXES.length));
 
@@ -94,7 +94,7 @@ export function MixcloudRotator({ autoplayTrigger }: MixcloudRotatorProps) {
       </CardContent>
       <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border/40 bg-muted/20">
         <a
-          href={MIXCLOUD_BACKUP_URL}
+          href={mixcloudBackupUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary hover:underline"

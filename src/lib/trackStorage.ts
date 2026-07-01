@@ -1,4 +1,4 @@
-export const TRACK_BUCKET_CANDIDATES = ["tracks", "track"] as const;
+export const TRACK_BUCKET_CANDIDATES = ["tracks", "track", "site-images"] as const;
 
 export interface ParsedTrackStorageUrl {
   bucket: string;

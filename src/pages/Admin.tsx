@@ -63,6 +63,7 @@ import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { ReviewsManager } from "@/components/admin/ReviewsManager";
 import { TracksManager } from "@/components/admin/TracksManager";
+import { ExtraFeaturesManager } from "@/components/admin/ExtraFeaturesManager";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
@@ -742,6 +743,7 @@ export default function Admin() {
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="specials">Specials</TabsTrigger>
+              <TabsTrigger value="extra-features">Extra Features</TabsTrigger>
               <TabsTrigger value="youtube">YouTube</TabsTrigger>
               <TabsTrigger value="music">Music</TabsTrigger>
               <TabsTrigger value="competitions">Competitions</TabsTrigger>
@@ -1165,6 +1167,10 @@ export default function Admin() {
 
             <TabsContent value="specials">
               <SpecialsManager />
+            </TabsContent>
+
+            <TabsContent value="extra-features">
+              <ExtraFeaturesManager />
             </TabsContent>
 
             <TabsContent value="youtube">
