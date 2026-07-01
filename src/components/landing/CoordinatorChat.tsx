@@ -9,7 +9,16 @@ interface Msg { role: "user" | "assistant"; content: string }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-const INTRO = "Hey there! 👋 I'm **Kulture**, your AI event coordinator at BeatKulture. I can help you pick the perfect package, build a custom quote, plan your timeline or set up QR song requests for your guests. What kind of event are you planning?";
+const INTRO = "Hey there! 👋 I'm **Kulture**, your AI event coordinator at BeatKulture. I can help you pick the perfect package, build a custom quote, plan your timeline or set up QR song requests. What kind of event are you planning?";
+
+const QUICK_REPLIES = [
+  "🎉 Plan a wedding",
+  "🎂 Kids birthday party",
+  "🎓 Matric farewell",
+  "🏢 Corporate event",
+  "💬 Book a date",
+  "🎵 QR song requests",
+];
 
 export function CoordinatorChat() {
   const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: INTRO }]);
@@ -20,8 +29,8 @@ export function CoordinatorChat() {
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, busy]);
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text || busy) return;
     setInput("");
     setError(null);
@@ -78,18 +87,28 @@ export function CoordinatorChat() {
 
   return (
     <Card variant="glow" className="overflow-hidden border-primary/40">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40 bg-gradient-to-r from-primary/10 to-accent/10">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-          <Sparkles className="w-5 h-5 text-primary-foreground" />
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40 bg-gradient-to-r from-primary/15 via-accent/10 to-primary/15">
+        <div className="relative w-11 h-11 shrink-0">
+          <motion.div
+            className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-accent to-primary opacity-70 blur-sm"
+            animate={{ scale: [1, 1.15, 1], rotate: [0, 180, 360] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          />
+          <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-primary-foreground" />
+          </div>
         </div>
         <div>
-          <div className="font-display font-bold leading-tight">Kulture</div>
+          <div className="font-display font-bold leading-tight flex items-center gap-2">
+            Kulture
+            <span className="inline-block w-2 h-2 rounded-full bg-success animate-pulse" />
+          </div>
           <div className="text-xs text-muted-foreground">AI Event Coordinator · usually replies instantly</div>
         </div>
         <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-success/20 text-success border border-success/30">Online</span>
       </div>
       <CardContent className="p-0">
-        <div className="max-h-[320px] overflow-y-auto p-4 space-y-3">
+        <div className="max-h-[340px] overflow-y-auto p-4 space-y-3">
           {messages.map((m, i) => (
             <motion.div
               key={i}
@@ -101,16 +120,39 @@ export function CoordinatorChat() {
                 className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
                   m.role === "user"
                     ? "bg-primary text-primary-foreground rounded-br-sm"
-                    : "bg-muted/50 text-foreground rounded-bl-sm"
+                    : "bg-muted/50 text-foreground rounded-bl-sm border border-border/40"
                 }`}
               >
-                {m.content || (busy && i === messages.length - 1 ? <Loader2 className="w-4 h-4 animate-spin" /> : null)}
+                {m.content || (busy && i === messages.length - 1 ? (
+                  <span className="inline-flex gap-1 items-center py-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                ) : null)}
               </div>
             </motion.div>
           ))}
           {error && <p className="text-xs text-destructive text-center">{error}</p>}
           <div ref={endRef} />
         </div>
+
+        {messages.length <= 2 && (
+          <div className="px-3 pt-1 pb-2 flex flex-wrap gap-1.5 border-t border-border/40 bg-background/30">
+            {QUICK_REPLIES.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => send(q)}
+                disabled={busy}
+                className="text-[11px] px-2.5 py-1 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 text-foreground transition-colors disabled:opacity-50"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
         <form
           onSubmit={(e) => { e.preventDefault(); send(); }}
           className="flex items-center gap-2 p-3 border-t border-border/40 bg-background/40"
