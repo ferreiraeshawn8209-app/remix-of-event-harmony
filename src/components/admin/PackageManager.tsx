@@ -221,7 +221,7 @@ export function PackageManager() {
                         <div className="flex items-center gap-4 min-w-0 flex-1">
                           <div className="w-40 h-24 rounded-lg overflow-hidden bg-muted/50 shrink-0 border border-border/60">
                             {pkg.image_url ? (
-                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" loading="lazy" />
+                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain p-1" loading="lazy" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground">
                                 No image

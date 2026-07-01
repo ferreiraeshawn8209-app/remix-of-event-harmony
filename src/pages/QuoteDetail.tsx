@@ -92,6 +92,9 @@ export default function QuoteDetail() {
 
   const equipment = quote.equipment || {};
   const equipmentEntries = Object.entries(equipment).filter(([_, qty]) => (qty as number) > 0);
+  const isMonthlyInstallments = quote.payment_structure === "monthly_installments";
+  const depositLabel = isMonthlyInstallments ? "First Installment" : "30% Non-Refundable Deposit";
+  const balanceLabel = isMonthlyInstallments ? "Remaining Installments" : "Remaining Balance";
 
   const statusColors: Record<string, string> = {
     draft: "bg-muted text-muted-foreground",
@@ -294,7 +297,7 @@ export default function QuoteDetail() {
                     ) : (
                       <Circle className="w-4 h-4 text-muted-foreground" />
                     )}
-                    <span>30% Non-Refundable Deposit</span>
+                    <span>{depositLabel}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-primary">{formatCurrency(Number(quote.deposit))}</span>
@@ -312,7 +315,7 @@ export default function QuoteDetail() {
                     ) : (
                       <Circle className="w-4 h-4 text-muted-foreground" />
                     )}
-                    <span>Remaining Balance</span>
+                    <span>{balanceLabel}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span>{formatCurrency(Number(quote.balance))}</span>
@@ -324,18 +327,24 @@ export default function QuoteDetail() {
                   </div>
                 </div>
                 {quote.deposit_paid_at && (
-                  <p className="text-xs text-muted-foreground">Deposit paid: {new Date(quote.deposit_paid_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">{isMonthlyInstallments ? "First installment" : "Deposit"} paid: {new Date(quote.deposit_paid_at).toLocaleDateString()}</p>
                 )}
                 {quote.balance_paid_at && (
                   <p className="text-xs text-muted-foreground">Balance paid: {new Date(quote.balance_paid_at).toLocaleDateString()}</p>
                 )}
                 <Separator className="bg-primary/20" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  ⚠️ A <strong>30% non-refundable deposit</strong> is required to secure your booking. 
-                  The remaining balance of <strong>{formatCurrency(Number(quote.balance))}</strong> must be paid 
-                  in full <strong>before the scheduled performance begins</strong>. No performance will take place 
-                  without full payment confirmation.
-                </p>
+                {isMonthlyInstallments ? (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    ⚠️ This quote uses a <strong>monthly installment plan</strong>. The first installment confirms booking, and the remaining installments must be fully settled by event day.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    ⚠️ A <strong>30% non-refundable deposit</strong> is required to secure your booking.
+                    The remaining balance of <strong>{formatCurrency(Number(quote.balance))}</strong> must be paid
+                    in full <strong>before the scheduled performance begins</strong>. No performance will take place
+                    without full payment confirmation.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -385,8 +394,10 @@ export default function QuoteDetail() {
                         } as any,
                       });
                       toast({
-                        title: newVal ? "Deposit Marked as Paid" : "Deposit Marked as Unpaid",
-                        description: newVal ? "The 30% booking deposit has been recorded." : "Deposit payment status has been reset.",
+                        title: newVal ? `${isMonthlyInstallments ? "First installment" : "Deposit"} Marked as Paid` : `${isMonthlyInstallments ? "First installment" : "Deposit"} Marked as Unpaid`,
+                        description: newVal
+                          ? `The ${isMonthlyInstallments ? "first installment" : "booking deposit"} has been recorded.`
+                          : `${isMonthlyInstallments ? "First installment" : "Deposit"} payment status has been reset.`,
                       });
                     } catch (e) {
                       console.error(e);
@@ -396,9 +407,9 @@ export default function QuoteDetail() {
                   }}
                 >
                   {quote.deposit_paid ? (
-                    <><CheckCircle2 className="w-4 h-4 mr-2" /> Deposit Paid ✓</>
+                    <><CheckCircle2 className="w-4 h-4 mr-2" /> {isMonthlyInstallments ? "First installment paid ✓" : "Deposit Paid ✓"}</>
                   ) : (
-                    <><Circle className="w-4 h-4 mr-2" /> Mark Deposit Paid</>
+                    <><Circle className="w-4 h-4 mr-2" /> {isMonthlyInstallments ? "Mark First Installment Paid" : "Mark Deposit Paid"}</>
                   )}
                 </Button>
                 <Button
@@ -437,7 +448,7 @@ export default function QuoteDetail() {
                   )}
                 </Button>
                 {!quote.deposit_paid && (
-                  <p className="text-xs text-muted-foreground w-full">Deposit must be paid before balance can be marked.</p>
+                  <p className="text-xs text-muted-foreground w-full">{isMonthlyInstallments ? "First installment" : "Deposit"} must be paid before balance can be marked.</p>
                 )}
               </CardContent>
             </Card>

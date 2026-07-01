@@ -676,6 +676,7 @@ export type Database = {
           needs_sound: boolean
           needs_special_effects: boolean
           notes: string | null
+          payment_preference: string
           package_id: string | null
           package_name: string | null
           quote_id: string | null
@@ -704,6 +705,7 @@ export type Database = {
           needs_sound?: boolean
           needs_special_effects?: boolean
           notes?: string | null
+          payment_preference?: string
           package_id?: string | null
           package_name?: string | null
           quote_id?: string | null
@@ -732,6 +734,7 @@ export type Database = {
           needs_sound?: boolean
           needs_special_effects?: boolean
           notes?: string | null
+          payment_preference?: string
           package_id?: string | null
           package_name?: string | null
           quote_id?: string | null
@@ -782,6 +785,8 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          payment_plan_installments: Json
+          payment_structure: string
           start_time: string | null
           status: string | null
           subtotal: number | null
@@ -827,6 +832,8 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          payment_plan_installments?: Json
+          payment_structure?: string
           start_time?: string | null
           status?: string | null
           subtotal?: number | null
@@ -872,6 +879,8 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          payment_plan_installments?: Json
+          payment_structure?: string
           start_time?: string | null
           status?: string | null
           subtotal?: number | null
@@ -1185,6 +1194,8 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          payment_plan_installments: Json
+          payment_structure: string
           start_time: string | null
           status: string | null
           subtotal: number | null

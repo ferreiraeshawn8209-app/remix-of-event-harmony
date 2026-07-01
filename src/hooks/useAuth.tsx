@@ -69,22 +69,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const notifyAdminAuthEvent = useCallback(async (eventType: "signup" | "signin") => {
     const invoke = async () => {
       const { error } = await supabase.rpc("notify_admin_on_app_auth", { _event: eventType });
-      if (error) {
-        console.error("Error notifying admin of auth event:", error);
-        return false;
-      }
-      return true;
+      return !error;
     };
 
-    const succeeded = await invoke();
-    if (!succeeded) {
-      if (notificationRetryTimerRef.current) {
-        window.clearTimeout(notificationRetryTimerRef.current);
-      }
-      notificationRetryTimerRef.current = window.setTimeout(() => {
-        void invoke();
-      }, 1500);
+    let succeeded = await invoke();
+    if (succeeded) return;
+
+    if (notificationRetryTimerRef.current) {
+      window.clearTimeout(notificationRetryTimerRef.current);
     }
+
+    let attempt = 0;
+    const maxAttempts = 3;
+    const retry = () => {
+      notificationRetryTimerRef.current = window.setTimeout(async () => {
+        attempt += 1;
+        succeeded = await invoke();
+        if (!succeeded && attempt < maxAttempts) {
+          retry();
+        }
+      }, 1200 * attempt + 1200);
+    };
+    retry();
   }, []);
 
   const hydrateAuthState = async (currentSession: Session | null, deferProfileFetch = false) => {

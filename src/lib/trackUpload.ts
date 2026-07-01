@@ -145,8 +145,15 @@ export function validateFallbackTrackUrl(rawUrl: string): string {
   }
 
   const pathname = parsed.pathname.toLowerCase();
-  if (!pathname.endsWith(".mp3") && !pathname.endsWith(".wav")) {
-    throw new TrackUploadError("invalid_file", "Fallback links must point directly to an .mp3 or .wav file.");
+  const normalizedUrl = parsed.toString().toLowerCase();
+  const hasAudioExtensionHint =
+    pathname.endsWith(".mp3") ||
+    pathname.endsWith(".wav") ||
+    normalizedUrl.includes(".mp3") ||
+    normalizedUrl.includes(".wav");
+
+  if (!hasAudioExtensionHint) {
+    throw new TrackUploadError("invalid_file", "Fallback links must include an .mp3 or .wav file reference.");
   }
 
   return parsed.toString();

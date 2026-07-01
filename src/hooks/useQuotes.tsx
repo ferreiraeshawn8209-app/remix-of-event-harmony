@@ -34,6 +34,13 @@ export interface DatabaseQuote {
   total: number;
   deposit: number;
   balance: number;
+  payment_structure?: "deposit" | "monthly_installments";
+  payment_plan_installments?: {
+    installment_number: number;
+    due_date: string;
+    amount: number;
+    description: string;
+  }[];
   hours: number;
   status: string;
   deposit_paid: boolean;
@@ -86,6 +93,10 @@ export function useQuotes() {
         source_type: ((quote as any).source_type || "custom") as "custom" | "package",
         package_id: (quote as any).package_id || null,
         package_name: (quote as any).package_name || null,
+        payment_structure: ((quote as any).payment_structure || "deposit") as "deposit" | "monthly_installments",
+        payment_plan_installments: Array.isArray((quote as any).payment_plan_installments)
+          ? (quote as any).payment_plan_installments
+          : [],
         client_removed_items: ((quote as any).client_removed_items as DatabaseQuote["client_removed_items"]) || [],
       })) as DatabaseQuote[];
     },
@@ -139,6 +150,8 @@ export function useQuotes() {
         total: calculations.total,
         deposit: calculations.deposit,
         balance: calculations.balance,
+        payment_structure: "deposit",
+        payment_plan_installments: [],
         hours: calculations.hours,
         status: "draft",
         created_by: user.id,

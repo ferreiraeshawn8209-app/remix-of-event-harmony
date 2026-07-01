@@ -8,7 +8,7 @@ import { useSpecials } from "@/hooks/useSpecials";
 import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
 import {
   Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users, Sparkles,
-  ArrowRight, MessageSquare, Phone,
+  ArrowRight, MessageSquare, Phone, Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -22,7 +22,7 @@ const statusColors: Record<string, string> = {
 };
 
 export function QuoteRequestsManager() {
-  const { requests, isLoading, updateRequest } = useQuoteRequests();
+  const { requests, isLoading, updateRequest, deleteRequest } = useQuoteRequests();
   const { activeSpecials } = useSpecials();
   const [acting, setActing] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -50,6 +50,17 @@ export function QuoteRequestsManager() {
     setActing(r.id);
     await updateRequest({ id: r.id, updates: { status: "declined" } });
     setActing(null);
+  };
+
+  const removeRequest = async (r: QuoteRequest) => {
+    const confirmed = window.confirm(`Delete quote request from ${r.client_name}? This cannot be undone.`);
+    if (!confirmed) return;
+    setActing(r.id);
+    try {
+      await deleteRequest(r.id);
+    } finally {
+      setActing(null);
+    }
   };
 
   if (isLoading) {
@@ -87,6 +98,9 @@ export function QuoteRequestsManager() {
                     Auto discount to apply: {autoDiscount}%
                   </Badge>
                 )}
+                <Badge variant="outline" className="mt-2 ml-2 text-[10px]">
+                  Payment preference: {r.payment_preference === "monthly_installments" ? "Monthly installments" : "Deposit + balance"}
+                </Badge>
               </div>
               <Badge variant="outline" className={statusColors[r.status] || ""}>
                 {r.status.replace("_", " ")}
@@ -163,6 +177,9 @@ export function QuoteRequestsManager() {
                   <a href={`tel:${r.contact_no}`}><Phone className="w-3 h-3 mr-1" /> Call</a>
                 </Button>
               )}
+              <Button size="sm" variant="ghost" className="text-destructive" disabled={acting === r.id} onClick={() => removeRequest(r)}>
+                <Trash2 className="w-3 h-3 mr-1" /> Delete
+              </Button>
             </div>
           </CardContent>
         </Card>

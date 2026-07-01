@@ -70,6 +70,7 @@ import { useAlarms } from "@/hooks/useAlarms";
 import { useSpecials } from "@/hooks/useSpecials";
 import { useBrandingLogo } from "@/hooks/useBranding";
 import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
+import { generateEventDayMonthlyPlan } from "@/lib/paymentPlanCalculator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -323,6 +324,7 @@ export default function Admin() {
     sourceType: "custom" | "package";
     packageId: string | null;
     packageName: string | null;
+    paymentPreference: "deposit" | "monthly_installments";
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -375,6 +377,7 @@ export default function Admin() {
         event_type?: string | null;
         package_id?: string | null;
         package_name?: string | null;
+        payment_preference?: "deposit" | "monthly_installments";
         venue_provides_sound?: boolean;
         requires_microphones?: boolean;
         requires_lighting?: boolean;
@@ -438,6 +441,7 @@ export default function Admin() {
         sourceType: req.package_id ? "package" : "custom",
         packageId: req.package_id || null,
         packageName: req.package_name || null,
+        paymentPreference: req.payment_preference === "monthly_installments" ? "monthly_installments" : "deposit",
       });
     } catch {
       // Ignore malformed storage payloads and keep manual builder flow available.
@@ -496,12 +500,42 @@ export default function Admin() {
       });
 
       if (pendingRequestMeta?.requestId && (createdQuote as any)?.id) {
+        const quotePatch: Record<string, unknown> = {
+          source_type: pendingRequestMeta.sourceType,
+          package_id: pendingRequestMeta.packageId,
+          package_name: pendingRequestMeta.packageName,
+          payment_structure: pendingRequestMeta.paymentPreference,
+        };
+
+        if (pendingRequestMeta.paymentPreference === "monthly_installments") {
+          const eventDate = quoteData.eventDate ? new Date(quoteData.eventDate) : null;
+          if (eventDate && !Number.isNaN(eventDate.getTime())) {
+            const plan = generateEventDayMonthlyPlan(
+              Number(calculations.total) || 0,
+              new Date(),
+              eventDate,
+              "Monthly Installments",
+            );
+            const installments = plan.installments.map((item) => ({
+              installment_number: item.installmentNumber,
+              due_date: item.dueDate.toISOString().slice(0, 10),
+              amount: Math.round(item.amount * 100) / 100,
+              description: item.description,
+            }));
+            const firstInstallment = installments[0]?.amount ?? (Number(calculations.total) || 0);
+            quotePatch.payment_plan_installments = installments;
+            quotePatch.deposit = firstInstallment;
+            quotePatch.balance = Math.round(((Number(calculations.total) || 0) - firstInstallment) * 100) / 100;
+          } else {
+            quotePatch.payment_structure = "deposit";
+            quotePatch.payment_plan_installments = [];
+          }
+        } else {
+          quotePatch.payment_plan_installments = [];
+        }
+
         await Promise.all([
-          supabase.from("quotes").update({
-            source_type: pendingRequestMeta.sourceType,
-            package_id: pendingRequestMeta.packageId,
-            package_name: pendingRequestMeta.packageName,
-          } as any).eq("id", (createdQuote as any).id),
+          supabase.from("quotes").update(quotePatch as any).eq("id", (createdQuote as any).id),
           supabase.from("quote_requests").update({
             status: "quoted",
             quote_id: (createdQuote as any).id,

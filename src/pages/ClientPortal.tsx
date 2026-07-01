@@ -49,7 +49,7 @@ import { PageBackground } from "@/components/PageBackground";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { ExtraFeaturesScroller } from "@/components/client/ExtraFeaturesScroller";
-import { generateMonthlyPlan } from "@/lib/paymentPlanCalculator";
+import { generateEventDayMonthlyPlan } from "@/lib/paymentPlanCalculator";
 import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
@@ -104,6 +104,7 @@ interface QuestionnairePayload {
   needs_mic: boolean;
   package_id: string | null;
   package_name: string | null;
+  payment_preference: "deposit" | "monthly_installments";
   notes: string | null;
   terms_accepted: boolean;
   terms_accepted_at: string;
@@ -140,6 +141,13 @@ interface QuoteData {
   total: number;
   deposit: number;
   balance: number;
+  payment_structure: "deposit" | "monthly_installments";
+  payment_plan_installments: {
+    installment_number: number;
+    due_date: string;
+    amount: number;
+    description: string;
+  }[];
   hours: number;
   status: string;
   deposit_paid: boolean;
@@ -189,6 +197,8 @@ function hydrateQuote(q: any): QuoteData {
     total: Number(q.total) || 0,
     deposit: Number(q.deposit) || 0,
     balance: Number(q.balance) || 0,
+    payment_structure: q.payment_structure === "monthly_installments" ? "monthly_installments" : "deposit",
+    payment_plan_installments: Array.isArray(q.payment_plan_installments) ? q.payment_plan_installments : [],
     dj_cost: Number(q.dj_cost) || 0,
     equipment_cost: Number(q.equipment_cost) || 0,
     kids_cost: Number(q.kids_cost) || 0,
@@ -197,6 +207,24 @@ function hydrateQuote(q: any): QuoteData {
     package_name: q.package_name || null,
     client_removed_items: Array.isArray(q.client_removed_items) ? q.client_removed_items : [],
   } as QuoteData;
+}
+
+function computeMonthlyInstallmentPayload(total: number, eventDateIso: string | null, firstPaymentDate: Date) {
+  const eventDate = eventDateIso ? new Date(eventDateIso) : null;
+  if (!eventDate || Number.isNaN(eventDate.getTime())) return null;
+  const plan = generateEventDayMonthlyPlan(total, firstPaymentDate, eventDate, "Monthly Installments");
+  const serializedInstallments = plan.installments.map((installment) => ({
+    installment_number: installment.installmentNumber,
+    due_date: installment.dueDate.toISOString().slice(0, 10),
+    amount: roundCurrency(installment.amount),
+    description: installment.description,
+  }));
+  const firstInstallmentAmount = serializedInstallments[0]?.amount ?? roundCurrency(total);
+  return {
+    installments: serializedInstallments,
+    firstInstallmentAmount,
+    balance: roundCurrency(total - firstInstallmentAmount),
+  };
 }
 
 function hasCompleteEventProfile(profile: any) {
@@ -246,6 +274,26 @@ function recalculateQuoteForClientReview(
   const subtotal = roundCurrency(nonCustomSubtotal + customItemsCost);
   const discountAmount = roundCurrency(subtotal * (quote.discount_percent / 100));
   const total = roundCurrency(subtotal + quote.travel_cost + extrasCost - discountAmount);
+  if (quote.payment_structure === "monthly_installments") {
+    const firstDueDate = quote.payment_plan_installments[0]?.due_date;
+    const anchorDate = firstDueDate ? new Date(firstDueDate) : new Date();
+    const monthlyTerms = computeMonthlyInstallmentPayload(total, quote.event_date, anchorDate);
+    if (monthlyTerms) {
+      return {
+        custom_items: customItems,
+        custom_items_cost: customItemsCost,
+        extras,
+        extras_cost: extrasCost,
+        subtotal,
+        discount_amount: discountAmount,
+        total,
+        deposit: monthlyTerms.firstInstallmentAmount,
+        balance: monthlyTerms.balance,
+        payment_plan_installments: monthlyTerms.installments,
+      };
+    }
+  }
+
   const deposit = roundCurrency(total * DEPOSIT_PERCENT);
 
   return {
@@ -258,6 +306,7 @@ function recalculateQuoteForClientReview(
     total,
     deposit,
     balance: roundCurrency(total - deposit),
+    payment_plan_installments: [],
   };
 }
 
@@ -437,7 +486,14 @@ export default function ClientPortal() {
   useEffect(() => {
     if (!user || !profile?.id || loadingQuotes || view !== "dashboard") return;
     const params = new URLSearchParams(location.search);
+    const requestedCustomQuote = params.get("custom") === "1";
     const selectedPackageId = params.get("package");
+    if (requestedCustomQuote) {
+      setQuestionnairePrefill({ package_id: null, package_name: null });
+      setView("questionnaire");
+      navigate("/client", { replace: true });
+      return;
+    }
     if (!selectedPackageId) return;
 
     const selectedPackage = packages.find((pkg) => pkg.id === selectedPackageId && pkg.is_active);
@@ -610,13 +666,13 @@ export default function ClientPortal() {
 
           <Card
             variant="glass"
-            className="relative overflow-hidden border-2 border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-500/20 via-purple-500/25 to-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.14),0_18px_40px_-20px_hsl(289_100%_62%)]"
+            className="relative overflow-hidden border-2 border-purple-400/80 bg-gradient-to-r from-purple-600/30 via-fuchsia-500/25 to-orange-500/20 shadow-[0_0_0_1px_rgba(255,255,255,0.2),0_22px_48px_-18px_rgba(255,107,0,0.75)]"
           >
-            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-fuchsia-400/30 blur-xl" />
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-orange-400/40 blur-xl" />
             <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-fuchsia-100 flex items-center gap-2">
-                  <Wand2 className="w-4 h-4 text-fuchsia-200" />
+                <p className="font-semibold text-purple-50 flex items-center gap-2">
+                  <Wand2 className="w-4 h-4 text-orange-300" />
                   Need a customised quote?
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -625,7 +681,7 @@ export default function ClientPortal() {
               </div>
               <Button
                 variant="default"
-                className="relative bg-gradient-to-r from-fuchsia-500 via-purple-500 to-primary text-white border border-white/30 hover:from-fuchsia-400 hover:via-purple-400 hover:to-primary/90 shadow-[0_10px_24px_-12px_hsl(289_100%_62%)]"
+                className="relative bg-gradient-to-r from-purple-500 via-fuchsia-500 to-orange-500 text-white border border-white/40 hover:from-purple-400 hover:via-fuchsia-400 hover:to-orange-400 shadow-[0_12px_28px_-10px_rgba(255,107,0,0.8)]"
                 disabled={!eventProfileReady}
                 onClick={() => {
                   setQuestionnairePrefill({ package_id: null, package_name: null });
@@ -656,8 +712,8 @@ export default function ClientPortal() {
                       {packagesByCategory[category].map((pkg) => (
                         <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
                           {pkg.image_url && (
-                            <div className="w-full h-64 bg-muted/40 flex items-center justify-center">
-                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="w-full h-40 bg-muted/40 flex items-center justify-center p-2">
+                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
                             </div>
                           )}
                           <CardHeader className="pb-2">
@@ -790,6 +846,10 @@ export default function ClientPortal() {
 
   if (view === "quote" && activeQuote) {
     const quote = activeQuote;
+    const isMonthlyInstallments = quote.payment_structure === "monthly_installments";
+    const installmentPlan = isMonthlyInstallments
+      ? quote.payment_plan_installments
+      : [];
     const isPaid = quote.deposit_paid;
     const isFullyPaid = quote.balance_paid;
     const plannerUnlocked = isPaid && (quote.status === "accepted" || quote.status === "paid");
@@ -797,16 +857,79 @@ export default function ClientPortal() {
     const now = new Date();
     const isPastEventDate = !!eventDate && eventDate < now;
     const serviceBlocked = isPastEventDate && !isFullyPaid;
-    const paymentPlan = eventDate && !Number.isNaN(eventDate.getTime())
-      ? generateMonthlyPlan(Number(quote.total || 0), eventDate, "AI Installment Plan")
-      : null;
     const songRequestUrl = `${window.location.origin}/request/${quote.id}`;
     const canClientAdjustCustomQuote = quote.source_type === "custom" && !quote.deposit_paid && !["accepted", "paid", "declined"].includes(quote.status);
     const canProceedToPayment = quote.status === "accepted" && !quote.deposit_paid;
+    const canSelectPaymentStructure = quote.status === "accepted" && !quote.deposit_paid && !quote.balance_paid;
 
     const syncQuoteState = (updatedQuote: QuoteData) => {
       setActiveQuote(updatedQuote);
       setQuotes((previous) => previous.map((entry) => entry.id === updatedQuote.id ? updatedQuote : entry));
+    };
+
+    const handlePaymentStructureChange = async (paymentStructure: "deposit" | "monthly_installments") => {
+      if (paymentStructure === quote.payment_structure) return;
+      if (paymentStructure === "monthly_installments" && (!eventDate || Number.isNaN(eventDate.getTime()))) {
+        toast({
+          title: "Event date required",
+          description: "Please ensure your event date is set before selecting monthly installments.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const total = roundCurrency(Number(quote.total) || 0);
+      const monthlyTerms = paymentStructure === "monthly_installments"
+        ? computeMonthlyInstallmentPayload(total, quote.event_date, new Date())
+        : null;
+
+      if (paymentStructure === "monthly_installments" && !monthlyTerms) {
+        toast({
+          title: "Unable to build payment plan",
+          description: "Monthly installments could not be generated for this quote.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const patch = paymentStructure === "monthly_installments"
+        ? {
+          payment_structure: "monthly_installments" as const,
+          payment_plan_installments: monthlyTerms!.installments,
+          deposit: monthlyTerms!.firstInstallmentAmount,
+          balance: monthlyTerms!.balance,
+        }
+        : {
+          payment_structure: "deposit" as const,
+          payment_plan_installments: [],
+          deposit: roundCurrency(total * DEPOSIT_PERCENT),
+          balance: roundCurrency(total - roundCurrency(total * DEPOSIT_PERCENT)),
+        };
+
+      setActioning(true);
+      try {
+        const { data, error } = await supabase
+          .from("quotes")
+          .update(patch as any)
+          .eq("id", quote.id)
+          .select("*")
+          .single();
+
+        if (error) {
+          toast({ title: "Unable to save payment option", description: error.message, variant: "destructive" });
+          return;
+        }
+
+        syncQuoteState(hydrateQuote(data));
+        toast({
+          title: paymentStructure === "monthly_installments" ? "Monthly plan selected" : "Deposit payment selected",
+          description: paymentStructure === "monthly_installments"
+            ? "Your quote now uses monthly installments up to your event day."
+            : "Your quote now uses the standard 30% deposit structure.",
+        });
+      } finally {
+        setActioning(false);
+      }
     };
 
     const handleAccept = async () => {
@@ -925,7 +1048,7 @@ export default function ClientPortal() {
       paymentDetailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       toast({
         title: "Proceed to payment",
-        description: "Your client code has been copied. Use the updated total and deposit amount below for payment.",
+        description: `Your client code has been copied. Use the updated total and ${isMonthlyInstallments ? "first installment" : "deposit"} amount below for payment.`,
       });
     };
 
@@ -951,7 +1074,7 @@ export default function ClientPortal() {
                   : <Clock className="w-7 h-7 text-orange-500" />}
                 <div>
                   <p className="font-semibold text-sm">
-                    {isFullyPaid ? "Fully Paid ✓" : isPaid ? "Deposit Paid" : "Awaiting Deposit"}
+                    {isFullyPaid ? "Fully Paid ✓" : isPaid ? `${isMonthlyInstallments ? "First installment" : "Deposit"} paid` : `Awaiting ${isMonthlyInstallments ? "first installment" : "deposit"}`}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Status: <span className="capitalize">{quote.status}</span>
@@ -1052,12 +1175,39 @@ export default function ClientPortal() {
                     </div>
                   ))}
                   <p className="text-[11px] text-primary">
-                    The updated total below is the amount that will be used for payment and deposit calculations.
+                    The updated total below is the amount that will be used for your payment calculations.
                   </p>
                 </div>
               )}
 
               <Separator />
+
+              {canSelectPaymentStructure && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2 text-xs">
+                  <p className="font-semibold text-sm text-primary">Select your payment option</p>
+                  <p className="text-muted-foreground">
+                    Choose either the standard 30% deposit or monthly installments from first payment date to event day.
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Button
+                      size="sm"
+                      variant={quote.payment_structure === "deposit" ? "hero" : "outline"}
+                      disabled={actioning}
+                      onClick={() => handlePaymentStructureChange("deposit")}
+                    >
+                      Standard 30% deposit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={quote.payment_structure === "monthly_installments" ? "hero" : "outline"}
+                      disabled={actioning}
+                      onClick={() => handlePaymentStructureChange("monthly_installments")}
+                    >
+                      Monthly installments
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(Number(quote.subtotal))}</span></div>
@@ -1075,7 +1225,7 @@ export default function ClientPortal() {
                   <span>Total</span><span>{formatCurrency(Number(quote.total))}</span>
                 </div>
                 <div className="flex justify-between text-primary font-semibold">
-                  <span>30% Deposit</span><span>{formatCurrency(Number(quote.deposit))}</span>
+                  <span>{isMonthlyInstallments ? "First installment" : "30% Deposit"}</span><span>{formatCurrency(Number(quote.deposit))}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Balance</span><span>{formatCurrency(Number(quote.balance))}</span>
@@ -1083,25 +1233,37 @@ export default function ClientPortal() {
               </div>
 
               <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 text-xs space-y-1">
-                <p className="font-semibold text-sm text-primary">30% Deposit Required</p>
-                <p className="text-muted-foreground leading-relaxed">
-                  A <strong className="text-foreground">non-refundable 30% deposit</strong> ({formatCurrency(Number(quote.deposit))}) secures your booking date.
-                  The <strong className="text-foreground">remaining balance</strong> ({formatCurrency(Number(quote.balance))}) is payable
-                  <strong className="text-foreground"> on or before the day of your event</strong>, prior to the DJ performing.
-                </p>
+                {isMonthlyInstallments ? (
+                  <>
+                    <p className="font-semibold text-sm text-primary">Monthly installment plan active</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Your <strong className="text-foreground">first installment</strong> ({formatCurrency(Number(quote.deposit))})
+                      starts this plan. Remaining installments are split monthly, with the final payment due on the event day.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-sm text-primary">30% Deposit Required</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      A <strong className="text-foreground">non-refundable 30% deposit</strong> ({formatCurrency(Number(quote.deposit))}) secures your booking date.
+                      The <strong className="text-foreground">remaining balance</strong> ({formatCurrency(Number(quote.balance))}) is payable
+                      <strong className="text-foreground"> on or before the day of your event</strong>, prior to the DJ performing.
+                    </p>
+                  </>
+                )}
               </div>
 
-              {paymentPlan && (
+              {isMonthlyInstallments && installmentPlan.length > 0 && (
                 <div className="p-3 rounded-lg bg-muted/20 border border-border text-xs space-y-2">
-                  <p className="font-semibold text-sm">AI Payment Plan</p>
+                  <p className="font-semibold text-sm">Monthly payment schedule</p>
                   <p className="text-muted-foreground">
-                    Total split across remaining months before your event. Final installment is scheduled before event day.
+                    Installments are split from your first payment date, with the final installment due on your event day.
                   </p>
                   <div className="space-y-1">
-                    {paymentPlan.installments.map((installment) => (
-                      <div key={installment.installmentNumber} className="flex items-center justify-between">
-                        <span>{installment.installmentNumber}. {installment.description}</span>
-                        <span className="font-medium">{formatCurrency(installment.amount)}</span>
+                    {installmentPlan.map((installment) => (
+                      <div key={`${installment.installment_number}-${installment.due_date}`} className="flex items-center justify-between">
+                        <span>{installment.installment_number}. {installment.description}</span>
+                        <span className="font-medium">{formatCurrency(Number(installment.amount))}</span>
                       </div>
                     ))}
                   </div>
@@ -1241,6 +1403,7 @@ function Questionnaire({
     requires_fog_machine: false,
     requires_low_fog_machine: false,
     requires_cold_spark_machines: false,
+    payment_preference: "deposit" as "deposit" | "monthly_installments",
     notes: "",
     terms_accepted: false,
   });
@@ -1299,6 +1462,7 @@ function Questionnaire({
       needs_mic: form.requires_microphones,
       package_id: selectedPackage?.id || null,
       package_name: selectedPackage?.name || null,
+      payment_preference: form.payment_preference,
       notes: form.notes.trim() || null,
       terms_accepted: true,
       terms_accepted_at: new Date().toISOString(),
@@ -1393,6 +1557,32 @@ function Questionnaire({
                 icon={<Sparkles className="w-3 h-3" />}
                 label="Cold spark machines"
               />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold">Payment preference</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => update("payment_preference", "deposit")}
+                  className={`rounded-lg border px-3 py-3 text-left text-xs transition ${form.payment_preference === "deposit" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
+                >
+                  <p className="font-semibold text-sm">Deposit + balance</p>
+                  <p className="text-muted-foreground mt-1">
+                    Pay a 30% deposit to secure booking. Remaining balance due on or before the gig.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update("payment_preference", "monthly_installments")}
+                  className={`rounded-lg border px-3 py-3 text-left text-xs transition ${form.payment_preference === "monthly_installments" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
+                >
+                  <p className="font-semibold text-sm">Structured monthly plan</p>
+                  <p className="text-muted-foreground mt-1">
+                    Waives the deposit model. Booking is confirmed from the first installment, with final payment on event day.
+                  </p>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
