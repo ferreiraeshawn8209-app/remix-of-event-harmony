@@ -133,7 +133,28 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
   }
 
   if (tracks.length === 0) {
-    return null;
+    return (
+      <Card variant="glass" className="overflow-hidden border-primary/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Music className="w-4 h-4 text-primary" /> BeatKulture Music Player
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            No live portal tracks are loaded yet. You can still listen to our latest mixes below.
+          </p>
+          <a
+            href={mixcloudFallbackUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-xs text-primary hover:underline"
+          >
+            Listen to more mixes on Mixcloud
+          </a>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
