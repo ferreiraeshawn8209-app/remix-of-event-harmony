@@ -26,6 +26,32 @@ export function TestimonialsManager() {
   const [importLink, setImportLink] = useState(REVIEW_LINKS[0].url);
   const [isImporting, setIsImporting] = useState(false);
 
+  const normalizeImportedRows = (reviews: ImportedReview[], platform: string, fallbackUrl: string) =>
+    reviews
+      .map((review) => {
+        const message = String(review.message || "").trim();
+        if (!message) return null;
+
+        const rawRating = Number(review.rating || 5);
+        const rating = Math.max(1, Math.min(5, Number.isFinite(rawRating) ? Math.round(rawRating) : 5));
+        const author = String(review.author || "").trim() || "Verified Client";
+        const sourceReviewId = String(review.externalId || "").trim();
+
+        return {
+          client_name: author,
+          event_type: `${platform.charAt(0).toUpperCase()}${platform.slice(1)} Review`,
+          rating,
+          message,
+          photo_url: null,
+          source_platform: platform,
+          source_review_id: sourceReviewId || null,
+          source_url: String(review.sourceUrl || fallbackUrl).trim() || fallbackUrl,
+          sort_order: 0,
+          is_live: true,
+        };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+
   const submit = async () => {
     if (!form.client_name || !form.message) {
       toast({ title: "Name and message required", variant: "destructive" });
@@ -75,30 +101,7 @@ export function TestimonialsManager() {
       }
 
       const reviews = Array.isArray(data?.reviews) ? (data.reviews as ImportedReview[]) : [];
-      const rows = reviews
-        .map((review) => {
-          const message = String(review.message || "").trim();
-          if (!message) return null;
-
-          const rawRating = Number(review.rating || 5);
-          const rating = Math.max(1, Math.min(5, Number.isFinite(rawRating) ? Math.round(rawRating) : 5));
-          const author = String(review.author || "").trim() || "Verified Client";
-          const sourceReviewId = String(review.externalId || "").trim();
-
-          return {
-            client_name: author,
-            event_type: `${platform.charAt(0).toUpperCase()}${platform.slice(1)} Review`,
-            rating,
-            message,
-            photo_url: null,
-            source_platform: platform,
-            source_review_id: sourceReviewId || null,
-            source_url: String(review.sourceUrl || normalizedLink).trim() || normalizedLink,
-            sort_order: 0,
-            is_live: true,
-          };
-        })
-        .filter((row): row is NonNullable<typeof row> => row !== null);
+      const rows = normalizeImportedRows(reviews, platform, normalizedLink);
 
       if (rows.length === 0) {
         toast({ title: "No reviews were found to import", variant: "destructive" });
@@ -109,6 +112,53 @@ export function TestimonialsManager() {
       toast({ title: "Platform reviews imported", description: `${rows.length} review${rows.length === 1 ? "" : "s"} synced from ${platform}.` });
     } catch (e: any) {
       toast({ title: "Import failed", description: e.message, variant: "destructive" });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const importAllPlatforms = async () => {
+    setIsImporting(true);
+    try {
+      let imported = 0;
+      const failed: string[] = [];
+
+      for (const item of REVIEW_LINKS) {
+        try {
+          const { data, error } = await supabase.functions.invoke("import-platform-reviews", {
+            body: { url: item.url, platform: item.platform },
+          });
+
+          if (error) throw new Error(error.message);
+
+          const reviews = Array.isArray(data?.reviews) ? (data.reviews as ImportedReview[]) : [];
+          const rows = normalizeImportedRows(reviews, item.platform, item.url);
+          if (rows.length > 0) {
+            await upsertImported(rows);
+            imported += rows.length;
+          } else {
+            failed.push(item.label);
+          }
+        } catch {
+          failed.push(item.label);
+        }
+      }
+
+      if (imported === 0) {
+        toast({
+          title: "No platform reviews imported",
+          description: failed.length ? `No data found from: ${failed.join(", ")}` : "No public reviews found.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Platform reviews imported",
+        description: failed.length
+          ? `${imported} review${imported === 1 ? "" : "s"} imported. Could not pull from: ${failed.join(", ")}.`
+          : `${imported} review${imported === 1 ? "" : "s"} imported from Bark, Facebook, and Google.`,
+      });
     } finally {
       setIsImporting(false);
     }
@@ -129,6 +179,9 @@ export function TestimonialsManager() {
                 {item.label}
               </Button>
             ))}
+            <Button type="button" variant="secondary" size="sm" onClick={importAllPlatforms} disabled={isImporting}>
+              Import all platforms
+            </Button>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
