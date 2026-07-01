@@ -8,6 +8,9 @@ export interface Testimonial {
   rating: number;
   message: string;
   photo_url: string | null;
+  source_platform: string | null;
+  source_review_id: string | null;
+  source_url: string | null;
   sort_order: number;
   is_live: boolean;
   created_at: string;
@@ -45,5 +48,13 @@ export function useTestimonials(onlyLive = false) {
     invalidate();
   };
 
-  return { testimonials: data, isLoading, create, update, remove };
+  const upsertImported = async (rows: Array<Omit<Testimonial, "id" | "created_at">>) => {
+    const { error } = await supabase
+      .from("testimonials")
+      .upsert(rows as any, { onConflict: "source_platform,source_review_id" });
+    if (error) throw error;
+    invalidate();
+  };
+
+  return { testimonials: data, isLoading, create, update, remove, upsertImported };
 }
