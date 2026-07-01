@@ -116,6 +116,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Packages — visible on landing before auth flow */}
+      <div id="packages"><PackagesShowcase /></div>
+
       <section className="container mx-auto px-4 pb-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="glass-card rounded-xl p-4">
@@ -138,9 +141,6 @@ const Index = () => {
 
       {/* Specials */}
       <SpecialsBanner />
-
-      {/* Packages — Custom first, then Wedding / Corporate / Party */}
-      <div id="packages"><PackagesShowcase /></div>
 
       {/* Testimonials */}
       <TestimonialsCarousel />
