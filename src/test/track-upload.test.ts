@@ -9,6 +9,7 @@ import {
   validateFallbackTrackUrl,
   validateTrackFile,
 } from "@/lib/trackUpload";
+import { parseTrackStoragePublicUrl } from "@/lib/trackStorage";
 
 function makeFile(contents: string, name: string, type = "audio/mpeg") {
   return new File([contents], name, { type });
@@ -201,6 +202,15 @@ describe("track upload hardening", () => {
 
     expect(pathA).toBe(pathB);
     expect(pathA.endsWith("-night-set.mp3")).toBe(true);
+  });
+
+  it("parses bucket and path from Supabase public track URLs", () => {
+    expect(
+      parseTrackStoragePublicUrl("https://abc.supabase.co/storage/v1/object/public/tracks/folder/mix%201.mp3"),
+    ).toEqual({
+      bucket: "tracks",
+      path: "folder/mix 1.mp3",
+    });
   });
 
   it("cleans up object when DB insert fails after upload", async () => {

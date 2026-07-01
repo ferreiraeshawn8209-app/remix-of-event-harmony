@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { parseTrackStoragePublicUrl, TRACK_BUCKET_CANDIDATES } from "@/lib/trackStorage";
 
 export interface Track {
   id: string;
@@ -47,11 +48,18 @@ export function useTracks() {
 
     // If we have the storage URL, delete the file too
     if (fileUrl) {
-      const marker = "/tracks/";
-      const idx = fileUrl.indexOf(marker);
-      if (idx !== -1) {
-        const path = fileUrl.slice(idx + marker.length);
-        await supabase.storage.from("tracks").remove([path]);
+      const parsed = parseTrackStoragePublicUrl(fileUrl);
+      if (parsed) {
+        await supabase.storage.from(parsed.bucket).remove([parsed.path]);
+      } else {
+        for (const bucketName of TRACK_BUCKET_CANDIDATES) {
+          const marker = `/${bucketName}/`;
+          const idx = fileUrl.indexOf(marker);
+          if (idx === -1) continue;
+          const path = fileUrl.slice(idx + marker.length);
+          await supabase.storage.from(bucketName).remove([path]);
+          break;
+        }
       }
     }
 
