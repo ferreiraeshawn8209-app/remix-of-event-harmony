@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTracks } from "@/hooks/useTracks";
 import { toast } from "@/hooks/use-toast";
 import { TrackUploadError, resolveMaxTrackUploadBytes, uploadTrackFile, validateFallbackTrackUrl } from "@/lib/trackUpload";
+import { TRACK_BUCKET_CANDIDATES } from "@/lib/trackStorage";
 
 export function TracksManager() {
   const { tracks, isLoading, update, remove, refetch, create } = useTracks();
@@ -29,25 +30,44 @@ export function TracksManager() {
 
     setUploading(true);
     try {
-      const result = await uploadTrackFile(
-        file,
-        trackTitle,
-        {
-          storage: supabase.storage.from("tracks"),
-          findTrackByUrl: async (url) => {
-            const { data } = await supabase
-              .from("tracks")
-              .select("id")
-              .eq("url", url)
-              .maybeSingle();
-            return data;
-          },
-          insertTrack: async (resolvedTitle, url) => {
-            const { error } = await supabase.from("tracks").insert({ title: resolvedTitle, url });
-            if (error) throw error;
-          },
-        },
-      );
+      let result: Awaited<ReturnType<typeof uploadTrackFile>> | null = null;
+      let lastError: TrackUploadError | null = null;
+
+      for (const bucketName of TRACK_BUCKET_CANDIDATES) {
+        try {
+          result = await uploadTrackFile(
+            file,
+            trackTitle,
+            {
+              storage: supabase.storage.from(bucketName),
+              findTrackByUrl: async (url) => {
+                const { data } = await supabase
+                  .from("tracks")
+                  .select("id")
+                  .eq("url", url)
+                  .maybeSingle();
+                return data;
+              },
+              insertTrack: async (resolvedTitle, url) => {
+                const { error } = await supabase.from("tracks").insert({ title: resolvedTitle, url });
+                if (error) throw error;
+              },
+            },
+          );
+          break;
+        } catch (err) {
+          const uploadError = err instanceof TrackUploadError ? err : new TrackUploadError("unknown", "Upload failed");
+          if (uploadError.kind === "missing_bucket") {
+            lastError = uploadError;
+            continue;
+          }
+          throw uploadError;
+        }
+      }
+
+      if (!result) {
+        throw lastError ?? new TrackUploadError("missing_bucket", "No compatible tracks bucket was found.");
+      }
 
       await refetch();
       setTitle("");

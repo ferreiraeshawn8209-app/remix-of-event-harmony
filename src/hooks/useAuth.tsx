@@ -62,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const hydrationRequestRef = useRef(0);
+  const pendingAuthEventRef = useRef<"signup" | "signin" | null>(null);
+  const lastNotifiedAccessTokenRef = useRef<string | null>(null);
 
   const hydrateAuthState = async (currentSession: Session | null, deferProfileFetch = false) => {
     const requestId = ++hydrationRequestRef.current;
@@ -271,7 +273,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
+      (event, currentSession) => {
+        if (event === "SIGNED_IN" && currentSession?.access_token) {
+          const isNewSessionToken = lastNotifiedAccessTokenRef.current !== currentSession.access_token;
+          if (isNewSessionToken) {
+            lastNotifiedAccessTokenRef.current = currentSession.access_token;
+            const authEvent = pendingAuthEventRef.current ?? "signin";
+            pendingAuthEventRef.current = null;
+            void supabase.rpc("notify_admin_on_app_auth", { _event: authEvent }).then(({ error }) => {
+              if (error) {
+                console.error("Error notifying admin of auth event:", error);
+              }
+            });
+          }
+        }
+
         setIsLoading(true);
 
         void hydrateAuthState(currentSession, true);
@@ -360,23 +376,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
 
+      if (!error) {
+        pendingAuthEventRef.current = "signup";
+      }
+
       if (error) return { error };
 
       return { error: null };
     } catch (error) {
+      pendingAuthEventRef.current = null;
       return { error: error as Error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      pendingAuthEventRef.current = "signin";
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      if (error) {
+        pendingAuthEventRef.current = null;
+      }
+
       return { error: error ? new Error(error.message) : null };
     } catch (error) {
+      pendingAuthEventRef.current = null;
       return { error: error as Error };
     }
   };
