@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -224,32 +223,6 @@ export default function Auth() {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: authRedirectUrl,
-      },
-    });
-
-    if (error) {
-      setIsLoading(false);
-      const unsupportedProvider =
-        error.message?.toLowerCase().includes("unsupported provider") ||
-        error.message?.toLowerCase().includes("provider is not enabled");
-
-      toast({
-        title: unsupportedProvider ? "Google Provider Not Enabled" : "Google Sign-In Failed",
-        description: unsupportedProvider
-          ? "Google auth is disabled in Supabase. Enable Google under Authentication -> Providers, then try again."
-          : error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -325,21 +298,9 @@ export default function Auth() {
                       "Sign In"
                     )}
                   </Button>
-                  <div className="relative my-3">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                      or
-                    </span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleAuth}
-                    disabled={isLoading}
-                  >
-                    Continue with Google
-                  </Button>
+                  <p className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                    Please sign in with your email and password. Google sign-in is temporarily unavailable.
+                  </p>
                   <button
                     type="button"
                     className="w-full text-xs text-muted-foreground hover:text-primary transition-colors mt-2"
