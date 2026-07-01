@@ -85,6 +85,25 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
     });
   }, []);
 
+  // If autoplay is blocked, retry as soon as the user interacts anywhere on the page.
+  useEffect(() => {
+    if (!autoplayBlocked) return;
+
+    const unlockAndPlay = () => {
+      play();
+    };
+
+    window.addEventListener("pointerdown", unlockAndPlay, { once: true });
+    window.addEventListener("keydown", unlockAndPlay, { once: true });
+    window.addEventListener("touchstart", unlockAndPlay, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAndPlay);
+      window.removeEventListener("keydown", unlockAndPlay);
+      window.removeEventListener("touchstart", unlockAndPlay);
+    };
+  }, [autoplayBlocked, play]);
+
   const pause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -171,6 +190,7 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
         <audio
           ref={audioRef}
           aria-label="BeatKulture background music player"
+          autoPlay
           onEnded={handleEnded}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
@@ -193,7 +213,7 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
         {/* Autoplay-blocked nudge */}
         {autoplayBlocked && (
           <div className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
-            Your browser requires a tap before audio can start. Hit Play below to begin.
+            Your browser requires interaction before audio can start. Tap anywhere and playback will begin automatically.
           </div>
         )}
 
