@@ -136,6 +136,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (typeof meta.full_name === "string" && meta.full_name) ||
       (email ? email.split("@")[0] : "User");
     const phoneRaw = typeof meta.phone === "string" ? meta.phone : null;
+    const baseProfilePayload = {
+      user_id: userId,
+      full_name: fullNameRaw,
+      email,
+      phone: phoneRaw,
+    };
     const eventProfile = {
       event_type: typeof meta.event_type === "string" ? meta.event_type : null,
       event_date: typeof meta.event_date === "string" ? meta.event_date : null,
@@ -205,21 +211,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: created, error: createError } = await supabase
       .from("profiles")
       .insert({
-        user_id: userId,
-        full_name: fullNameRaw,
-        email,
-        phone: phoneRaw,
+        ...baseProfilePayload,
         ...eventProfile,
       } as any)
       .select("*")
       .single();
 
-    if (createError) {
-      console.error("Error creating profile:", createError);
+    if (!createError) {
+      return created;
+    }
+
+    console.error("Error creating profile with event fields, retrying base profile:", createError);
+
+    const { data: fallbackCreated, error: fallbackCreateError } = await supabase
+      .from("profiles")
+      .insert(baseProfilePayload as any)
+      .select("*")
+      .single();
+
+    if (fallbackCreateError) {
+      console.error("Error creating fallback profile:", fallbackCreateError);
       return null;
     }
 
-    return created;
+    return fallbackCreated;
   };
 
   const fetchProfile = async (u: User) => {

@@ -98,9 +98,12 @@ export default function Auth() {
       return;
     }
 
-    if (!profile) return;
+    if (isAdmin) {
+      navigate("/admin", { replace: true });
+      return;
+    }
 
-    navigate(isAdmin ? "/admin" : "/client", { replace: true });
+    navigate(profile ? "/client" : "/dashboard", { replace: true });
   }, [user, authLoading, profile, isAdmin, navigate, explicitRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
