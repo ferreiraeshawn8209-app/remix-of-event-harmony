@@ -44,6 +44,10 @@ function ImageSettingRow({
   const handlePick = () => {
     const f = fileRef.current?.files?.[0];
     if (!f) { toast({ title: "Choose a file first", variant: "destructive" }); return; }
+    if (settingKey === "logo_url" && f.type === "image/gif") {
+      void doUpload(f);
+      return;
+    }
     setPendingFile(f);
   };
 

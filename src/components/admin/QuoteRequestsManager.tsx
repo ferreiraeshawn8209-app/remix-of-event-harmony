@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useQuoteRequests, QuoteRequest } from "@/hooks/useQuoteRequests";
+import { useSpecials } from "@/hooks/useSpecials";
+import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
 import {
   Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users, Sparkles,
   ArrowRight, MessageSquare, Phone,
@@ -21,6 +23,7 @@ const statusColors: Record<string, string> = {
 
 export function QuoteRequestsManager() {
   const { requests, isLoading, updateRequest } = useQuoteRequests();
+  const { activeSpecials } = useSpecials();
   const [acting, setActing] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -65,7 +68,9 @@ export function QuoteRequestsManager() {
 
   return (
     <div className="space-y-3">
-      {requests.map(r => (
+      {requests.map(r => {
+        const autoDiscount = inferAutoDiscountPercent(r.event_type, activeSpecials);
+        return (
         <Card key={r.id} variant="glass">
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between flex-wrap gap-2">
@@ -77,6 +82,11 @@ export function QuoteRequestsManager() {
                 <CardDescription className="text-xs">
                   {r.email}{r.contact_no ? ` • ${r.contact_no}` : ""} • Submitted {new Date(r.created_at).toLocaleString("en-ZA")}
                 </CardDescription>
+                {autoDiscount > 0 && (
+                  <Badge variant="outline" className="mt-2 text-[10px] border-success/40 text-success">
+                    Auto discount to apply: {autoDiscount}%
+                  </Badge>
+                )}
               </div>
               <Badge variant="outline" className={statusColors[r.status] || ""}>
                 {r.status.replace("_", " ")}
@@ -156,7 +166,8 @@ export function QuoteRequestsManager() {
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }
