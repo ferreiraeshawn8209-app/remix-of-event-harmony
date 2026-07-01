@@ -21,11 +21,11 @@ describe("track upload hardening", () => {
     expect(() => validateTrackFile(file)).not.toThrow();
   });
 
-  it("rejects invalid type when MIME does not match MP3", () => {
-    const file = makeFile("fake", "song.mp3", "audio/wav");
+  it("rejects invalid type when MIME does not match MP3/WAV", () => {
+    const file = makeFile("fake", "song.mp3", "audio/ogg");
 
     expect(() => validateTrackFile(file)).toThrowError(TrackUploadError);
-    expect(() => validateTrackFile(file)).toThrow("Please upload a valid MP3 file");
+    expect(() => validateTrackFile(file)).toThrow("Please upload a valid MP3 or WAV file");
   });
 
   it("rejects oversized file", () => {
@@ -49,12 +49,13 @@ describe("track upload hardening", () => {
     expect(resolveMaxTrackUploadBytes(0)).toBe(DEFAULT_MAX_TRACK_UPLOAD_MB * 1024 * 1024);
   });
 
-  it("accepts valid direct MP3 fallback URLs", () => {
+  it("accepts valid direct MP3/WAV fallback URLs", () => {
     expect(validateFallbackTrackUrl("https://cdn.example/audio/mix.mp3")).toBe("https://cdn.example/audio/mix.mp3");
+    expect(validateFallbackTrackUrl("https://cdn.example/audio/mix.wav")).toBe("https://cdn.example/audio/mix.wav");
   });
 
-  it("rejects non-MP3 fallback URLs", () => {
-    expect(() => validateFallbackTrackUrl("https://cdn.example/audio/mix.wav")).toThrow(".mp3");
+  it("rejects unsupported fallback URLs", () => {
+    expect(() => validateFallbackTrackUrl("https://cdn.example/audio/mix.ogg")).toThrow(".mp3 or .wav");
   });
 
   it("retries transient upload error and succeeds", async () => {

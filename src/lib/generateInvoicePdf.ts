@@ -5,6 +5,7 @@ import { EQUIPMENT_CATALOG, formatCurrency } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { addTermsAndConditionsPages } from "@/lib/termsAndConditions";
 import { fetchBankingDetails } from "@/hooks/useBusinessSettings";
+import { fetchBrandingLogoUrl } from "@/hooks/useBranding";
 
 export interface CatalogItemForPdf {
   id: string;
@@ -33,7 +34,8 @@ async function loadImageBase64(url: string): Promise<string | null> {
 // Load logo
 async function loadLogoBase64(): Promise<string | null> {
   try {
-    const response = await fetch(new URL("@/assets/logo.png", import.meta.url).href);
+    const logoUrl = await fetchBrandingLogoUrl();
+    const response = await fetch(logoUrl);
     const blob = await response.blob();
     return new Promise((resolve) => {
       const reader = new FileReader();

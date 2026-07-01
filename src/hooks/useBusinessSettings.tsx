@@ -7,6 +7,7 @@ export type BusinessSettingKey =
   | "bank_account_number"
   | "bank_branch_code"
   | "bank_account_type"
+  | "logo_url"
   | "hero_image_url"
   | "site_background_url"
   | "bg_landing"

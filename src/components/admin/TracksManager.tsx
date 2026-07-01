@@ -105,7 +105,7 @@ export function TracksManager() {
           <Music2 className="w-5 h-5 text-primary" /> Client Music Player
         </CardTitle>
         <CardDescription>
-          Upload MP3 tracks that play automatically and randomly for clients when they log in.
+          Upload MP3/WAV tracks that play automatically and randomly for clients when they log in.
           Clients hear a shuffled mix from all active tracks.
         </CardDescription>
       </CardHeader>
@@ -128,19 +128,19 @@ export function TracksManager() {
             >
               {uploading
                 ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading…</>
-                : <><Upload className="w-4 h-4 mr-2" /> Choose MP3</>}
+                : <><Upload className="w-4 h-4 mr-2" /> Choose MP3 / WAV</>}
             </Button>
-            <span className="text-xs text-muted-foreground">Max {maxUploadMb} MB · MP3 only</span>
+            <span className="text-xs text-muted-foreground">Max {maxUploadMb} MB · MP3/WAV</span>
           </div>
           <input
             ref={fileRef}
             type="file"
-            accept=".mp3,audio/mpeg,audio/mp3"
+            accept=".mp3,.wav,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave"
             className="hidden"
             onChange={handleUpload}
           />
           <div className="pt-3 border-t border-border/50 space-y-2">
-            <Label>Fallback direct MP3 URL (when storage upload is unavailable)</Label>
+            <Label>Fallback direct MP3/WAV URL (when storage upload is unavailable)</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 value={fallbackUrl}
@@ -152,7 +152,7 @@ export function TracksManager() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use this backup path if bucket permissions/config are broken. The link must point directly to an MP3 file.
+              Use this backup path if bucket permissions/config are broken. The link must point directly to an MP3/WAV file.
             </p>
           </div>
         </div>

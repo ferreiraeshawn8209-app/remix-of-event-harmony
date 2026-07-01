@@ -5,7 +5,7 @@ const TRANSIENT_HTTP_STATUS_CODES = new Set([408, 425, 429]);
 const FNV1A_32_OFFSET_BASIS = 2166136261;
 const FNV1A_32_PRIME = 16777619;
 
-const MP3_MIME_TYPES = new Set(["audio/mpeg", "audio/mp3"]);
+const SUPPORTED_AUDIO_MIME_TYPES = new Set(["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave"]);
 
 export type UploadFailureKind =
   | "missing_bucket"
@@ -78,6 +78,17 @@ function normalizeFilename(name: string): string {
   );
 }
 
+function resolveAudioExtension(name: string): "mp3" | "wav" {
+  const lower = name.toLowerCase();
+  return lower.endsWith(".wav") ? "wav" : "mp3";
+}
+
+function resolveContentType(file: File): string {
+  const mimeType = normalizeType(file.type);
+  if (SUPPORTED_AUDIO_MIME_TYPES.has(mimeType)) return mimeType;
+  return resolveAudioExtension(file.name) === "wav" ? "audio/wav" : "audio/mpeg";
+}
+
 function formatAdminDetails(error: unknown): string | undefined {
   const code = typeof error === "object" && error && "code" in error ? String((error as { code?: unknown }).code ?? "") : "";
   const message = typeof error === "object" && error && "message" in error ? String((error as { message?: unknown }).message ?? "") : "";
@@ -94,31 +105,32 @@ export function resolveMaxTrackUploadBytes(maxUploadMb?: number): number {
 
 export function validateTrackFile(file: File, maxBytes = resolveMaxTrackUploadBytes()): void {
   if (!file || !file.name) {
-    throw new TrackUploadError("invalid_file", "Please select an MP3 file before uploading.");
+    throw new TrackUploadError("invalid_file", "Please select an MP3 or WAV file before uploading.");
   }
 
   if (file.size <= 0) {
-    throw new TrackUploadError("invalid_file", "The selected MP3 is empty. Please choose a valid MP3 file.");
+    throw new TrackUploadError("invalid_file", "The selected file is empty. Please choose a valid MP3 or WAV file.");
   }
 
   if (file.size > maxBytes) {
     const maxMb = Math.round((maxBytes / (1024 * 1024)) * 100) / 100;
-    throw new TrackUploadError("size_limit", `This MP3 is too large. Maximum allowed size is ${maxMb} MB.`);
+    throw new TrackUploadError("size_limit", `This file is too large. Maximum allowed size is ${maxMb} MB.`);
   }
 
-  const hasMp3Extension = file.name.toLowerCase().endsWith(".mp3");
+  const lowerName = file.name.toLowerCase();
+  const hasSupportedExtension = lowerName.endsWith(".mp3") || lowerName.endsWith(".wav");
   const mimeType = normalizeType(file.type);
-  const hasMp3Mime = !mimeType || MP3_MIME_TYPES.has(mimeType);
+  const hasSupportedMime = !mimeType || SUPPORTED_AUDIO_MIME_TYPES.has(mimeType);
 
-  if (!hasMp3Extension || !hasMp3Mime) {
-    throw new TrackUploadError("invalid_file", "Please upload a valid MP3 file (.mp3).", `Detected file type: ${mimeType || "unknown"}`);
+  if (!hasSupportedExtension || !hasSupportedMime) {
+    throw new TrackUploadError("invalid_file", "Please upload a valid MP3 or WAV file.", `Detected file type: ${mimeType || "unknown"}`);
   }
 }
 
 export function validateFallbackTrackUrl(rawUrl: string): string {
   const value = rawUrl.trim();
   if (!value) {
-    throw new TrackUploadError("invalid_file", "Please enter a direct MP3 URL.");
+    throw new TrackUploadError("invalid_file", "Please enter a direct MP3 or WAV URL.");
   }
 
   let parsed: URL;
@@ -133,8 +145,8 @@ export function validateFallbackTrackUrl(rawUrl: string): string {
   }
 
   const pathname = parsed.pathname.toLowerCase();
-  if (!pathname.endsWith(".mp3")) {
-    throw new TrackUploadError("invalid_file", "Fallback links must point directly to an .mp3 file.");
+  if (!pathname.endsWith(".mp3") && !pathname.endsWith(".wav")) {
+    throw new TrackUploadError("invalid_file", "Fallback links must point directly to an .mp3 or .wav file.");
   }
 
   return parsed.toString();
@@ -187,7 +199,7 @@ export function mapStorageError(error: unknown): TrackUploadError {
   }
 
   if (["invalid_file_type", "invalid_mime_type", "invalid_request"].includes(code)) {
-    return new TrackUploadError("invalid_file", "Please upload a valid MP3 file (.mp3).", adminDetails, error);
+    return new TrackUploadError("invalid_file", "Please upload a valid MP3 or WAV file.", adminDetails, error);
   }
 
   if (isTransientStorageError(error)) {
@@ -217,7 +229,8 @@ export async function buildDeterministicTrackPath(file: File): Promise<string> {
   }
 
   const digest = (hash >>> 0).toString(16).padStart(8, "0");
-  return `${digest}-${normalizeFilename(file.name)}.mp3`;
+  const ext = resolveAudioExtension(file.name);
+  return `${digest}-${normalizeFilename(file.name)}.${ext}`;
 }
 
 function wait(ms: number): Promise<void> {
@@ -252,7 +265,7 @@ export async function uploadTrackFile(
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const { error: uploadError } = await deps.storage.upload(path, file, {
       upsert: true,
-      contentType: "audio/mpeg",
+      contentType: resolveContentType(file),
     });
 
     if (!uploadError) {

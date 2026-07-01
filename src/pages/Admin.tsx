@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
+import { usePackages } from "@/hooks/usePackages";
 import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { 
@@ -65,6 +66,7 @@ import { TracksManager } from "@/components/admin/TracksManager";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
+import { useBrandingLogo } from "@/hooks/useBranding";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -307,14 +309,23 @@ export default function Admin() {
   const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { packages } = usePackages();
   const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
   const [requestPrefill, setRequestPrefill] = useState<QuoteData | undefined>(undefined);
+  const [pendingRequestMeta, setPendingRequestMeta] = useState<{
+    requestId: string;
+    clientId: string;
+    sourceType: "custom" | "package";
+    packageId: string | null;
+    packageName: string | null;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
   const [declineDialog, setDeclineDialog] = useState<{ quoteId: string; status: string } | null>(null);
   const [declineReason, setDeclineReason] = useState("");
+  const logoImg = useBrandingLogo();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -348,6 +359,7 @@ export default function Admin() {
     try {
       const req = JSON.parse(stored) as {
         id: string;
+        client_id: string;
         client_name: string;
         contact_no?: string | null;
         email: string;
@@ -357,16 +369,43 @@ export default function Admin() {
         start_time?: string | null;
         end_time?: string | null;
         event_type?: string | null;
-        needs_sound?: boolean;
-        needs_lighting?: boolean;
-        needs_special_effects?: boolean;
-        needs_mic?: boolean;
+        package_id?: string | null;
+        package_name?: string | null;
+        venue_provides_sound?: boolean;
+        requires_microphones?: boolean;
+        requires_lighting?: boolean;
+        requires_laser_effects?: boolean;
+        requires_smoke_machine?: boolean;
+        requires_fog_machine?: boolean;
+        requires_low_fog_machine?: boolean;
+        requires_cold_spark_machines?: boolean;
       };
 
       const requestId = params.get("newQuoteRequest");
       if (requestId && req.id !== requestId) return;
 
       const venue = [req.venue_name, req.venue_address].filter(Boolean).join(" - ");
+      const selectedPackage = req.package_id ? packages.find((pkg) => pkg.id === req.package_id) : null;
+      const packageItems = req.package_id && req.package_name
+        ? [
+            { name: `[PKG:${req.package_id}] ${req.package_name} Package`, price: Number(selectedPackage?.price || 0), qty: 1 },
+            ...((selectedPackage?.includes || []).map((item) => ({
+              name: `${req.package_name} includes: ${item}`,
+              price: 0,
+              qty: 1,
+            }))),
+          ]
+        : [];
+      const extras = [
+        ...(!req.venue_provides_sound ? [{ name: "Sound equipment surcharge", price: 2050, qty: 1 }] : []),
+        ...(req.requires_microphones ? [{ name: "Microphone surcharge", price: 350, qty: 1 }] : []),
+        ...(req.requires_lighting ? [{ name: "Lighting surcharge", price: 1200, qty: 1 }] : []),
+        ...(req.requires_laser_effects ? [{ name: "Laser effects surcharge", price: 500, qty: 1 }] : []),
+        ...(req.requires_smoke_machine ? [{ name: "Smoke machine surcharge", price: 400, qty: 1 }] : []),
+        ...(req.requires_fog_machine ? [{ name: "Fog machine surcharge", price: 550, qty: 1 }] : []),
+        ...(req.requires_low_fog_machine ? [{ name: "Low fog machine surcharge", price: 700, qty: 1 }] : []),
+        ...(req.requires_cold_spark_machines ? [{ name: "Cold spark surcharge", price: 1800, qty: 1 }] : []),
+      ];
 
       setRequestPrefill({
         clientName: req.client_name || "",
@@ -378,14 +417,9 @@ export default function Admin() {
         endTime: req.end_time?.slice(0, 5) || "00:00",
         eventType: req.event_type || "",
         djName: "Aces",
-        equipment: {
-          partyrocker: req.needs_sound ? 2 : 0,
-          rgbStrobe: req.needs_lighting ? 1 : 0,
-          smokeMachine: req.needs_special_effects ? 1 : 0,
-          wirelessMic: req.needs_mic ? 1 : 0,
-        },
-        customItems: [],
-        extras: [],
+        equipment: {},
+        customItems: packageItems,
+        extras,
         kidsCorner: false,
         kidsHours: 0,
         humanJukebox: false,
@@ -393,10 +427,17 @@ export default function Admin() {
         travelDistance: 0,
         discountPercent: 0,
       });
+      setPendingRequestMeta({
+        requestId: req.id,
+        clientId: req.client_id,
+        sourceType: req.package_id ? "package" : "custom",
+        packageId: req.package_id || null,
+        packageName: req.package_name || null,
+      });
     } catch {
       // Ignore malformed storage payloads and keep manual builder flow available.
     }
-  }, [location.search]);
+  }, [location.search, packages]);
 
   const handleStatusChange = async (quoteId: string, status: string) => {
     // For declined/rejected, prompt for a reason before applying
@@ -443,11 +484,30 @@ export default function Admin() {
   const handleSaveQuote = async (quoteData: QuoteData, calculations: ReturnType<typeof calculateQuote>) => {
     if (!profile) return;
     try {
-      await createQuote({
+      const createdQuote = await createQuote({
         quoteData,
         calculations,
-        clientProfileId: profile.id,
+        clientProfileId: pendingRequestMeta?.clientId || profile.id,
       });
+
+      if (pendingRequestMeta?.requestId && (createdQuote as any)?.id) {
+        await Promise.all([
+          supabase.from("quotes").update({
+            source_type: pendingRequestMeta.sourceType,
+            package_id: pendingRequestMeta.packageId,
+            package_name: pendingRequestMeta.packageName,
+          } as any).eq("id", (createdQuote as any).id),
+          supabase.from("quote_requests").update({
+            status: "quoted",
+            quote_id: (createdQuote as any).id,
+          } as any).eq("id", pendingRequestMeta.requestId),
+        ]);
+        setPendingRequestMeta(null);
+        setRequestPrefill(undefined);
+        setPendingRequestMeta(null);
+        sessionStorage.removeItem("prefill_quote_request");
+      }
+
       setActiveTab("quotes");
     } catch (error) {
       console.error("Error creating quote:", error);
@@ -534,14 +594,14 @@ export default function Admin() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative isolate">
       <PageBackground pageKey="bg_admin" />
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <Music className="w-6 h-6 text-primary" />
-            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
+            <img src={logoImg} alt="BeatKulture Entertainment logo" className="w-8 h-8 object-contain" />
+            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </Link>
 
           <div className="flex items-center gap-3">
@@ -586,6 +646,7 @@ export default function Admin() {
               </Button>
               <Button variant="hero" onClick={() => {
                 setRequestPrefill(undefined);
+                setPendingRequestMeta(null);
                 setActiveTab("new-quote");
               }}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -787,6 +848,7 @@ export default function Admin() {
                       </p>
                       <Button variant="hero" onClick={() => {
                         setRequestPrefill(undefined);
+                        setPendingRequestMeta(null);
                         setActiveTab("new-quote");
                       }}>
                         <Plus className="w-4 h-4 mr-2" />

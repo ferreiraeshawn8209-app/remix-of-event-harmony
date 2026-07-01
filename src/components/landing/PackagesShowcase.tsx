@@ -94,7 +94,11 @@ export function PackagesShowcase() {
                           ))}
                         </ul>
                         <Button variant="glass" className="mt-4" asChild>
-                          <Link to="/auth?tab=signup">Book this package</Link>
+                          <Link
+                            to={`/auth?package=${encodeURIComponent(p.id)}&redirect=${encodeURIComponent(`/client?package=${p.id}`)}`}
+                          >
+                            Book this package
+                          </Link>
                         </Button>
                       </CardContent>
                     </Card>

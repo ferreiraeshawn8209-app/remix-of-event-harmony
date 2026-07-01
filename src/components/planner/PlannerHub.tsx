@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,7 +16,7 @@ import { formatCurrency } from "@/lib/pricing";
 import {
   Bot, Wallet, LayoutGrid, ListChecks, Music, CloudSun, Search, ClipboardList,
   Mail, StickyNote, QrCode, Send, Plus, Trash2, Sparkles, Loader2, Calendar,
-  ArrowUp, ArrowDown, Youtube, Phone, MapPin, Wand2,
+  ArrowUp, ArrowDown, Youtube, Phone, MapPin, Wand2, Heart, Briefcase, PartyPopper, Palette,
 } from "lucide-react";
 
 type PlannerCtx = {
@@ -30,6 +31,87 @@ type PlannerCtx = {
     guest_count?: number | null;
   };
 };
+
+type EventKind = "wedding" | "corporate" | "party" | "general";
+
+function inferEventKind(eventType?: string | null): EventKind {
+  if (!eventType) return "general";
+  const lower = eventType.toLowerCase();
+  if (lower.includes("wedding")) return "wedding";
+  if (lower.includes("corporate") || lower.includes("company") || lower.includes("business") || lower.includes("conference")) return "corporate";
+  if (lower.includes("party") || lower.includes("birthday") || lower.includes("private") || lower.includes("anniversary") || lower.includes("shower")) return "party";
+  return "general";
+}
+
+function getSeason(date?: string | null) {
+  if (!date) return "all year";
+  const month = new Date(date).getMonth() + 1;
+  if ([12, 1, 2].includes(month)) return "summer";
+  if ([3, 4, 5].includes(month)) return "autumn";
+  if ([6, 7, 8].includes(month)) return "winter";
+  return "spring";
+}
+
+function getDaysUntil(date?: string | null) {
+  if (!date) return null;
+  const now = new Date();
+  const eventDate = new Date(`${date}T00:00:00`);
+  return Math.ceil((eventDate.getTime() - now.getTime()) / 86400000);
+}
+
+function buildSearchUrl(query: string) {
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+
+async function fetchSingleAssistantAnswer(prompt: string, context?: PlannerCtx["quote"]) {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/event-assistant`;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({
+      messages: [{ role: "user", content: prompt }],
+      context: context ? {
+        event_type: context.event_type,
+        event_date: context.event_date,
+        venue: context.venue,
+        guest_count: context.guest_count,
+        start_time: context.start_time,
+        end_time: context.end_time,
+      } : null,
+    }),
+  });
+  if (!resp.ok || !resp.body) throw new Error("AI request failed");
+
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  let text = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) !== -1) {
+      let line = buf.slice(0, nl);
+      buf = buf.slice(nl + 1);
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (!line.startsWith("data: ")) continue;
+      const d = line.slice(6).trim();
+      if (d === "[DONE]") continue;
+      try {
+        const parsed = JSON.parse(d);
+        const delta = parsed.choices?.[0]?.delta?.content;
+        if (delta) text += delta;
+      } catch {}
+    }
+  }
+
+  return text.trim();
+}
 
 // ---------- localStorage helper ----------
 function useLocal<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
@@ -50,6 +132,10 @@ function useLocal<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => voi
 // ============================================================
 export function PlannerHub({ scopeKey, quote }: PlannerCtx) {
   const ns = (k: string) => `bk:planner:${scopeKey}:${k}`;
+  const [activeTab, setActiveTab] = useLocal<string>(ns("tab"), "concierge");
+  const eventKind = inferEventKind(quote?.event_type);
+  const season = getSeason(quote?.event_date);
+  const daysUntil = getDaysUntil(quote?.event_date);
 
   return (
     <Card variant="glass" className="border-primary/20">
@@ -62,9 +148,12 @@ export function PlannerHub({ scopeKey, quote }: PlannerCtx) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="ai" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <ScrollArea className="w-full">
             <TabsList className="inline-flex h-auto p-1 mb-4 flex-nowrap">
+              <TabsTrigger value="concierge" className="gap-1 text-xs"><Sparkles className="w-3.5 h-3.5" />Concierge</TabsTrigger>
+              <TabsTrigger value="design" className="gap-1 text-xs"><Palette className="w-3.5 h-3.5" />Design</TabsTrigger>
+              <TabsTrigger value="discovery" className="gap-1 text-xs"><Search className="w-3.5 h-3.5" />Discovery</TabsTrigger>
               <TabsTrigger value="ai" className="gap-1 text-xs"><Bot className="w-3.5 h-3.5" />AI Assistant</TabsTrigger>
               <TabsTrigger value="budget" className="gap-1 text-xs"><Wallet className="w-3.5 h-3.5" />Budget</TabsTrigger>
               <TabsTrigger value="floor" className="gap-1 text-xs"><LayoutGrid className="w-3.5 h-3.5" />Floor</TabsTrigger>
@@ -79,6 +168,17 @@ export function PlannerHub({ scopeKey, quote }: PlannerCtx) {
             </TabsList>
           </ScrollArea>
 
+          <TabsContent value="concierge">
+            <ConciergeOverview
+              eventKind={eventKind}
+              quote={quote}
+              season={season}
+              daysUntil={daysUntil}
+              onOpenTab={setActiveTab}
+            />
+          </TabsContent>
+          <TabsContent value="design"><DesignStudio storageKey={ns("design")} quote={quote} eventKind={eventKind} season={season} /></TabsContent>
+          <TabsContent value="discovery"><DiscoveryBoard storageKey={ns("discovery")} quote={quote} eventKind={eventKind} season={season} /></TabsContent>
           <TabsContent value="ai"><AIAssistant scopeKey={scopeKey} quote={quote} /></TabsContent>
           <TabsContent value="budget"><BudgetPlanner storageKey={ns("budget")} /></TabsContent>
           <TabsContent value="floor"><FloorPlanner storageKey={ns("floor")} /></TabsContent>
@@ -93,6 +193,120 @@ export function PlannerHub({ scopeKey, quote }: PlannerCtx) {
         </Tabs>
       </CardContent>
     </Card>
+  );
+}
+
+// ============================================================
+// 0. CONCIERGE OVERVIEW
+// ============================================================
+function ConciergeOverview({
+  eventKind,
+  quote,
+  season,
+  daysUntil,
+  onOpenTab,
+}: {
+  eventKind: EventKind;
+  quote?: PlannerCtx["quote"];
+  season: string;
+  daysUntil: number | null;
+  onOpenTab: (tab: string) => void;
+}) {
+  const eventLabel = quote?.event_type || "Event";
+  const spotlight = eventKind === "wedding"
+    ? {
+        icon: <Heart className="w-5 h-5 text-primary" />,
+        title: "Wedding concierge mode",
+        description: "Design invitations, explore dresses and bridal party looks, shape your palette, map the seating, build the timeline, and shortlist honeymoon and expo ideas in one place.",
+      }
+    : eventKind === "corporate"
+      ? {
+          icon: <Briefcase className="w-5 h-5 text-primary" />,
+          title: "Corporate concierge mode",
+          description: "Build the agenda, manage seating and flow, control spend, research suppliers, and plan entertainment and team-building around your event goals.",
+        }
+      : {
+          icon: <PartyPopper className="w-5 h-5 text-primary" />,
+          title: "Party concierge mode",
+          description: "Generate the theme, shape the decor vibe, plan entertainment, build the playlist, and organise your run sheet and budget with a premium planning flow.",
+        };
+
+  const cards = eventKind === "wedding"
+    ? [
+        { key: "design", title: "Invitation, cake & bridal style", body: "Create your look, palette, bridal party vibe, and cake direction.", tag: "Design studio" },
+        { key: "floor", title: "Seating planner", body: "Lay out tables, dance floor, DJ booth, and venue flow visually.", tag: "Planner" },
+        { key: "timeline", title: "Wedding timeline creator", body: "Build ceremony, dinner, speeches, bouquet, garter, and closing cues.", tag: "Timeline" },
+        { key: "music", title: "Playlist creator", body: "Build your must-play list, ceremony songs, and do-not-play list.", tag: "Music" },
+        { key: "budget", title: "Wedding budget planner", body: "Track your total, actual spend, and remaining balance.", tag: "Budget" },
+        { key: "checklist", title: "Wedding checklist", body: "Stay on top of every booking, vendor, and final confirmation.", tag: "Checklist" },
+        { key: "discovery", title: "Honeymoon, expo & supplier finder", body: "Get wedding fairs, honeymoon ideas, local suppliers, and dress deal research.", tag: "Discovery" },
+      ]
+    : eventKind === "corporate"
+      ? [
+          { key: "timeline", title: "Event agenda builder", body: "Map your opening, content blocks, networking, dinner, and entertainment flow.", tag: "Agenda" },
+          { key: "floor", title: "Seating & room layout", body: "Visualise stage, audience, networking pods, and dining setup.", tag: "Planner" },
+          { key: "budget", title: "Corporate budget planner", body: "Track venue, suppliers, team-building, staging, and catering costs.", tag: "Budget" },
+          { key: "discovery", title: "Entertainment & networking ideas", body: "Research corporate entertainment, conferences, suppliers, and team-building concepts.", tag: "Discovery" },
+          { key: "checklist", title: "Corporate event checklist", body: "Keep logistics, comms, suppliers, and approvals on schedule.", tag: "Checklist" },
+        ]
+      : [
+          { key: "design", title: "Theme & decor generator", body: "Shape your theme, colours, outfit mood, and visual direction.", tag: "Design studio" },
+          { key: "music", title: "Playlist creator", body: "Build the energy curve for arrivals, peak time, and closing songs.", tag: "Music" },
+          { key: "timeline", title: "Party timeline planner", body: "Organise arrivals, cake, speeches, games, and dance floor timing.", tag: "Timeline" },
+          { key: "budget", title: "Party budget planner", body: "Balance venue, decor, catering, and entertainment spend.", tag: "Budget" },
+          { key: "discovery", title: "Venue & entertainment finder", body: "Research venues, decor ideas, and current supplier suggestions.", tag: "Discovery" },
+          { key: "checklist", title: "Party planning checklist", body: "Keep all the moving parts under control before event day.", tag: "Checklist" },
+        ];
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-accent/10 to-background p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/40 px-3 py-1 text-xs font-medium text-primary">
+              {spotlight.icon}
+              <span>{spotlight.title}</span>
+            </div>
+            <h3 className="font-display text-2xl font-bold">{eventLabel} planning dashboard</h3>
+            <p className="text-sm text-muted-foreground">{spotlight.description}</p>
+            <p className="text-xs text-muted-foreground">
+              {daysUntil != null ? `${daysUntil} days to go.` : "No event countdown yet."} Your event sits in {season}, so the concierge highlights budget, weather, supplier, and style guidance that fits the season.
+            </p>
+          </div>
+          <div className="grid min-w-[220px] gap-2 sm:grid-cols-2">
+            <Card variant="glass">
+              <CardContent className="py-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Event date</p>
+                <p className="font-semibold">{quote?.event_date ? new Date(quote.event_date).toLocaleDateString("en-ZA") : "Not set"}</p>
+              </CardContent>
+            </Card>
+            <Card variant="glass">
+              <CardContent className="py-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Season tip</p>
+                <p className="font-semibold capitalize">{season}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {cards.map((card) => (
+          <Card key={card.title} variant="glass" className="overflow-hidden border-border/60">
+            <CardContent className="space-y-3 py-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold">{card.title}</p>
+                <Badge variant="outline" className="text-[10px]">{card.tag}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">{card.body}</p>
+              <Button size="sm" variant="outline" onClick={() => onOpenTab(card.key)}>
+                Open tool
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -112,9 +326,17 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: Msg = { role: "user", content: input.trim() };
+  const guidedPrompts = [
+    "Build me a step-by-step run sheet for my event day.",
+    "Suggest ceremony + first dance songs based on my event type.",
+    "Create a DJ cue list for entrance, bouquet, garter, and closing.",
+    "Help me finalise a 35-song must-play list with genres.",
+  ];
+
+  const send = async (preset?: string) => {
+    const messageText = (preset ?? input).trim();
+    if (!messageText || loading) return;
+    const userMsg: Msg = { role: "user", content: messageText };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
@@ -177,6 +399,23 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
 
   return (
     <div className="space-y-3">
+      <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+        <p className="text-xs font-semibold text-foreground">Guided event planning</p>
+        <div className="flex flex-wrap gap-2">
+          {guidedPrompts.map((prompt) => (
+            <Button
+              key={prompt}
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px]"
+              onClick={() => send(prompt)}
+              disabled={loading}
+            >
+              {prompt}
+            </Button>
+          ))}
+        </div>
+      </div>
       <div ref={scrollRef} className="h-72 overflow-y-auto rounded-lg border border-border bg-muted/20 p-3 space-y-3">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -201,6 +440,378 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
       <p className="text-[11px] text-muted-foreground flex items-center gap-1">
         <Youtube className="w-3 h-3" /> Subscribe to <strong>@beatkulturesa</strong> on YouTube for mixes by DJ Shawn-E-Shawn.
       </p>
+    </div>
+  );
+}
+
+// ============================================================
+// 1B. DESIGN STUDIO
+// ============================================================
+function DesignStudio({
+  storageKey,
+  quote,
+  eventKind,
+  season,
+}: {
+  storageKey: string;
+  quote?: PlannerCtx["quote"];
+  eventKind: EventKind;
+  season: string;
+}) {
+  const [style, setStyle] = useLocal<string>(`${storageKey}:style`, eventKind === "corporate" ? "premium" : eventKind === "party" ? "bold" : "romantic");
+  const [palette, setPalette] = useLocal<string>(`${storageKey}:palette`, season === "winter" ? "black-gold" : "champagne-blush");
+  const [highlight, setHighlight] = useLocal<string>(`${storageKey}:highlight`, eventKind === "wedding" ? "cake" : eventKind === "corporate" ? "stage" : "theme");
+  const [notes, setNotes] = useLocal<string>(`${storageKey}:notes`, "");
+
+  const paletteGuides: Record<string, { title: string; swatches: string[]; copy: string }> = {
+    "champagne-blush": { title: "Champagne & blush", swatches: ["#f6e7d7", "#e9c1c5", "#f8f4ef"], copy: "Soft, elegant, and ideal for romantic ceremonies and refined receptions." },
+    "black-gold": { title: "Black & gold", swatches: ["#111111", "#d4af37", "#f5f1e8"], copy: "High-impact luxury styling that reads premium in corporate or evening spaces." },
+    "sage-ivory": { title: "Sage & ivory", swatches: ["#a9b7a0", "#f8f5ee", "#d9cab3"], copy: "Fresh, modern, and easy to pair with florals, linen, and natural textures." },
+    "neon-sunset": { title: "Neon sunset", swatches: ["#ff6f61", "#ffb347", "#7c3aed"], copy: "Energetic party styling for birthdays, nightlife, and youth-focused events." },
+  };
+
+  const moodCopy = eventKind === "wedding"
+    ? {
+        title: "Wedding design studio",
+        prompts: [
+          "Invitation direction",
+          "Cake styling",
+          "Wedding dress inspiration",
+          "Bridal party outfits",
+          "Colour palette and decor mood",
+        ],
+      }
+    : eventKind === "corporate"
+      ? {
+          title: "Corporate design studio",
+          prompts: [
+            "Stage and branding direction",
+            "Table and networking setup",
+            "Guest gifting or activation ideas",
+            "Entertainment look and feel",
+            "Colour palette and atmosphere",
+          ],
+        }
+      : {
+          title: "Party design studio",
+          prompts: [
+            "Theme direction",
+            "Decor statement moments",
+            "Host outfit inspiration",
+            "Photo-op and feature corners",
+            "Colour palette and energy",
+          ],
+        };
+
+  const highlightCopy =
+    highlight === "cake"
+      ? "Use a clean silhouette, one signature texture, and one standout floral or metallic accent so the cake feels premium without looking overcrowded."
+      : highlight === "dress"
+        ? "Focus on one leading style word, one fabric direction, and one budget target so your shopping shortlist stays realistic."
+        : highlight === "theme"
+          ? "Anchor the experience with one hero colour, one lighting mood, and one memorable decor focal point."
+          : "Keep the room identity consistent across staging, lighting, table styling, and printed collateral for a polished guest experience.";
+
+  const currentPalette = paletteGuides[palette] || paletteGuides["champagne-blush"];
+  const city = quote?.venue?.split(",")[0] || "your city";
+  const searchLinks = eventKind === "wedding"
+    ? [
+        { label: "Search wedding dresses", href: buildSearchUrl(`best rated wedding dress suppliers in ${city}`) },
+        { label: "Search bridal party outfits", href: buildSearchUrl(`bridal party outfit inspiration ${season}`) },
+        { label: "Search wedding decor inspiration", href: buildSearchUrl(`luxury wedding decor inspiration ${season}`) },
+      ]
+    : eventKind === "corporate"
+      ? [
+          { label: "Search stage styling", href: buildSearchUrl(`premium corporate event stage styling ${city}`) },
+          { label: "Search networking decor", href: buildSearchUrl(`corporate networking event decor ideas`) },
+          { label: "Search activation inspiration", href: buildSearchUrl(`corporate activation inspiration`) },
+        ]
+      : [
+          { label: "Search party themes", href: buildSearchUrl(`${quote?.event_type || "party"} theme ideas ${season}`) },
+          { label: "Search decor inspiration", href: buildSearchUrl(`party decor inspiration ${city}`) },
+          { label: "Search outfit ideas", href: buildSearchUrl(`party outfit inspiration ${season}`) },
+        ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
+        <Card variant="glass">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">{moodCopy.title}</CardTitle>
+            <CardDescription>
+              Shape the look and feel of the event with guided selections instead of a blank chat thread.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Style mood</Label>
+                <Select value={style} onValueChange={setStyle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="romantic">Romantic</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="modern">Modern</SelectItem>
+                    <SelectItem value="bold">Bold</SelectItem>
+                    <SelectItem value="minimal">Minimal</SelectItem>
+                    <SelectItem value="classic">Classic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Colour palette</Label>
+                <Select value={palette} onValueChange={setPalette}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="champagne-blush">Champagne & blush</SelectItem>
+                    <SelectItem value="black-gold">Black & gold</SelectItem>
+                    <SelectItem value="sage-ivory">Sage & ivory</SelectItem>
+                    <SelectItem value="neon-sunset">Neon sunset</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Feature focus</Label>
+                <Select value={highlight} onValueChange={setHighlight}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={eventKind === "wedding" ? "cake" : "stage"}>{eventKind === "wedding" ? "Cake styling" : "Stage styling"}</SelectItem>
+                    {eventKind === "wedding" && <SelectItem value="dress">Dress inspiration</SelectItem>}
+                    <SelectItem value="theme">Theme direction</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any must-have colours, fabrics, textures, or visual cues..."
+                  rows={5}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-border/60 bg-background/30 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Palette className="w-4 h-4 text-primary" />
+                  <p className="font-semibold">{currentPalette.title}</p>
+                </div>
+                <div className="flex gap-2 mb-3">
+                  {currentPalette.swatches.map((swatch) => (
+                    <div key={swatch} className="h-10 flex-1 rounded-xl border border-white/20" style={{ backgroundColor: swatch }} />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{currentPalette.copy}</p>
+              </div>
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                <p className="font-semibold mb-2">Creative direction</p>
+                <p className="text-sm capitalize">{style} styling paired with {currentPalette.title.toLowerCase()} accents.</p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{highlightCopy}</p>
+                {notes ? <p className="text-xs mt-3 rounded-lg bg-background/60 p-3 text-muted-foreground">{notes}</p> : null}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="glass">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Inspiration shortcuts</CardTitle>
+            <CardDescription>
+              Jump into the most useful style tasks for this event type.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {moodCopy.prompts.map((prompt) => (
+              <div key={prompt} className="rounded-xl border border-border/60 bg-background/20 p-3 text-sm">
+                {prompt}
+              </div>
+            ))}
+            <div className="space-y-2 pt-1">
+              {searchLinks.map((link) => (
+                <Button key={link.href} asChild variant="outline" size="sm" className="w-full justify-start">
+                  <a href={link.href} target="_blank" rel="noreferrer">Open {link.label}</a>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 1C. DISCOVERY BOARD
+// ============================================================
+function DiscoveryBoard({
+  storageKey,
+  quote,
+  eventKind,
+  season,
+}: {
+  storageKey: string;
+  quote?: PlannerCtx["quote"];
+  eventKind: EventKind;
+  season: string;
+}) {
+  const [insights, setInsights] = useLocal<Record<string, string>>(`${storageKey}:insights`, {});
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const location = quote?.venue || "the event location";
+  const eventLabel = quote?.event_type || "event";
+
+  const briefs = eventKind === "wedding"
+    ? [
+        {
+          key: "honeymoon",
+          title: "Honeymoon suggestions",
+          searchLabel: "Search honeymoon ideas",
+          searchUrl: buildSearchUrl(`best honeymoon destinations for ${season} travel from South Africa`),
+          prompt: `Give concise honeymoon destination suggestions for a ${eventLabel} client planning a ${season} event. Include 5 options, why each suits the season, travel-budget guidance, and one money-saving tip per option.`,
+        },
+        {
+          key: "expo",
+          title: "Bridal expo and wedding fair finder",
+          searchLabel: "Search current bridal expos",
+          searchUrl: buildSearchUrl(`upcoming bridal expo wedding fair near ${location}`),
+          prompt: `Create a short wedding expo research brief for a client in or near ${location}. Highlight what to look for at bridal expos, how to compare suppliers, and a checklist for making the visit worthwhile.`,
+        },
+        {
+          key: "suppliers",
+          title: "Local wedding suppliers",
+          searchLabel: "Search local suppliers",
+          searchUrl: buildSearchUrl(`best wedding suppliers near ${location}`),
+          prompt: `Give a practical shortlist strategy for finding local wedding suppliers near ${location}. Cover florists, decor, venues, photographers, and planners, plus red flags and money-saving questions to ask.`,
+        },
+        {
+          key: "dress",
+          title: "Best-rated wedding dress suppliers",
+          searchLabel: "Search dress suppliers",
+          searchUrl: buildSearchUrl(`best rated affordable wedding dress suppliers near ${location}`),
+          prompt: `Provide advice for finding the cheapest but best-rated wedding dress suppliers near ${location}. Include how to compare boutiques, sample sales, alterations, and hidden costs.`,
+        },
+      ]
+    : eventKind === "corporate"
+      ? [
+          {
+            key: "entertainment",
+            title: "Corporate entertainment ideas",
+            searchLabel: "Search entertainment ideas",
+            searchUrl: buildSearchUrl(`corporate event entertainment ideas near ${location}`),
+            prompt: `Suggest premium but practical corporate entertainment ideas for a ${eventLabel}. Include who each idea suits, the atmosphere it creates, and one budget-saving tip.`,
+          },
+          {
+            key: "team",
+            title: "Team-building suggestions",
+            searchLabel: "Search team building",
+            searchUrl: buildSearchUrl(`team building activity providers near ${location}`),
+            prompt: `Suggest team-building activities for a corporate event near ${location}. Include energetic, low-pressure, and executive-friendly options.`,
+          },
+          {
+            key: "networking",
+            title: "Conference and networking recommendations",
+            searchLabel: "Search networking ideas",
+            searchUrl: buildSearchUrl(`conference networking activation ideas ${season}`),
+            prompt: `Recommend networking-friendly event formats and activation ideas for a corporate audience. Include layout, timing, and sponsorship opportunities.`,
+          },
+          {
+            key: "suppliers",
+            title: "Corporate supplier research",
+            searchLabel: "Search suppliers",
+            searchUrl: buildSearchUrl(`corporate event suppliers near ${location}`),
+            prompt: `Provide a shortlist framework for comparing AV, staging, decor, catering, and registration suppliers for a corporate event near ${location}.`,
+          },
+        ]
+      : [
+          {
+            key: "theme",
+            title: "Current theme and decor trends",
+            searchLabel: "Search party trends",
+            searchUrl: buildSearchUrl(`${eventLabel} decor trends ${season}`),
+            prompt: `Suggest current party theme and decor trends for a ${eventLabel}. Include 5 ideas and how each one can be kept stylish on a budget.`,
+          },
+          {
+            key: "entertainment",
+            title: "Entertainment suggestions",
+            searchLabel: "Search entertainment",
+            searchUrl: buildSearchUrl(`party entertainment ideas near ${location}`),
+            prompt: `Recommend entertainment ideas for a ${eventLabel}. Include crowd energy level, age suitability, and setup notes.`,
+          },
+          {
+            key: "venue",
+            title: "Venue recommendations",
+            searchLabel: "Search venues",
+            searchUrl: buildSearchUrl(`best party venues near ${location}`),
+            prompt: `Give a venue comparison checklist for someone looking at party venues near ${location}. Cover guest count, access, noise rules, and power needs.`,
+          },
+          {
+            key: "suppliers",
+            title: "Decor and supplier finder",
+            searchLabel: "Search suppliers",
+            searchUrl: buildSearchUrl(`party decor suppliers near ${location}`),
+            prompt: `Advise how to compare decor, lighting, and hire suppliers near ${location}. Include what to ask and how to avoid overspending.`,
+          },
+        ];
+
+  const runBrief = async (brief: typeof briefs[number]) => {
+    setLoadingKey(brief.key);
+    try {
+      const response = await fetchSingleAssistantAnswer(brief.prompt, quote);
+      if (!response) throw new Error("No response");
+      setInsights((prev) => ({ ...prev, [brief.key]: response }));
+    } catch {
+      toast({
+        title: "Unable to load discovery insight",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+        <h3 className="font-semibold mb-1">Discovery board</h3>
+        <p className="text-sm text-muted-foreground">
+          Use these cards to research ideas, trends, suppliers, and opportunities around your {eventLabel.toLowerCase()} without relying on one long chat thread.
+        </p>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {briefs.map((brief) => (
+          <Card key={brief.key} variant="glass" className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">{brief.title}</CardTitle>
+              <CardDescription>
+                Tailored to {location} and your {season} planning window.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => runBrief(brief)} disabled={loadingKey === brief.key}>
+                  {loadingKey === brief.key ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  Generate insight
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <a href={brief.searchUrl} target="_blank" rel="noreferrer">{brief.searchLabel}</a>
+                </Button>
+              </div>
+              <div className="min-h-[150px] rounded-xl border border-border/60 bg-background/30 p-4 text-sm leading-relaxed">
+                {insights[brief.key] ? (
+                  <div className="whitespace-pre-wrap">{insights[brief.key]}</div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Generate an insight card here, then use the live search shortcut for current suppliers, expos, venues, and market options.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

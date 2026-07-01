@@ -25,11 +25,14 @@ export interface PaymentPlan {
 export function calculateMonthsBetween(eventDate: Date): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const target = new Date(eventDate);
+  target.setHours(0, 0, 0, 0);
+  if (target <= today) return 1;
   
   let months = 0;
   const current = new Date(today);
   
-  while (current < eventDate) {
+  while (current < target) {
     current.setMonth(current.getMonth() + 1);
     months++;
   }
@@ -58,11 +61,20 @@ export function generateMonthlyPlan(
   
   const installments: PaymentInstallment[] = [];
   const today = new Date();
+  const lastDueDate = new Date(eventDate);
+  lastDueDate.setHours(0, 0, 0, 0);
+  lastDueDate.setDate(lastDueDate.getDate() - 1);
+  if (lastDueDate <= today) {
+    lastDueDate.setTime(today.getTime());
+  }
   
   for (let i = 0; i < monthsAvailable; i++) {
     const dueDate = new Date(today);
     dueDate.setMonth(dueDate.getMonth() + i + 1);
     dueDate.setDate(1); // First of each month
+    if (dueDate > lastDueDate) {
+      dueDate.setTime(lastDueDate.getTime());
+    }
     
     // Last payment gets remainder to avoid rounding issues
     const amount = i === monthsAvailable - 1 

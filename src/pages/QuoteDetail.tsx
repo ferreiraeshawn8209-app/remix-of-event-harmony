@@ -247,6 +247,12 @@ export default function QuoteDetail() {
                   <span>{formatCurrency(Number(quote.custom_items_cost))}</span>
                 </div>
               )}
+              {Number(quote.extras_cost || 0) > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Extras</span>
+                  <span>{formatCurrency(Number(quote.extras_cost))}</span>
+                </div>
+              )}
               {Number(quote.kids_cost) > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Kids Corner</span>
@@ -333,6 +339,28 @@ export default function QuoteDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {!!quote.client_removed_items?.length && (
+            <Card variant="glass" className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-lg">Client Quote Changes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {quote.client_removed_items.map((item, index) => (
+                  <div key={`${item.removed_at}-${index}`} className="rounded-md border border-border p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">{item.name}</p>
+                      <Badge variant="outline" className="capitalize">{item.kind.replace("_", " ")}</Badge>
+                    </div>
+                    <p className="text-muted-foreground mt-1">
+                      Removed {new Date(item.removed_at).toLocaleString()} • {formatCurrency(Number(item.price) * Number(item.qty))}
+                    </p>
+                    <p className="text-muted-foreground mt-2">Reason: {item.reason}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Payment Actions (Admin only) */}
           {profile && (

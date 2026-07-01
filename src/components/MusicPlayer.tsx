@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Music, Loader2, Play, Pause, SkipForward, Shuffle, Volume2 } from "lucide-react";
+import { Music, Loader2, Play, Pause, SkipBack, SkipForward, Shuffle, Volume2 } from "lucide-react";
 import { useActiveTracks, Track } from "@/hooks/useTracks";
 
 function randomIndex(len: number, exclude?: number): number {
@@ -26,6 +26,7 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const mixcloudFallbackUrl = "https://www.mixcloud.com/Beatkulture/uploads/";
 
   // Pick a random track once tracks are loaded
   useEffect(() => {
@@ -95,6 +96,12 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
     setAutoplayBlocked(false);
   }, [tracks.length]);
 
+  const previous = useCallback(() => {
+    if (tracks.length === 0) return;
+    setIndex((i) => (i - 1 + tracks.length) % tracks.length);
+    setAutoplayBlocked(false);
+  }, [tracks.length]);
+
   const shuffle = useCallback(() => {
     if (tracks.length === 0) return;
     setIndex((i) => randomIndex(tracks.length, i));
@@ -138,7 +145,6 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Hidden native audio element */}
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <audio
           ref={audioRef}
           aria-label="BeatKulture background music player"
@@ -163,9 +169,9 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
 
         {/* Autoplay-blocked nudge */}
         {autoplayBlocked && (
-          <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
+          <div className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
             Your browser requires a tap before audio can start. Hit Play below to begin.
-          </p>
+          </div>
         )}
 
         {/* Controls */}
@@ -180,6 +186,11 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
               ? <><Pause className="w-4 h-4 mr-1" /> Pause</>
               : <><Play className="w-4 h-4 mr-1" /> Play</>}
           </Button>
+          {tracks.length > 1 && (
+            <Button size="sm" variant="ghost" onClick={previous} title="Previous track">
+              <SkipBack className="w-4 h-4" />
+            </Button>
+          )}
           <Button size="sm" variant="ghost" onClick={shuffle} title="Shuffle">
             <Shuffle className="w-4 h-4" />
           </Button>
@@ -189,6 +200,15 @@ export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
             </Button>
           )}
         </div>
+
+        <a
+          href={mixcloudFallbackUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-xs text-primary hover:underline"
+        >
+          Listen to more mixes on Mixcloud
+        </a>
       </CardContent>
     </Card>
   );

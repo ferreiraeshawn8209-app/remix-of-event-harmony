@@ -1,7 +1,8 @@
 import { Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
-import logoImg from "@/assets/logo.png";
+import { useBrandingLogo } from "@/hooks/useBranding";
 
 export function Footer() {
+  const logoImg = useBrandingLogo();
   return (
     <footer className="bg-card border-t border-border py-12">
       <div className="container mx-auto px-4">

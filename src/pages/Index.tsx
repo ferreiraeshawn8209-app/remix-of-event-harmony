@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Loader2, Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import logoImg from "@/assets/logo.png";
 import { PageBackground } from "@/components/PageBackground";
 import { CoordinatorChat } from "@/components/landing/CoordinatorChat";
 import { UpcomingEventsTicker } from "@/components/landing/UpcomingEventsTicker";
@@ -14,6 +13,7 @@ import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel"
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
+import { useBrandingLogo } from "@/hooks/useBranding";
 
 /**
  * Public landing page — authenticated visitors are redirected to /admin or /client.
@@ -21,6 +21,7 @@ import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading } = useAuth();
+  const logoImg = useBrandingLogo();
 
   useEffect(() => {
     if (isLoading) return;
@@ -46,7 +47,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative isolate min-h-screen bg-background text-foreground">
       <PageBackground pageKey="bg_landing" />
 
       {/* Top bar */}
@@ -112,6 +113,23 @@ const Index = () => {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}>
             <CoordinatorChat />
           </motion.div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 pb-8 relative z-10">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="glass-card rounded-xl p-4">
+            <h2 className="font-display text-xl font-bold mb-2">BeatKulture Entertainment</h2>
+            <p className="text-sm text-muted-foreground">
+              Premium DJ and event production platform with guided planning from quote to event day.
+            </p>
+          </div>
+          <div className="glass-card rounded-xl p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Platform features</p>
+            <p className="text-sm text-muted-foreground">
+              AI assistant, event planning tools, client music system, and transparent quote management in one portal.
+            </p>
+          </div>
         </div>
       </section>
 

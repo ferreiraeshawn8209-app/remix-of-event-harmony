@@ -10,8 +10,29 @@ interface Profile {
   phone: string | null;
   email: string;
   avatar_url: string | null;
+  event_type: string | null;
+  event_date: string | null;
+  venue_name: string | null;
+  venue_address: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  guest_count: number | null;
+  event_setting: string | null;
+  city: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface EventProfileInput {
+  eventType: string;
+  eventDate: string;
+  venueName: string;
+  venueAddress: string;
+  startTime: string;
+  endTime: string;
+  guestCount: number;
+  eventSetting: "indoor" | "outdoor";
+  city: string;
 }
 
 interface AuthContextType {
@@ -20,7 +41,13 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   isLoading: boolean;
-  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    phone?: string,
+    eventProfile?: EventProfileInput
+  ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -109,6 +136,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (typeof meta.full_name === "string" && meta.full_name) ||
       (email ? email.split("@")[0] : "User");
     const phoneRaw = typeof meta.phone === "string" ? meta.phone : null;
+    const eventProfile = {
+      event_type: typeof meta.event_type === "string" ? meta.event_type : null,
+      event_date: typeof meta.event_date === "string" ? meta.event_date : null,
+      venue_name: typeof meta.venue_name === "string" ? meta.venue_name : null,
+      venue_address: typeof meta.venue_address === "string" ? meta.venue_address : null,
+      start_time: typeof meta.start_time === "string" ? meta.start_time : null,
+      end_time: typeof meta.end_time === "string" ? meta.end_time : null,
+      guest_count:
+        typeof meta.guest_count === "number"
+          ? meta.guest_count
+          : typeof meta.guest_count === "string" && meta.guest_count
+            ? Number(meta.guest_count)
+            : null,
+      event_setting: typeof meta.event_setting === "string" ? meta.event_setting : null,
+      city: typeof meta.city === "string" ? meta.city : null,
+    };
 
     const { data: existing, error: existingError } = await supabase
       .from("profiles")
@@ -124,7 +167,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return existing;
     }
 
-    if (existing) return existing;
+    if (existing) {
+      const profileNeedsBackfill = [
+        ["event_type", eventProfile.event_type],
+        ["event_date", eventProfile.event_date],
+        ["venue_name", eventProfile.venue_name],
+        ["venue_address", eventProfile.venue_address],
+        ["start_time", eventProfile.start_time],
+        ["end_time", eventProfile.end_time],
+        ["guest_count", eventProfile.guest_count],
+        ["event_setting", eventProfile.event_setting],
+        ["city", eventProfile.city],
+      ].some(([key, value]) => !existing[key as keyof typeof existing] && value);
+
+      if (!profileNeedsBackfill) return existing;
+
+      const { data: updated, error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: existing.full_name || fullNameRaw,
+          email: existing.email || email,
+          phone: existing.phone || phoneRaw,
+          ...eventProfile,
+        } as any)
+        .eq("id", existing.id)
+        .select("*")
+        .single();
+
+      if (updateError) {
+        console.error("Error backfilling profile:", updateError);
+        return existing;
+      }
+
+      return updated;
+    }
 
     const { data: created, error: createError } = await supabase
       .from("profiles")
@@ -133,7 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: fullNameRaw,
         email,
         phone: phoneRaw,
-      })
+        ...eventProfile,
+      } as any)
       .select("*")
       .single();
 
@@ -227,7 +304,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    phone?: string,
+    eventProfile?: EventProfileInput
+  ) => {
     try {
       const configuredBase = import.meta.env.BASE_URL || "/";
       const normalizedConfiguredBase = configuredBase.endsWith("/")
@@ -249,6 +332,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             full_name: fullName,
             phone: phone || null,
+            event_type: eventProfile?.eventType || null,
+            event_date: eventProfile?.eventDate || null,
+            venue_name: eventProfile?.venueName || null,
+            venue_address: eventProfile?.venueAddress || null,
+            start_time: eventProfile?.startTime || null,
+            end_time: eventProfile?.endTime || null,
+            guest_count: eventProfile?.guestCount ?? null,
+            event_setting: eventProfile?.eventSetting || null,
+            city: eventProfile?.city || null,
           },
         },
       });

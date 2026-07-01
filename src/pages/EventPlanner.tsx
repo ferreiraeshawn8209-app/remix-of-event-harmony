@@ -16,6 +16,7 @@ import {
   Clock, Plus, Trash2, GripVertical, Briefcase, Gem
 } from "lucide-react";
 import { PageBackground } from "@/components/PageBackground";
+import { useBrandingLogo } from "@/hooks/useBranding";
 
 // ─── Types ───────────────────────────────────────────────
 interface ScheduleItem {
@@ -122,6 +123,9 @@ export default function EventPlanner() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("schedule");
+  const [quoteLockedReason, setQuoteLockedReason] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const logoImg = useBrandingLogo();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -130,6 +134,27 @@ export default function EventPlanner() {
   useEffect(() => {
     if (!profile || !quoteId) return;
     (async () => {
+      const { data: quote, error: quoteError } = await supabase
+        .from("quotes")
+        .select("status, deposit_paid")
+        .eq("id", quoteId)
+        .maybeSingle();
+      if (quoteError) {
+        toast({ title: "Error", description: quoteError.message, variant: "destructive" });
+        navigate("/client");
+        return;
+      }
+      if (!quote) {
+        toast({ title: "Quote not found", variant: "destructive" });
+        navigate("/client");
+        return;
+      }
+      if (!(quote.deposit_paid && (quote.status === "accepted" || quote.status === "paid"))) {
+        setQuoteLockedReason("This planner unlocks only after quote acceptance and deposit payment.");
+        setLoading(false);
+        return;
+      }
+
       const { data } = await supabase
         .from("event_plans")
         .select("*")
@@ -169,6 +194,18 @@ export default function EventPlanner() {
 
   const handleSave = async () => {
     if (!profile || !quoteId) return;
+    const mustPlaySongs = plan.must_play_songs
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (mustPlaySongs.length < 35 || mustPlaySongs.length > 50) {
+      toast({
+        title: "Playlist requirement not met",
+        description: "Please provide between 35 and 50 must-play songs before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSaving(true);
     try {
       const { data: quote } = await supabase.from("quotes").select("client_id, client_name, email, event_date, venue, event_type").eq("id", quoteId).single();
@@ -232,6 +269,71 @@ export default function EventPlanner() {
   };
 
   const isWedding = plan.event_style === "wedding";
+  const mustPlayCount = plan.must_play_songs
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean).length;
+
+  const addAiSuggestions = async () => {
+    setAiLoading(true);
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/event-assistant`;
+      const existing = plan.must_play_songs.trim();
+      const prompt = [
+        `Suggest 12 songs for a ${plan.event_style || "general"} event playlist.`,
+        "Include ceremony, first dance, and dance-floor options where relevant.",
+        "Return one song per line in the exact format: Title — Artist.",
+        existing ? `Avoid these songs already selected: ${existing}` : "",
+      ].filter(Boolean).join(" ");
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: [{ role: "user", content: prompt }] }),
+      });
+      if (!resp.ok || !resp.body) throw new Error("AI request failed");
+
+      const reader = resp.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      let text = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) !== -1) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (!data || data === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) text += delta;
+          } catch {
+            // ignore malformed stream chunks
+          }
+        }
+      }
+      const suggestions = text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 12);
+      if (!suggestions.length) throw new Error("No suggestions were generated");
+      const combined = [plan.must_play_songs.trim(), ...suggestions].filter(Boolean).join("\n");
+      update("must_play_songs", combined);
+      toast({ title: "AI suggestions added", description: `${suggestions.length} songs were appended.` });
+    } catch (err: any) {
+      toast({ title: "AI error", description: err.message || "Failed to generate suggestions", variant: "destructive" });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   if (authLoading || loading) {
     return (
@@ -241,14 +343,32 @@ export default function EventPlanner() {
     );
   }
 
+  if (quoteLockedReason) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card variant="glass" className="max-w-lg w-full">
+          <CardHeader>
+            <CardTitle>Event planner locked</CardTitle>
+            <CardDescription>{quoteLockedReason}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link to="/client">Back to client portal</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative isolate">
       <PageBackground pageKey="bg_planner" />
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <Music className="w-6 h-6 text-primary" />
-            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
+            <img src={logoImg} alt="BeatKulture Entertainment logo" className="w-8 h-8 object-contain" />
+            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </Link>
           <Button variant="outline" size="sm" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
@@ -420,7 +540,13 @@ export default function EventPlanner() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Must-Play Songs</Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Label>Must-Play Songs ({mustPlayCount}/35-50)</Label>
+                      <Button size="sm" variant="outline" onClick={addAiSuggestions} disabled={aiLoading}>
+                        {aiLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                        AI Suggest
+                      </Button>
+                    </div>
                     <Textarea placeholder="List songs you absolutely want played (one per line)" value={plan.must_play_songs} onChange={(e) => update("must_play_songs", e.target.value)} rows={4} />
                   </div>
                   <div className="space-y-2">

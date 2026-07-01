@@ -42,6 +42,17 @@ export interface DatabaseQuote {
   balance_paid_at: string | null;
   client_code: string;
   created_by: string | null;
+  source_type?: "custom" | "package";
+  package_id?: string | null;
+  package_name?: string | null;
+  client_removed_items?: {
+    kind: "custom_item" | "extra";
+    name: string;
+    price: number;
+    qty: number;
+    reason: string;
+    removed_at: string;
+  }[];
   created_at: string;
   updated_at: string;
 }
@@ -72,6 +83,10 @@ export function useQuotes() {
         custom_items: (quote.custom_items as unknown as CustomLineItem[]) || [],
         extras: ((quote as any).extras as unknown as ExtraLineItem[]) || [],
         extras_cost: Number((quote as any).extras_cost) || 0,
+        source_type: ((quote as any).source_type || "custom") as "custom" | "package",
+        package_id: (quote as any).package_id || null,
+        package_name: (quote as any).package_name || null,
+        client_removed_items: ((quote as any).client_removed_items as DatabaseQuote["client_removed_items"]) || [],
       })) as DatabaseQuote[];
     },
     enabled: !!profile,
