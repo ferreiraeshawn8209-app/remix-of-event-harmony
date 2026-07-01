@@ -71,7 +71,7 @@ function PackageForm({
         popular,
         is_active: isActive,
         sort_order: Number(sortOrder),
-        includes: includesText.split("\n").map(s => s.trim()).filter(Boolean),
+        includes: includesText.split("\n").filter((line) => line.length > 0),
         image_url: imageUrl || null,
       });
       toast({ title: "Saved", description: `Package "${name}" saved.` });

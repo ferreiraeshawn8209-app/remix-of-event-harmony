@@ -175,7 +175,7 @@ export function mapStorageError(error: unknown): TrackUploadError {
   if (["nosuchbucket", "bucket_not_found", "404"].includes(code) || (messageLower.includes("bucket") && messageLower.includes("not found"))) {
     return new TrackUploadError(
       "missing_bucket",
-      "Track storage bucket is missing. Ask an admin to create the 'tracks' bucket (legacy 'track' is also supported).",
+      "No compatible music storage bucket is available right now.",
       adminDetails,
       error,
     );

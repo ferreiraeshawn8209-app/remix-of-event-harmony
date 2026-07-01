@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, Loader2, Play, Pause, SkipBack, SkipForward, Shuffle, Volume2 } from "lucide-react";
 import { useActiveTracks, Track } from "@/hooks/useTracks";
+import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
 function randomIndex(len: number, exclude?: number): number {
   if (len <= 1) return 0;
@@ -17,16 +18,17 @@ interface MusicPlayerProps {
    * Typically set to the authenticated user's ID so it fires once on login.
    */
   autoplayTrigger?: string;
+  mixcloudUrl?: string | null;
 }
 
-export function MusicPlayer({ autoplayTrigger }: MusicPlayerProps) {
+export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) {
   const { tracks, isLoading } = useActiveTracks();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [index, setIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const mixcloudFallbackUrl = "https://www.mixcloud.com/Beatkulture/uploads/";
+  const mixcloudFallbackUrl = resolveMixcloudProfileUrl(mixcloudUrl);
 
   // Pick a random track once tracks are loaded
   useEffect(() => {

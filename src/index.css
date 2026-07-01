@@ -145,6 +145,10 @@
     animation: gradient-shift 4s ease infinite;
   }
 
+  .animate-feature-scroll {
+    animation: feature-scroll 36s linear infinite;
+  }
+
   @keyframes float {
     0%, 100% {
       transform: translateY(0);
@@ -174,6 +178,15 @@
     }
     100% {
       background-position: 0% 50%;
+    }
+  }
+
+  @keyframes feature-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
     }
   }
 }

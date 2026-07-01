@@ -143,10 +143,10 @@ export function PackagesShowcase() {
                           )}
                         </div>
                         <ul className="space-y-1.5 text-sm flex-1">
-                          {p.includes.slice(0, 6).map((inc, i) => (
+                          {p.includes.map((inc, i) => (
                             <li key={i} className="flex gap-2 text-muted-foreground">
                               <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                              <span>{inc}</span>
+                              <span className="whitespace-pre-wrap">{inc}</span>
                             </li>
                           ))}
                         </ul>

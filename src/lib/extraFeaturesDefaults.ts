@@ -1,0 +1,48 @@
+import type { ExtraFeature } from "@/hooks/useExtraFeatures";
+
+export const DEFAULT_EXTRA_FEATURES: ExtraFeature[] = [
+  {
+    id: "default-kids-corner",
+    title: "Kids Corner",
+    description: "Safe fun zone with games and supervision so parents can enjoy the party.",
+    image_url: null,
+    price: 1500,
+    sort_order: 1,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  },
+  {
+    id: "default-human-jukebox",
+    title: "Human Jukebox",
+    description: "Guests pick tracks live and we keep the dance floor energy locked in.",
+    image_url: null,
+    price: 1200,
+    sort_order: 2,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  },
+  {
+    id: "default-qr-song-requests",
+    title: "QR Song Request",
+    description: "Custom QR request page for your event linked straight to the DJ queue.",
+    image_url: null,
+    price: 650,
+    sort_order: 3,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  },
+  {
+    id: "default-event-planning",
+    title: "Event Planning & Organising",
+    description: "Planning support from timeline and vendors to full event coordination.",
+    image_url: null,
+    price: 2500,
+    sort_order: 4,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  },
+];
