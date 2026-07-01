@@ -16,6 +16,7 @@ import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
 import { BackgroundAudio } from "@/components/BackgroundAudio";
+import { MusicPlayer } from "@/components/MusicPlayer";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BackgroundAudio />
+        <MusicPlayer />
+
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
