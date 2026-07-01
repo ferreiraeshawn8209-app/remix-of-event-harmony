@@ -11,30 +11,7 @@ import { useTestimonials } from "@/hooks/useTestimonials";
 import { submitClientReview } from "@/hooks/useClientReviews";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-
-const REVIEW_LINKS = [
-  {
-    label: "Bark",
-    url: "https://barkau.onelink.me/nmLC/t1hw8m1i",
-    color: "bg-orange-500/10 border-orange-500/30 hover:border-orange-500/60",
-    textColor: "text-orange-500",
-    emoji: "🐾",
-  },
-  {
-    label: "Facebook",
-    url: "https://www.facebook.com/share/177R4KRrtz/",
-    color: "bg-blue-500/10 border-blue-500/30 hover:border-blue-500/60",
-    textColor: "text-blue-500",
-    emoji: "👍",
-  },
-  {
-    label: "Google",
-    url: "https://g.page/r/CW_CXvpVqjtbEBE/review",
-    color: "bg-green-500/10 border-green-500/30 hover:border-green-500/60",
-    textColor: "text-green-500",
-    emoji: "⭐",
-  },
-];
+import { REVIEW_LINKS } from "@/lib/reviewPlatforms";
 
 function StarRating({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
   return (
@@ -158,6 +135,25 @@ export function TestimonialsSection({ quoteId }: { quoteId?: string }) {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed italic">"{t.message}"</p>
+                  {(t.source_platform || t.source_url) && (
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      {t.source_platform && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                          {t.source_platform}
+                        </Badge>
+                      )}
+                      {t.source_url && (
+                        <a
+                          href={t.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          View original <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

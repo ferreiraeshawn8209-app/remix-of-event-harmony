@@ -967,6 +967,9 @@ export type Database = {
           photo_url: string | null
           rating: number
           sort_order: number
+          source_platform: string | null
+          source_review_id: string | null
+          source_url: string | null
           updated_at: string
         }
         Insert: {
@@ -979,6 +982,9 @@ export type Database = {
           photo_url?: string | null
           rating?: number
           sort_order?: number
+          source_platform?: string | null
+          source_review_id?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -991,6 +997,9 @@ export type Database = {
           photo_url?: string | null
           rating?: number
           sort_order?: number
+          source_platform?: string | null
+          source_review_id?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Relationships: []
