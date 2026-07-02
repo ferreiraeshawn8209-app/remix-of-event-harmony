@@ -1409,10 +1409,10 @@ function Questionnaire({
   const update = (key: string, value: boolean | string) => setForm((previous) => ({ ...previous, [key]: value }));
 
   const submit = async () => {
-    if (!profile?.id || !hasCompleteEventProfile(profile)) {
+    if (!profile?.id) {
       toast({
-        title: "Event profile incomplete",
-        description: "Please complete your saved event details before requesting a quote.",
+        title: "Profile error",
+        description: "Unable to process quote request. Please try again.",
         variant: "destructive",
       });
       return;
