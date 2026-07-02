@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Mic, Send, Sparkles, Volume2, CalendarDays, MessagesSquare } from "lucide-react";
+import { Loader2, Mic, Send, Sparkles, Volume2, CalendarDays, MessagesSquare, Image } from "lucide-react";
 import { EventTimelineComponent } from "@/components/timeline/EventTimeline";
+import { EventVisualizationPanel } from "@/components/visualization/EventVisualizationPanel";
 import { useAiPlanner } from "@/hooks/useAiPlanner";
 import { useVoiceAi } from "@/hooks/useVoiceAi";
 import { useTimeline } from "@/hooks/useTimeline";
+import { useVisualization } from "@/hooks/useVisualization";
 import type { TimelineConfig } from "@/packages/shared-types/timeline";
 import type { AvatarEmotion } from "@/packages/shared-types/avatar";
 
@@ -16,7 +18,7 @@ interface AiEventPlannerWithAvatarProps {
   clientId: string;
 }
 
-type PlannerPanel = "chat" | "timeline";
+type PlannerPanel = "chat" | "timeline" | "visualization";
 
 const safeNumber = (value: unknown, fallback: number) => {
   const asNumber = Number(value);
@@ -71,6 +73,12 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
     error: timelineError,
     generateTimeline,
   } = useTimeline();
+  const {
+    storyboard,
+    isLoading: visualizationLoading,
+    error: visualizationError,
+    generateStoryboard,
+  } = useVisualization();
 
   const messages = state.messages;
   const plannerLoading = state.loading;
@@ -120,14 +128,14 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
       setAvatarEmotion("speaking");
     } else if (isListening) {
       setAvatarEmotion("listening");
-    } else if (isProcessing || plannerLoading || timelineLoading) {
+    } else if (isProcessing || plannerLoading || timelineLoading || visualizationLoading) {
       setAvatarEmotion("thinking");
     } else if (state.isComplete) {
       setAvatarEmotion("celebrating");
     } else {
       setAvatarEmotion("idle");
     }
-  }, [isListening, isSpeaking, isProcessing, plannerLoading, timelineLoading, state.isComplete]);
+  }, [isListening, isSpeaking, isProcessing, plannerLoading, timelineLoading, visualizationLoading, state.isComplete]);
 
   useEffect(() => {
     if (!state.conversationId) {
@@ -194,6 +202,12 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
   const handleGenerateTimeline = async () => {
     setActivePanel("timeline");
     await generateTimeline(timelineConfig, eventId);
+  };
+
+  const handleGenerateVisualization = async () => {
+    if (!timeline) return;
+    setActivePanel("visualization");
+    await generateStoryboard(timeline);
   };
 
   return (
@@ -287,6 +301,14 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                   <CalendarDays className="w-3 h-3 mr-1" />
                   Timeline
                 </Badge>
+                <Badge
+                  variant={activePanel === "visualization" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setActivePanel("visualization")}
+                >
+                  <Image className="w-3 h-3 mr-1" />
+                  Visuals
+                </Badge>
               </div>
 
               {activePanel === "chat" ? (
@@ -339,7 +361,7 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
 
                   <div ref={bottomRef} />
                 </CardContent>
-              ) : (
+              ) : activePanel === "timeline" ? (
                 <CardContent className="flex-1 overflow-y-auto space-y-4 pb-4">
                   {timelineError && (
                     <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive">
@@ -353,6 +375,26 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                     </Button>
                   )}
                   <EventTimelineComponent timeline={timeline} djSchedule={djSchedule} isLoading={timelineLoading} />
+                </CardContent>
+              ) : (
+                <CardContent className="flex-1 overflow-y-auto space-y-4 pb-4">
+                  {visualizationError && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive">
+                      {visualizationError}
+                    </div>
+                  )}
+                  {!storyboard && (
+                    <Button
+                      onClick={() => void handleGenerateVisualization()}
+                      disabled={visualizationLoading || !timeline}
+                      variant="hero"
+                      className="w-full"
+                    >
+                      {visualizationLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
+                      Generate Event Visuals
+                    </Button>
+                  )}
+                  <EventVisualizationPanel storyboard={storyboard} isLoading={visualizationLoading} />
                 </CardContent>
               )}
 
@@ -443,6 +485,19 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                       Generate Timeline from Conversation
                     </Button>
                   )}
+
+                  {timeline && !storyboard && (
+                    <Button
+                      onClick={() => void handleGenerateVisualization()}
+                      disabled={visualizationLoading}
+                      className="w-full"
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Image className="w-3 h-3 mr-2" />
+                      Generate Visual Scenes
+                    </Button>
+                  )}
                 </div>
               )}
             </Card>
@@ -456,6 +511,11 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
               {timelineLoading && (
                 <Badge variant="outline" className="bg-orange-500/20">
                   <Loader2 className="w-2 h-2 mr-1 animate-spin" /> Building timeline...
+                </Badge>
+              )}
+              {visualizationLoading && (
+                <Badge variant="outline" className="bg-pink-500/20">
+                  <Loader2 className="w-2 h-2 mr-1 animate-spin" /> Rendering scenes...
                 </Badge>
               )}
               {isSpeaking && (
@@ -473,6 +533,7 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                   Timeline Score: {optimization.score}
                 </Badge>
               )}
+              {storyboard && <Badge variant="outline" className="bg-fuchsia-500/20">Scenes: {storyboard.scenes.length}</Badge>}
               {state.isComplete && <Badge className="bg-orange-500/20">✅ Plan Complete</Badge>}
             </div>
           </motion.div>
