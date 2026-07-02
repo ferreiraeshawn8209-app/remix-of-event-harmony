@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -462,6 +462,54 @@ export default function ClientPortal() {
   const [submittingQuestionnaire, setSubmittingQuestionnaire] = useState(false);
   const paymentDetailsRef = useRef<HTMLDivElement | null>(null);
 
+  const submitQuickQuoteRequest = useCallback(async (prefill: QuestionnairePrefill) => {
+    if (!profile?.id || !user?.email) {
+      toast({
+        title: "Profile unavailable",
+        description: "Please wait a moment and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await createRequest({
+      client_id: profile.id,
+      client_name: profile?.full_name || user.email,
+      email: user.email,
+      contact_no: profile?.phone || null,
+      event_type: profile?.event_type || "General Event",
+      venue_name: profile?.venue_name || null,
+      venue_address: profile?.venue_address || null,
+      event_date: profile?.event_date || null,
+      start_time: profile?.start_time || null,
+      end_time: profile?.end_time || null,
+      guest_count: profile?.guest_count || null,
+      city: profile?.city || null,
+      is_outdoor: profile?.event_setting === "outdoor",
+      venue_provides_sound: false,
+      requires_microphones: false,
+      requires_lighting: false,
+      requires_laser_effects: false,
+      requires_smoke_machine: false,
+      requires_fog_machine: false,
+      requires_low_fog_machine: false,
+      requires_cold_spark_machines: false,
+      needs_sound: true,
+      needs_lighting: false,
+      needs_special_effects: false,
+      needs_mic: false,
+      package_id: prefill.package_id || null,
+      package_name: prefill.package_name || null,
+      payment_preference: "deposit",
+      notes: null,
+      terms_accepted: true,
+      terms_accepted_at: new Date().toISOString(),
+    } as any);
+
+    setQuestionnairePrefill(undefined);
+    setView("dashboard");
+  }, [createRequest, profile, user]);
+
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth?redirect=/client");
   }, [authLoading, user, navigate]);
@@ -489,8 +537,7 @@ export default function ClientPortal() {
     const requestedCustomQuote = params.get("custom") === "1";
     const selectedPackageId = params.get("package");
     if (requestedCustomQuote) {
-      setQuestionnairePrefill({ package_id: null, package_name: null });
-      setView("questionnaire");
+      void submitQuickQuoteRequest({ package_id: null, package_name: null });
       navigate("/client", { replace: true });
       return;
     }
@@ -499,13 +546,12 @@ export default function ClientPortal() {
     const selectedPackage = packages.find((pkg) => pkg.id === selectedPackageId && pkg.is_active);
     if (!selectedPackage) return;
 
-    setQuestionnairePrefill({
+    void submitQuickQuoteRequest({
       package_id: selectedPackage.id,
       package_name: selectedPackage.name,
     });
-    setView("questionnaire");
     navigate("/client", { replace: true });
-  }, [user, profile, loadingQuotes, view, location.search, packages, navigate]);
+  }, [user, profile, loadingQuotes, view, location.search, packages, navigate, submitQuickQuoteRequest]);
 
   useEffect(() => {
     if (!user || !profile) return;
@@ -683,8 +729,7 @@ export default function ClientPortal() {
                 variant="default"
                 className="relative bg-gradient-to-r from-purple-500 via-fuchsia-500 to-orange-500 text-white border border-white/40 hover:from-purple-400 hover:via-fuchsia-400 hover:to-orange-400 shadow-[0_12px_28px_-10px_rgba(255,107,0,0.8)]"
                 onClick={() => {
-                  setQuestionnairePrefill({ package_id: null, package_name: null });
-                  setView("questionnaire");
+                  void submitQuickQuoteRequest({ package_id: null, package_name: null });
                 }}
               >
                 <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
@@ -737,8 +782,7 @@ export default function ClientPortal() {
                               size="sm"
                               className="w-full"
                               onClick={() => {
-                                setQuestionnairePrefill({ package_id: pkg.id, package_name: pkg.name });
-                                setView("questionnaire");
+                                void submitQuickQuoteRequest({ package_id: pkg.id, package_name: pkg.name });
                               }}
                             >
                               Select Package
