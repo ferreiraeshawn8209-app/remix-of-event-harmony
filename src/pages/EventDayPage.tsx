@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { EventDayCommandCenter } from '@/components/event-day/EventDayCommandCenter';
 import { useState, useEffect } from 'react';
+import { CinematicAmbient } from '@/components/CinematicAmbient';
 
 export default function EventDayPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -59,7 +60,8 @@ export default function EventDayPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="cinematic-shell min-h-screen flex items-center justify-center">
+        <CinematicAmbient intensity="soft" />
         <div className="text-center">
           <p className="text-xl text-muted-foreground">Please sign in to access event day command center.</p>
         </div>
@@ -69,7 +71,8 @@ export default function EventDayPage() {
 
   if (!eventId) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="cinematic-shell min-h-screen flex items-center justify-center">
+        <CinematicAmbient intensity="soft" />
         <div className="text-center">
           <p className="text-xl text-muted-foreground">Event ID not found.</p>
         </div>

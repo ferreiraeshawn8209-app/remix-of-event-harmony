@@ -4,12 +4,13 @@ import type {
   TimelineCue,
   DjControl,
   DjCommand,
-  EventDayStatus as EventDayStatusType,
   AudienceReaction,
   CommandCenterState,
   StaffMessage,
   LiveNotification,
   EventDayIssue,
+  AudienceSongRequest,
+  AudiencePoll,
 } from '@/packages/shared-types/event-day-command';
 
 export class CommandCenterEngine {
@@ -40,6 +41,8 @@ export class CommandCenterEngine {
         commandHistory: [],
       },
       audienceReactions: [],
+      audienceSongRequests: [],
+      audiencePolls: [],
       staffMessages: [],
       liveNotifications: [],
     };
@@ -236,6 +239,98 @@ export class CommandCenterEngine {
     }
   }
 
+  // Audience Requests & Polls
+  addAudienceSongRequest(songTitle: string, artist: string, guestName?: string): void {
+    const request: AudienceSongRequest = {
+      id: `req-${Date.now()}`,
+      eventId: this.state.eventId,
+      songTitle,
+      artist,
+      guestName,
+      requestedAt: new Date().toISOString(),
+      votes: 1,
+      status: 'queued',
+    };
+    this.state.audienceSongRequests.push(request);
+    this.addNotification({
+      type: 'audience_reaction',
+      title: 'New Song Request',
+      message: `${songTitle} - ${artist}`,
+      timestamp: new Date().toISOString(),
+      actionRequired: false,
+    });
+  }
+
+  voteAudienceSongRequest(requestId: string): void {
+    const request = this.state.audienceSongRequests.find((item) => item.id === requestId && item.status === 'queued');
+    if (!request) {
+      return;
+    }
+    request.votes += 1;
+  }
+
+  markSongRequestPlayed(requestId: string): void {
+    const request = this.state.audienceSongRequests.find((item) => item.id === requestId);
+    if (!request) {
+      return;
+    }
+    request.status = 'played';
+  }
+
+  createAudiencePoll(prompt: string, optionLabels: string[], closesAt?: string): void {
+    const normalizedOptions = optionLabels
+      .map((label) => label.trim())
+      .filter((label) => label.length > 0)
+      .slice(0, 6);
+
+    if (normalizedOptions.length < 2) {
+      return;
+    }
+
+    const poll: AudiencePoll = {
+      id: `poll-${Date.now()}`,
+      eventId: this.state.eventId,
+      prompt,
+      createdAt: new Date().toISOString(),
+      closesAt,
+      status: 'active',
+      options: normalizedOptions.map((label, index) => ({
+        id: `option-${index + 1}`,
+        label,
+        votes: 0,
+      })),
+    };
+
+    this.state.audiencePolls.push(poll);
+    this.addNotification({
+      type: 'system',
+      title: 'Audience Poll Started',
+      message: prompt,
+      timestamp: new Date().toISOString(),
+      actionRequired: false,
+    });
+  }
+
+  castAudiencePollVote(pollId: string, optionId: string): void {
+    const poll = this.state.audiencePolls.find((item) => item.id === pollId && item.status === 'active');
+    if (!poll) {
+      return;
+    }
+    const option = poll.options.find((item) => item.id === optionId);
+    if (!option) {
+      return;
+    }
+    option.votes += 1;
+  }
+
+  closeAudiencePoll(pollId: string): void {
+    const poll = this.state.audiencePolls.find((item) => item.id === pollId);
+    if (!poll) {
+      return;
+    }
+    poll.status = 'closed';
+  }
+
   // Issue Tracking
   reportIssue(severity: any, title: string, description: string): void {
     const issue: EventDayIssue = {
@@ -320,5 +415,16 @@ export class CommandCenterEngine {
 
   getRecentMessages(count: number = 10): StaffMessage[] {
     return [...this.state.staffMessages].reverse().slice(0, count);
+  }
+
+  getTopAudienceSongRequests(count: number = 5): AudienceSongRequest[] {
+    return [...this.state.audienceSongRequests]
+      .filter((request) => request.status === 'queued')
+      .sort((a, b) => b.votes - a.votes)
+      .slice(0, count);
+  }
+
+  getActiveAudiencePoll(): AudiencePoll | undefined {
+    return [...this.state.audiencePolls].reverse().find((poll) => poll.status === 'active');
   }
 }
