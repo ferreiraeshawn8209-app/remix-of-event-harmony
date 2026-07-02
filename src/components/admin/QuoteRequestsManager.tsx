@@ -38,8 +38,8 @@ export function QuoteRequestsManager() {
         sessionStorage.setItem("prefill_quote_request", JSON.stringify(r));
       } catch { /* ignore */ }
 
-      // Open admin quote builder and include request id for prefill
-      navigate(`/admin?newQuote=1&newQuoteRequest=${r.id}`);
+      // Open the admin quote builder with the request payload available for prefill.
+      navigate(`/admin?tab=new-quote&fromRequest=${r.id}`);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
