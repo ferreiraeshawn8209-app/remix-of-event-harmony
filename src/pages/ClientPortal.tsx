@@ -29,8 +29,9 @@ import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
+import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { PageBackground } from "@/components/PageBackground";
-import { MixcloudRotator } from "@/components/MixcloudRotator";
+import { LoopingGifImage } from "@/components/ui/LoopingGifImage";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -183,16 +184,18 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          {/* Mixcloud Rotator — random genre each load + prev/next */}
-          <MixcloudRotator />
-
-          {/* Competitions */}
-          <CompetitionsBanner />
-
-          {/* YouTube Showcase */}
-          <YoutubeShowcase />
-
-
+          {/* AI + Event Planning Tools */}
+          <PlannerHub
+            scopeKey={profile?.id || user.id}
+            quote={quotes[0] ? {
+              id: quotes[0].id,
+              event_type: quotes[0].event_type,
+              event_date: quotes[0].event_date,
+              venue: quotes[0].venue,
+              start_time: quotes[0].start_time,
+              end_time: quotes[0].end_time,
+            } : undefined}
+          />
 
           {/* Specials */}
           {activeSpecials.length > 0 && (
@@ -204,7 +207,12 @@ export default function ClientPortal() {
                 {activeSpecials.map((s) => (
                   <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/20">
                     <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                      <img src={s.image_url} alt={s.title || "Special"} className="w-full h-full object-contain" />
+                      <LoopingGifImage
+                        src={s.image_url}
+                        alt={s.title || "Special"}
+                        className="w-full h-full object-contain"
+                        loading="eager"
+                      />
                     </div>
                     {s.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
@@ -217,7 +225,47 @@ export default function ClientPortal() {
             </section>
           )}
 
-          {/* Packages — Corporate, Wedding, Private Party */}
+          {/* CTA: Request Custom Quote */}
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
+          >
+            <Card
+              variant="glow"
+              className="relative overflow-hidden border-primary/50 bg-gradient-to-br from-primary/10 via-background to-accent/10 shadow-[0_0_45px_rgba(255,215,0,0.12)]"
+            >
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-primary/20 blur-3xl animate-pulse" />
+                <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-accent/20 blur-3xl animate-pulse [animation-delay:1.1s]" />
+              </div>
+              <CardContent className="relative py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <Badge className="mb-3 bg-primary/15 text-primary border-primary/30 shadow-sm shadow-primary/20">
+                    Most flexible · Start here
+                  </Badge>
+                  <p className="font-display text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-lg shadow-primary/20 ring-1 ring-primary/25">
+                      <Sparkles className="w-5 h-5" />
+                    </span>
+                    <span className="bg-gradient-to-r from-primary via-foreground to-accent bg-clip-text text-transparent">
+                      Need a custom quote?
+                    </span>
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Tell us about your event — venue, date, times, special effects — and we'll prepare a custom quote built around your plan.
+                  </p>
+                </div>
+                <Button variant="hero" size="lg" onClick={() => setView("questionnaire")} className="shadow-lg shadow-primary/25">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Request Custom Quotation
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Packages — Wedding, Corporate, Private Party */}
           <section className="space-y-4">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
@@ -225,7 +273,7 @@ export default function ClientPortal() {
             {Object.keys(packagesByCategory).length === 0 ? (
               <p className="text-xs text-muted-foreground">No packages available right now.</p>
             ) : (
-              (["corporate", "wedding", "party", "other"] as const)
+              (["wedding", "corporate", "party", "other"] as const)
                 .filter(cat => packagesByCategory[cat])
                 .map(cat => (
                   <div key={cat} className="space-y-2">
@@ -237,7 +285,12 @@ export default function ClientPortal() {
                         <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
                           {pkg.image_url && (
                             <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
+                              <LoopingGifImage
+                                src={pkg.image_url}
+                                alt={pkg.name}
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                              />
                             </div>
                           )}
                           <CardHeader className="pb-2">
@@ -273,21 +326,41 @@ export default function ClientPortal() {
             )}
           </section>
 
-          {/* CTA: Request Custom Quote */}
-          <Card variant="glass" className="border-primary/40 bg-primary/5">
-            <CardContent className="py-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold">Prefer something tailored?</p>
-                <p className="text-xs text-muted-foreground">
-                  Tell us about your event — venue, date, times, special effects — and we'll prepare a custom quote.
-                </p>
-              </div>
-              <Button variant="hero" onClick={() => setView("questionnaire")}>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Request Custom Quotation
-              </Button>
+          {/* Mixcloud mini player */}
+          <Card variant="glass" className="overflow-hidden border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Music className="w-4 h-4 text-primary" /> BeatKulture Mixcloud Player
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Press play to preview our latest mixes while you browse your packages and quote options.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <iframe
+                width="100%"
+                height="60"
+                src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&light=1&autoplay=1&feed=%2FBeatkulture%2F"
+                frameBorder="0"
+                allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
+                title="BeatKulture Mixcloud"
+              />
             </CardContent>
           </Card>
+
+          {/* YouTube Showcase */}
+          <YoutubeShowcase />
+
+          {/* Competitions */}
+          <CompetitionsBanner />
+
+          {/* Testimonials */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary" /> Testimonials
+            </h2>
+            <TestimonialsCarousel />
+          </section>
 
           {/* My Requests / Quotes */}
           <section className="space-y-3">
@@ -347,18 +420,6 @@ export default function ClientPortal() {
             )}
           </section>
 
-          {/* Planning Tools */}
-          <PlannerHub
-            scopeKey={profile?.id || user.id}
-            quote={quotes[0] ? {
-              id: quotes[0].id,
-              event_type: quotes[0].event_type,
-              event_date: quotes[0].event_date,
-              venue: quotes[0].venue,
-              start_time: quotes[0].start_time,
-              end_time: quotes[0].end_time,
-            } : undefined}
-          />
         </main>
       </div>
     );

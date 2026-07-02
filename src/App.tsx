@@ -15,7 +15,7 @@ import EventPlanner from "./pages/EventPlanner";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
-import { BackgroundAudio } from "@/components/BackgroundAudio";
+import BackgroundAudio from "./components/BackgroundAudio";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";

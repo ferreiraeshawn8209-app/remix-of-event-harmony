@@ -35,20 +35,40 @@ export function PackagesShowcase() {
       </div>
 
       {/* Customized Quote — featured */}
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-8">
-        <Card variant="glow" className="border-primary/50 overflow-hidden">
-          <CardContent className="p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        className="mb-8"
+      >
+        <Card variant="glow" className="relative overflow-hidden border-primary/50 bg-gradient-to-br from-primary/10 via-background to-accent/10 shadow-[0_0_45px_rgba(255,215,0,0.14)]">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/20 blur-3xl animate-pulse" />
+            <div className="absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-accent/20 blur-3xl animate-pulse [animation-delay:1.2s]" />
+          </div>
+          <CardContent className="relative p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="flex-1">
-              <Badge className="mb-2">Most flexible · Start here</Badge>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2">
-                <Calculator className="w-6 h-6 text-primary" /> Build a Custom Quote
+              <Badge className="mb-3 bg-primary/15 text-primary border-primary/30 shadow-sm shadow-primary/20">
+                Most flexible · Start here
+              </Badge>
+              <h3 className="font-display text-2xl sm:text-4xl font-bold mb-3 flex items-center gap-3">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-lg shadow-primary/20 ring-1 ring-primary/25">
+                  <Calculator className="w-6 h-6" />
+                </span>
+                <span className="bg-gradient-to-r from-primary via-foreground to-accent bg-clip-text text-transparent">
+                  Build a Custom Quote
+                </span>
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground max-w-2xl">
                 Tell us your venue, hours, guest count and the equipment you want — our calculator builds a transparent, itemised quote in seconds. Add a kids corner, Human Jukebox, travel, or outsourced catering as extras. Admin discounts can apply.
               </p>
             </div>
-            <Button variant="hero" size="lg" asChild>
-              <Link to="/auth?tab=signup"><Sparkles className="w-4 h-4" /> Start my quote</Link>
+            <Button variant="hero" size="lg" asChild className="relative overflow-hidden shadow-lg shadow-primary/25">
+              <Link to="/auth?tab=signup" className="gap-2">
+                <Sparkles className="w-4 h-4" />
+                Start my quote
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -57,10 +77,10 @@ export function PackagesShowcase() {
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading packages…</p>}
 
       {/* Grouped by category in the requested order */}
-      {(["wedding", "corporate", "party"] as const).map((cat) => {
+      {(["wedding", "party", "corporate"] as const).map((cat) => {
         const list = active.filter((p) => p.category === cat);
         if (!list.length) return null;
-        const titleMap: Record<string, string> = { wedding: "Wedding Packages", corporate: "Corporate Packages", party: "Party Packages" };
+        const titleMap: Record<string, string> = { wedding: "Wedding Packages", party: "Party Packages", corporate: "Corporate Packages" };
         return (
           <div key={cat} className="mb-12">
             <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{titleMap[cat]}</h3>
