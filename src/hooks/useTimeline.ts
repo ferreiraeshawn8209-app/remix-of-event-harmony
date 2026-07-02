@@ -1,6 +1,6 @@
 // useTimeline hook - React integration for event timeline
 import { useEffect, useState } from "react";
-import { timelineEngine } from "@/services/timeline-engine/timeline-engine";
+import { timelineEngine } from "../../services/timeline-engine/timeline-engine";
 import type { EventTimeline, TimelineConfig, TimelineOptimization, DjScheduleEntry } from "@/packages/shared-types/timeline";
 
 /**

@@ -2,7 +2,7 @@
 // Integrates STT/TTS with conversation flow
 
 import { useCallback, useRef, useEffect, useState } from 'react';
-import type { VoiceMode, VoiceSessionStatus } from '../shared-types/voice';
+import type { VoiceMode, VoiceSessionStatus } from '../../packages/shared-types/voice';
 
 export interface UseVoiceAiState {
   isInitialized: boolean;
@@ -44,7 +44,7 @@ export function useVoiceAi(conversationId: string, options: UseVoiceAiOptions = 
   const initialize = useCallback(async () => {
     try {
       // Dynamically import the voice service to avoid issues in non-browser environments
-      const { createVoiceService } = await import('../services/voice-service/voice-service');
+      const { createVoiceService } = await import('../../services/voice-service/voice-service');
 
       const voiceService = createVoiceService({
         sttApiUrl: options.sttApiUrl ?? '/api/v1/voice/stt',

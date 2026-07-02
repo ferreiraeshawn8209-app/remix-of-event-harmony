@@ -2,7 +2,7 @@
 // Integrates with conversation state and Beatkulture API
 
 import { useCallback, useReducer, useRef, useEffect } from 'react';
-import type { BkAiMessage, PlannerContext, AiPlannerResponse } from '../shared-types/beatkulture';
+import type { BkAiMessage, AiPlannerResponse } from '../../packages/shared-types/beatkulture';
 
 export interface PlannerState {
   conversationId: string | null;

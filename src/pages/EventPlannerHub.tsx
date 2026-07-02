@@ -17,9 +17,9 @@ export function EventPlannerHub() {
   // Require authentication
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth?redirect=/event-planner");
+      navigate(`/auth?redirect=/event-planner/${quoteId ?? ""}`);
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user, navigate, quoteId]);
 
   if (authLoading) {
     return (

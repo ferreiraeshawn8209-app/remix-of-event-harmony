@@ -1,6 +1,6 @@
 // useAvatar hook - React integration for Beatkulture avatar system
 import { useEffect, useRef, useState } from "react";
-import { AvatarRenderer } from "@/services/avatar-renderer/avatar-renderer";
+import { AvatarRenderer } from "../../services/avatar-renderer/avatar-renderer";
 import type {
   AvatarConfig,
   AvatarAnimation,

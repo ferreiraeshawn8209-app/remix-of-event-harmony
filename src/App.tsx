@@ -11,7 +11,7 @@ import Admin from "./pages/Admin";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuoteEdit from "./pages/QuoteEdit";
 import ProfileEdit from "./pages/ProfileEdit";
-import EventPlanner from "./pages/EventPlanner";
+import EventPlannerHub from "./pages/EventPlannerHub";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
@@ -51,7 +51,7 @@ const App = () => (
             <Route path="/quote/:id" element={<QuoteDetail />} />
             <Route path="/quote/:id/edit" element={<QuoteEdit />} />
             <Route path="/profile" element={<ProfileEdit />} />
-            <Route path="/event-planner/:quoteId" element={<EventPlanner />} />
+            <Route path="/event-planner/:quoteId" element={<EventPlannerHub />} />
             <Route path="/request/:eventId" element={<SongRequest />} />
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             <Route path="/client" element={<ClientPortal />} />

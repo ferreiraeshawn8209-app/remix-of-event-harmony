@@ -8,8 +8,8 @@ import type {
   AudioConfig,
   VoiceSessionStatus,
   VoiceMode,
-} from '../../shared-types/voice';
-import { VoiceEventEmitter } from '../../shared-types/voice';
+} from '../../packages/shared-types/voice';
+import { VoiceEventEmitter } from '../../packages/shared-types/voice';
 
 export class VoiceService {
   private config: VoiceServiceConfig;
@@ -252,7 +252,7 @@ export class VoiceService {
   /**
    * Subscribe to voice events
    */
-  on<K extends keyof import('../../shared-types/voice').VoiceEventMap>(
+  on<K extends keyof import('../../packages/shared-types/voice').VoiceEventMap>(
     event: K,
     callback: (data: any) => void
   ): () => void {
