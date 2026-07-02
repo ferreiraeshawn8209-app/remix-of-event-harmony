@@ -60,6 +60,7 @@ import { YoutubeManager } from "@/components/admin/YoutubeManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { ReviewsManager } from "@/components/admin/ReviewsManager";
+import { MusicLibraryManager } from "@/components/admin/MusicLibraryManager";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import {
@@ -605,7 +606,12 @@ export default function Admin() {
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="music">Music Library</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="music">
+              <MusicLibraryManager />
+            </TabsContent>
 
             <TabsContent value="alarms">
               <AlarmsManager />
