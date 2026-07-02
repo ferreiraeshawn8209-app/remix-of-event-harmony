@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,7 +31,6 @@ import {
   ArrowLeft,
   Lightbulb,
   Mic,
-  Speaker,
   Wand2,
   Users,
   LogOut,
@@ -462,53 +460,30 @@ export default function ClientPortal() {
   const [submittingQuestionnaire, setSubmittingQuestionnaire] = useState(false);
   const paymentDetailsRef = useRef<HTMLDivElement | null>(null);
 
-  const submitQuickQuoteRequest = useCallback(async (prefill: QuestionnairePrefill) => {
-    if (!profile?.id || !user?.email) {
+  const openQuoteQuestionnaire = useCallback((prefill: QuestionnairePrefill) => {
+    if (!profile?.id) {
       toast({
         title: "Profile unavailable",
-        description: "Please wait a moment and try again.",
+        description: "Please complete sign up first.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    await createRequest({
-      client_id: profile.id,
-      client_name: profile?.full_name || user.email,
-      email: user.email,
-      contact_no: profile?.phone || null,
-      event_type: profile?.event_type || "General Event",
-      venue_name: profile?.venue_name || null,
-      venue_address: profile?.venue_address || null,
-      event_date: profile?.event_date || null,
-      start_time: profile?.start_time || null,
-      end_time: profile?.end_time || null,
-      guest_count: profile?.guest_count || null,
-      city: profile?.city || null,
-      is_outdoor: profile?.event_setting === "outdoor",
-      venue_provides_sound: false,
-      requires_microphones: false,
-      requires_lighting: false,
-      requires_laser_effects: false,
-      requires_smoke_machine: false,
-      requires_fog_machine: false,
-      requires_low_fog_machine: false,
-      requires_cold_spark_machines: false,
-      needs_sound: true,
-      needs_lighting: false,
-      needs_special_effects: false,
-      needs_mic: false,
-      package_id: prefill.package_id || null,
-      package_name: prefill.package_name || null,
-      payment_preference: "deposit",
-      notes: null,
-      terms_accepted: true,
-      terms_accepted_at: new Date().toISOString(),
-    } as any);
+    if (!hasCompleteEventProfile(profile)) {
+      toast({
+        title: "Complete event profile first",
+        description: "All core event questions must be completed in sign up/profile before requesting a quote.",
+        variant: "destructive",
+      });
+      navigate("/profile");
+      return false;
+    }
 
-    setQuestionnairePrefill(undefined);
-    setView("dashboard");
-  }, [createRequest, profile, user]);
+    setQuestionnairePrefill(prefill);
+    setView("questionnaire");
+    return true;
+  }, [profile, navigate]);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth?redirect=/client");
@@ -537,8 +512,8 @@ export default function ClientPortal() {
     const requestedCustomQuote = params.get("custom") === "1";
     const selectedPackageId = params.get("package");
     if (requestedCustomQuote) {
-      void submitQuickQuoteRequest({ package_id: null, package_name: null });
-      navigate("/client", { replace: true });
+      const opened = openQuoteQuestionnaire({ package_id: null, package_name: null });
+      if (opened) navigate("/client", { replace: true });
       return;
     }
     if (!selectedPackageId) return;
@@ -546,12 +521,12 @@ export default function ClientPortal() {
     const selectedPackage = packages.find((pkg) => pkg.id === selectedPackageId && pkg.is_active);
     if (!selectedPackage) return;
 
-    void submitQuickQuoteRequest({
+    const opened = openQuoteQuestionnaire({
       package_id: selectedPackage.id,
       package_name: selectedPackage.name,
     });
-    navigate("/client", { replace: true });
-  }, [user, profile, loadingQuotes, view, location.search, packages, navigate, submitQuickQuoteRequest]);
+    if (opened) navigate("/client", { replace: true });
+  }, [user, profile, loadingQuotes, view, location.search, packages, navigate, openQuoteQuestionnaire]);
 
   useEffect(() => {
     if (!user || !profile) return;
@@ -729,7 +704,7 @@ export default function ClientPortal() {
                 variant="default"
                 className="relative bg-gradient-to-r from-purple-500 via-fuchsia-500 to-orange-500 text-white border border-white/40 hover:from-purple-400 hover:via-fuchsia-400 hover:to-orange-400 shadow-[0_12px_28px_-10px_rgba(255,107,0,0.8)]"
                 onClick={() => {
-                  void submitQuickQuoteRequest({ package_id: null, package_name: null });
+                  openQuoteQuestionnaire({ package_id: null, package_name: null });
                 }}
               >
                 <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
@@ -782,7 +757,7 @@ export default function ClientPortal() {
                               size="sm"
                               className="w-full"
                               onClick={() => {
-                                void submitQuickQuoteRequest({ package_id: pkg.id, package_name: pkg.name });
+                                openQuoteQuestionnaire({ package_id: pkg.id, package_name: pkg.name });
                               }}
                             >
                               Select Package
@@ -1437,16 +1412,15 @@ function Questionnaire({
 }) {
   const termsUrl = supabase.storage.from("documents").getPublicUrl("terms-and-conditions.pdf").data.publicUrl;
   const [form, setForm] = useState({
-    venue_provides_sound: false,
+    sound_provider: "beatkulture" as "beatkulture" | "venue",
+    event_setting: (profile?.event_setting === "outdoor" ? "outdoor" : "indoor") as "indoor" | "outdoor",
     requires_microphones: false,
     requires_lighting: false,
-    requires_laser_effects: false,
-    requires_smoke_machine: false,
-    requires_fog_machine: false,
-    requires_low_fog_machine: false,
-    requires_cold_spark_machines: false,
-    payment_preference: "deposit" as "deposit" | "monthly_installments",
-    notes: "",
+    requires_special_effects: false,
+    feature_kids_corner: false,
+    feature_human_jukebox: false,
+    feature_qr_song_requests: false,
+    feature_event_planning: false,
     terms_accepted: false,
   });
 
@@ -1484,34 +1458,43 @@ function Questionnaire({
       end_time: profile.end_time,
       guest_count: profile.guest_count || null,
       city: profile.city || null,
-      is_outdoor: profile.event_setting === "outdoor",
-      venue_provides_sound: form.venue_provides_sound,
+      is_outdoor: form.event_setting === "outdoor",
+      venue_provides_sound: form.sound_provider === "venue",
       requires_microphones: form.requires_microphones,
       requires_lighting: form.requires_lighting,
-      requires_laser_effects: form.requires_laser_effects,
-      requires_smoke_machine: form.requires_smoke_machine,
-      requires_fog_machine: form.requires_fog_machine,
-      requires_low_fog_machine: form.requires_low_fog_machine,
-      requires_cold_spark_machines: form.requires_cold_spark_machines,
-      needs_sound: !form.venue_provides_sound,
-      needs_lighting: form.requires_lighting || form.requires_laser_effects,
-      needs_special_effects:
-        form.requires_smoke_machine ||
-        form.requires_fog_machine ||
-        form.requires_low_fog_machine ||
-        form.requires_cold_spark_machines ||
-        form.requires_laser_effects,
+      requires_laser_effects: form.requires_special_effects,
+      requires_smoke_machine: false,
+      requires_fog_machine: false,
+      requires_low_fog_machine: false,
+      requires_cold_spark_machines: false,
+      needs_sound: form.sound_provider === "beatkulture",
+      needs_lighting: form.requires_lighting,
+      needs_special_effects: form.requires_special_effects,
       needs_mic: form.requires_microphones,
       package_id: selectedPackage?.id || null,
       package_name: selectedPackage?.name || null,
-      payment_preference: form.payment_preference,
-      notes: form.notes.trim() || null,
+      payment_preference: "deposit",
+      notes: [
+        form.feature_kids_corner ? "Extra feature: Kids Corner" : null,
+        form.feature_human_jukebox ? "Extra feature: Human Jukebox" : null,
+        form.feature_qr_song_requests ? "Extra feature: QR Song Requests" : null,
+        form.feature_event_planning ? "Extra feature: Event Planning & Organising" : null,
+      ].filter(Boolean).join("\n") || null,
       terms_accepted: true,
       terms_accepted_at: new Date().toISOString(),
     });
   };
 
-  const surchargePreview = buildSurchargeItems(form);
+  const surchargePreview = buildSurchargeItems({
+    venue_provides_sound: form.sound_provider === "venue",
+    requires_microphones: form.requires_microphones,
+    requires_lighting: form.requires_lighting,
+    requires_laser_effects: form.requires_special_effects,
+    requires_smoke_machine: false,
+    requires_fog_machine: false,
+    requires_low_fog_machine: false,
+    requires_cold_spark_machines: false,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -1550,13 +1533,38 @@ function Questionnaire({
             <Separator />
 
             <div className="space-y-3">
-              <LabelledCheckbox
-                checked={form.venue_provides_sound}
-                onCheckedChange={(checked) => update("venue_provides_sound", checked)}
-                icon={<Speaker className="w-3 h-3" />}
-                label="Does the venue provide sound?"
-                description="Leave this unchecked if you need BeatKulture sound equipment added to the quote."
-              />
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Sound setup</p>
+                <Select
+                  value={form.sound_provider}
+                  onValueChange={(value) => update("sound_provider", value as "beatkulture" | "venue")}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beatkulture">Include sound from BeatKulture</SelectItem>
+                    <SelectItem value="venue">Venue provides sound</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Indoor or outdoor event</p>
+                <Select
+                  value={form.event_setting}
+                  onValueChange={(value) => update("event_setting", value as "indoor" | "outdoor")}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="indoor">Indoor</SelectItem>
+                    <SelectItem value="outdoor">Outdoor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <LabelledCheckbox
                 checked={form.requires_microphones}
                 onCheckedChange={(checked) => update("requires_microphones", checked)}
@@ -1570,70 +1578,38 @@ function Questionnaire({
                 label="Do you require lighting?"
               />
               <LabelledCheckbox
-                checked={form.requires_laser_effects}
-                onCheckedChange={(checked) => update("requires_laser_effects", checked)}
+                checked={form.requires_special_effects}
+                onCheckedChange={(checked) => update("requires_special_effects", checked)}
                 icon={<Wand2 className="w-3 h-3" />}
-                label="Do you require laser effects?"
-              />
-              <LabelledCheckbox
-                checked={form.requires_smoke_machine}
-                onCheckedChange={(checked) => update("requires_smoke_machine", checked)}
-                icon={<Sparkles className="w-3 h-3" />}
-                label="Smoke machine"
-              />
-              <LabelledCheckbox
-                checked={form.requires_fog_machine}
-                onCheckedChange={(checked) => update("requires_fog_machine", checked)}
-                icon={<Sparkles className="w-3 h-3" />}
-                label="Fog machine"
-              />
-              <LabelledCheckbox
-                checked={form.requires_low_fog_machine}
-                onCheckedChange={(checked) => update("requires_low_fog_machine", checked)}
-                icon={<Sparkles className="w-3 h-3" />}
-                label="Low fog machine"
-              />
-              <LabelledCheckbox
-                checked={form.requires_cold_spark_machines}
-                onCheckedChange={(checked) => update("requires_cold_spark_machines", checked)}
-                icon={<Sparkles className="w-3 h-3" />}
-                label="Cold spark machines"
+                label="Do you require special effects?"
               />
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">Payment preference</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => update("payment_preference", "deposit")}
-                  className={`rounded-lg border px-3 py-3 text-left text-xs transition ${form.payment_preference === "deposit" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
-                >
-                  <p className="font-semibold text-sm">Deposit + balance</p>
-                  <p className="text-muted-foreground mt-1">
-                    Pay a 30% deposit to secure booking. Remaining balance due on or before the gig.
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => update("payment_preference", "monthly_installments")}
-                  className={`rounded-lg border px-3 py-3 text-left text-xs transition ${form.payment_preference === "monthly_installments" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
-                >
-                  <p className="font-semibold text-sm">Structured monthly plan</p>
-                  <p className="text-muted-foreground mt-1">
-                    Waives the deposit model. Booking is confirmed from the first installment, with final payment on event day.
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">Anything else we should know?</p>
-              <Textarea
-                rows={4}
-                value={form.notes}
-                onChange={(event) => update("notes", event.target.value)}
-                placeholder="Special timing, venue restrictions, lighting colours, ceremony notes, or anything else for the admin quote."
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">Extra features</p>
+              <LabelledCheckbox
+                checked={form.feature_kids_corner}
+                onCheckedChange={(checked) => update("feature_kids_corner", checked)}
+                icon={<Sparkles className="w-3 h-3" />}
+                label="Kids Corner"
+              />
+              <LabelledCheckbox
+                checked={form.feature_human_jukebox}
+                onCheckedChange={(checked) => update("feature_human_jukebox", checked)}
+                icon={<Music className="w-3 h-3" />}
+                label="Human Jukebox"
+              />
+              <LabelledCheckbox
+                checked={form.feature_qr_song_requests}
+                onCheckedChange={(checked) => update("feature_qr_song_requests", checked)}
+                icon={<FileText className="w-3 h-3" />}
+                label="QR Song Requests"
+              />
+              <LabelledCheckbox
+                checked={form.feature_event_planning}
+                onCheckedChange={(checked) => update("feature_event_planning", checked)}
+                icon={<Calendar className="w-3 h-3" />}
+                label="Event Planning & Organising"
               />
             </div>
 
