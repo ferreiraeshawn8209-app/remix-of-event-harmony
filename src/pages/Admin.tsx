@@ -606,7 +606,12 @@ export default function Admin() {
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="music">Music Library</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="music">
+              <MusicLibraryManager />
+            </TabsContent>
 
             <TabsContent value="alarms">
               <AlarmsManager />
