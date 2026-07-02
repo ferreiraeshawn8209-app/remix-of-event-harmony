@@ -31,6 +31,7 @@ import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
+import { TopMixPlayer } from "@/components/TopMixPlayer";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -170,6 +171,11 @@ export default function ClientPortal() {
         <PageBackground pageKey="bg_client_portal" />
         <Header profile={profile} onSignOut={handleSignOut} />
         <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
+
+          {/* Top-end mix player — admin-uploaded tracks, skippable */}
+          <TopMixPlayer />
+
+
 
           {/* Welcome + Slogan */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
