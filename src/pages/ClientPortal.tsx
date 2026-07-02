@@ -682,7 +682,6 @@ export default function ClientPortal() {
               <Button
                 variant="default"
                 className="relative bg-gradient-to-r from-purple-500 via-fuchsia-500 to-orange-500 text-white border border-white/40 hover:from-purple-400 hover:via-fuchsia-400 hover:to-orange-400 shadow-[0_12px_28px_-10px_rgba(255,107,0,0.8)]"
-                disabled={!eventProfileReady}
                 onClick={() => {
                   setQuestionnairePrefill({ package_id: null, package_name: null });
                   setView("questionnaire");
@@ -737,7 +736,6 @@ export default function ClientPortal() {
                               variant="hero"
                               size="sm"
                               className="w-full"
-                              disabled={!eventProfileReady}
                               onClick={() => {
                                 setQuestionnairePrefill({ package_id: pkg.id, package_name: pkg.name });
                                 setView("questionnaire");
