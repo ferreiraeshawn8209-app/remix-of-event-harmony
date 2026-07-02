@@ -11,16 +11,32 @@ import Admin from "./pages/Admin";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuoteEdit from "./pages/QuoteEdit";
 import ProfileEdit from "./pages/ProfileEdit";
-import EventPlanner from "./pages/EventPlanner";
+import EventPlannerHub from "./pages/EventPlannerHub";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
+import { AdminDashboardHub } from "./pages/AdminDashboardHub";
+import EventDayPage from "./pages/EventDayPage";
+import { EventAnalyticsPage } from "./pages/EventAnalyticsPage";
 import { BackgroundAudio } from "@/components/BackgroundAudio";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const queryClient = new QueryClient();
+
+const configuredBase = import.meta.env.BASE_URL || "/";
+const normalizedConfiguredBase = configuredBase.endsWith("/")
+  ? configuredBase.slice(0, -1)
+  : configuredBase;
+const runtimeBasename =
+  normalizedConfiguredBase &&
+  normalizedConfiguredBase !== "/" &&
+  (window.location.pathname === normalizedConfiguredBase ||
+    window.location.pathname.startsWith(`${normalizedConfiguredBase}/`))
+    ? configuredBase
+    : "/";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,7 +45,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BackgroundAudio />
-        <BrowserRouter>
+        <BrowserRouter basename={runtimeBasename}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -38,16 +54,20 @@ const App = () => (
             <Route path="/quote/:id" element={<QuoteDetail />} />
             <Route path="/quote/:id/edit" element={<QuoteEdit />} />
             <Route path="/profile" element={<ProfileEdit />} />
-            <Route path="/event-planner/:quoteId" element={<EventPlanner />} />
+            <Route path="/event-planner/:quoteId" element={<EventPlannerHub />} />
             <Route path="/request/:eventId" element={<SongRequest />} />
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             <Route path="/client" element={<ClientPortal />} />
+            <Route path="/admin-dashboard" element={<AdminDashboardHub />} />
+            <Route path="/event-day/:eventId" element={<EventDayPage />} />
+            <Route path="/event-analytics/:eventId" element={<EventAnalyticsPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
         <Analytics />
+        <SpeedInsights />
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

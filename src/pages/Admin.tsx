@@ -20,6 +20,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
 import { formatCurrency, QuoteData, calculateQuote, DJ_LIST } from "@/lib/pricing";
+import { usePackages } from "@/hooks/usePackages";
+import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { 
   Music, 
@@ -61,10 +63,17 @@ import { YoutubeManager } from "@/components/admin/YoutubeManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { ReviewsManager } from "@/components/admin/ReviewsManager";
+import { TracksManager } from "@/components/admin/TracksManager";
+import { ExtraFeaturesManager } from "@/components/admin/ExtraFeaturesManager";
+import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import { QuoteRequest } from "@/hooks/useQuoteRequests";
 import { supabase } from "@/integrations/supabase/client";
+import { useSpecials } from "@/hooks/useSpecials";
+import { useBrandingLogo } from "@/hooks/useBranding";
+import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
+import { generateEventDayMonthlyPlan } from "@/lib/paymentPlanCalculator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -340,16 +349,28 @@ export default function Admin() {
   const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { packages } = usePackages();
+  const { activeSpecials } = useSpecials();
   const { dueCount } = useAlarms();
   const [activeTab, setActiveTab] = useState("quotes");
   const [newQuoteInitialData, setNewQuoteInitialData] = useState<QuoteData>(() => emptyAdminQuote());
   const [quoteBuilderKey, setQuoteBuilderKey] = useState(0);
   const [activeQuoteRequestId, setActiveQuoteRequestId] = useState<string | null>(null);
+  const [requestPrefill, setRequestPrefill] = useState<QuoteData | undefined>(undefined);
+  const [pendingRequestMeta, setPendingRequestMeta] = useState<{
+    requestId: string;
+    clientId: string;
+    sourceType: "custom" | "package";
+    packageId: string | null;
+    packageName: string | null;
+    paymentPreference: "deposit" | "monthly_installments";
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<DatabaseQuote | null>(null);
   const [declineDialog, setDeclineDialog] = useState<{ quoteId: string; status: string } | null>(null);
   const [declineReason, setDeclineReason] = useState("");
+  const logoImg = useBrandingLogo();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -415,6 +436,103 @@ export default function Admin() {
     navigate("/");
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const wantsNewQuote = params.has("newQuote") || params.has("newQuoteRequest");
+
+    if (!wantsNewQuote) return;
+
+    setActiveTab("new-quote");
+
+    const stored = sessionStorage.getItem("prefill_quote_request");
+    if (!stored) return;
+
+    try {
+      const req = JSON.parse(stored) as {
+        id: string;
+        client_id: string;
+        client_name: string;
+        contact_no?: string | null;
+        email: string;
+        venue_name?: string | null;
+        venue_address?: string | null;
+        event_date?: string | null;
+        start_time?: string | null;
+        end_time?: string | null;
+        event_type?: string | null;
+        package_id?: string | null;
+        package_name?: string | null;
+        payment_preference?: "deposit" | "monthly_installments";
+        venue_provides_sound?: boolean;
+        requires_microphones?: boolean;
+        requires_lighting?: boolean;
+        requires_laser_effects?: boolean;
+        requires_smoke_machine?: boolean;
+        requires_fog_machine?: boolean;
+        requires_low_fog_machine?: boolean;
+        requires_cold_spark_machines?: boolean;
+      };
+
+      const requestId = params.get("newQuoteRequest");
+      if (requestId && req.id !== requestId) return;
+
+      const venue = [req.venue_name, req.venue_address].filter(Boolean).join(" - ");
+      const selectedPackage = req.package_id ? packages.find((pkg) => pkg.id === req.package_id) : null;
+      const packageItems = req.package_id && req.package_name
+        ? [
+            { name: `[PKG:${req.package_id}] ${req.package_name} Package`, price: Number(selectedPackage?.price || 0), qty: 1 },
+            ...((selectedPackage?.includes || []).map((item) => ({
+              name: `${req.package_name} includes: ${item}`,
+              price: 0,
+              qty: 1,
+            }))),
+          ]
+        : [];
+      const extras = [
+        ...(!req.venue_provides_sound ? [{ name: "Sound equipment surcharge", price: 2050, qty: 1 }] : []),
+        ...(req.requires_microphones ? [{ name: "Microphone surcharge", price: 350, qty: 1 }] : []),
+        ...(req.requires_lighting ? [{ name: "Lighting surcharge", price: 1200, qty: 1 }] : []),
+        ...(req.requires_laser_effects ? [{ name: "Laser effects surcharge", price: 500, qty: 1 }] : []),
+        ...(req.requires_smoke_machine ? [{ name: "Smoke machine surcharge", price: 400, qty: 1 }] : []),
+        ...(req.requires_fog_machine ? [{ name: "Fog machine surcharge", price: 550, qty: 1 }] : []),
+        ...(req.requires_low_fog_machine ? [{ name: "Low fog machine surcharge", price: 700, qty: 1 }] : []),
+        ...(req.requires_cold_spark_machines ? [{ name: "Cold spark surcharge", price: 1800, qty: 1 }] : []),
+      ];
+      const autoDiscountPercent = inferAutoDiscountPercent(req.event_type || "", activeSpecials);
+
+      setRequestPrefill({
+        clientName: req.client_name || "",
+        contactNo: req.contact_no || "",
+        email: req.email || "",
+        venue,
+        eventDate: req.event_date || "",
+        startTime: req.start_time?.slice(0, 5) || "18:00",
+        endTime: req.end_time?.slice(0, 5) || "00:00",
+        eventType: req.event_type || "",
+        djName: "Aces",
+        equipment: {},
+        customItems: packageItems,
+        extras,
+        kidsCorner: false,
+        kidsHours: 0,
+        humanJukebox: false,
+        humanJukeboxHours: 0,
+        travelDistance: 0,
+        discountPercent: autoDiscountPercent,
+      });
+      setPendingRequestMeta({
+        requestId: req.id,
+        clientId: req.client_id,
+        sourceType: req.package_id ? "package" : "custom",
+        packageId: req.package_id || null,
+        packageName: req.package_name || null,
+        paymentPreference: req.payment_preference === "monthly_installments" ? "monthly_installments" : "deposit",
+      });
+    } catch {
+      // Ignore malformed storage payloads and keep manual builder flow available.
+    }
+  }, [location.search, packages, activeSpecials]);
+
   const handleStatusChange = async (quoteId: string, status: string) => {
     // For declined/rejected, prompt for a reason before applying
     if (status === "declined" || status === "rejected") {
@@ -463,7 +581,7 @@ export default function Admin() {
       const createdQuote = await createQuote({
         quoteData,
         calculations,
-        clientProfileId: profile.id,
+        clientProfileId: pendingRequestMeta?.clientId || profile.id,
       });
       if (activeQuoteRequestId && createdQuote?.id) {
         const { error } = await supabase
@@ -480,6 +598,55 @@ export default function Admin() {
       }
       setNewQuoteInitialData(emptyAdminQuote());
       setQuoteBuilderKey((key) => key + 1);
+
+      if (pendingRequestMeta?.requestId && (createdQuote as any)?.id) {
+        const quotePatch: Record<string, unknown> = {
+          source_type: pendingRequestMeta.sourceType,
+          package_id: pendingRequestMeta.packageId,
+          package_name: pendingRequestMeta.packageName,
+          payment_structure: pendingRequestMeta.paymentPreference,
+        };
+
+        if (pendingRequestMeta.paymentPreference === "monthly_installments") {
+          const eventDate = quoteData.eventDate ? new Date(quoteData.eventDate) : null;
+          if (eventDate && !Number.isNaN(eventDate.getTime())) {
+            const plan = generateEventDayMonthlyPlan(
+              Number(calculations.total) || 0,
+              new Date(),
+              eventDate,
+              "Monthly Installments",
+            );
+            const installments = plan.installments.map((item) => ({
+              installment_number: item.installmentNumber,
+              due_date: item.dueDate.toISOString().slice(0, 10),
+              amount: Math.round(item.amount * 100) / 100,
+              description: item.description,
+            }));
+            const firstInstallment = installments[0]?.amount ?? (Number(calculations.total) || 0);
+            quotePatch.payment_plan_installments = installments;
+            quotePatch.deposit = firstInstallment;
+            quotePatch.balance = Math.round(((Number(calculations.total) || 0) - firstInstallment) * 100) / 100;
+          } else {
+            quotePatch.payment_structure = "deposit";
+            quotePatch.payment_plan_installments = [];
+          }
+        } else {
+          quotePatch.payment_plan_installments = [];
+        }
+
+        await Promise.all([
+          supabase.from("quotes").update(quotePatch as any).eq("id", (createdQuote as any).id),
+          supabase.from("quote_requests").update({
+            status: "quoted",
+            quote_id: (createdQuote as any).id,
+          } as any).eq("id", pendingRequestMeta.requestId),
+        ]);
+        setPendingRequestMeta(null);
+        setRequestPrefill(undefined);
+        setPendingRequestMeta(null);
+        sessionStorage.removeItem("prefill_quote_request");
+      }
+
       setActiveTab("quotes");
       navigate("/admin", { replace: true });
     } catch (error) {
@@ -567,14 +734,14 @@ export default function Admin() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative isolate">
       <PageBackground pageKey="bg_admin" />
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <Music className="w-6 h-6 text-primary" />
-            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
+            <img src={logoImg} alt="BeatKulture Entertainment logo" className="w-8 h-8 object-contain" />
+            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </Link>
 
           <div className="flex items-center gap-3">
@@ -582,6 +749,7 @@ export default function Admin() {
               <Shield className="w-3 h-3" />
               Admin
             </Badge>
+            <SupabaseEnvBadge />
             <span className="text-sm text-muted-foreground hidden sm:inline">
               {profile.full_name}
             </span>
@@ -616,7 +784,11 @@ export default function Admin() {
                   Client View
                 </Link>
               </Button>
-              <Button variant="hero" onClick={() => setActiveTab("new-quote")}>
+              <Button variant="hero" onClick={() => {
+                setRequestPrefill(undefined);
+                setPendingRequestMeta(null);
+                setActiveTab("new-quote");
+              }}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Quote
               </Button>
@@ -706,7 +878,9 @@ export default function Admin() {
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="specials">Specials</TabsTrigger>
+              <TabsTrigger value="extra-features">Extra Features</TabsTrigger>
               <TabsTrigger value="youtube">YouTube</TabsTrigger>
+              <TabsTrigger value="music">Music</TabsTrigger>
               <TabsTrigger value="competitions">Competitions</TabsTrigger>
               <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -813,7 +987,11 @@ export default function Admin() {
                           ? "Create your first quote to get started." 
                           : "No quotes match your search criteria."}
                       </p>
-                      <Button variant="hero" onClick={() => setActiveTab("new-quote")}>
+                      <Button variant="hero" onClick={() => {
+                        setRequestPrefill(undefined);
+                        setPendingRequestMeta(null);
+                        setActiveTab("new-quote");
+                      }}>
                         <Plus className="w-4 h-4 mr-2" />
                         Create Quote
                       </Button>
@@ -842,6 +1020,9 @@ export default function Admin() {
                 isAdmin={true}
                 initialData={newQuoteInitialData}
                 onSaveQuote={handleSaveQuote}
+                isAdmin={true}
+                onSaveQuote={handleSaveQuote}
+                initialData={requestPrefill}
               />
             </TabsContent>
 
@@ -1127,8 +1308,16 @@ export default function Admin() {
               <SpecialsManager />
             </TabsContent>
 
+            <TabsContent value="extra-features">
+              <ExtraFeaturesManager />
+            </TabsContent>
+
             <TabsContent value="youtube">
               <YoutubeManager />
+            </TabsContent>
+
+            <TabsContent value="music">
+              <TracksManager />
             </TabsContent>
 
             <TabsContent value="competitions">

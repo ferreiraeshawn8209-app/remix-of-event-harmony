@@ -10,9 +10,11 @@ import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
 import { formatCurrency } from "@/lib/pricing";
 import { 
   Music, LogOut, FileText, Plus, Calendar, MapPin, Clock,
-  Loader2, Shield, User, Settings, ClipboardList
+  Loader2, Shield, User, Settings, ClipboardList, Sparkles, Film, CheckCircle2, Mic2, Bot
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
+import { BeatkultureMascot } from "@/components/BeatkultureMascot";
 
 const statusCardStyles: Record<string, string> = {
   draft: "border-l-4 border-l-muted-foreground",
@@ -153,12 +155,13 @@ export default function Dashboard() {
   const archivedQuotes = quotes.filter(q => q.status === "declined" || q.status === "rejected");
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <div className="cinematic-shell min-h-screen">
+      <CinematicAmbient intensity="medium" />
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/70 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-6 h-6 text-primary" />
-            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
+            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
           </Link>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -191,6 +194,27 @@ export default function Dashboard() {
             </p>
           </div>
 
+          <Card variant="glass" className="feature-card-luxe mb-8 overflow-hidden border-primary/25">
+            <CardContent className="py-5">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <BeatkultureMascot mood="idle" />
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-primary/80 mb-1">Luxury Concierge Mode</p>
+                    <h2 className="font-display text-2xl font-semibold">Design your event like a cinematic production</h2>
+                    <p className="text-sm text-muted-foreground mt-1">AI host, timeline intelligence, premium music flow, rehearsal preview, and approvals in one experience.</p>
+                  </div>
+                </div>
+                <Button variant="hero" size="lg" asChild>
+                  <Link to={activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid) ? `/event-planner/${activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid)?.id}` : "/#quote-calculator"}>
+                    <Sparkles className="w-4 h-4" />
+                    {activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid) ? "Open AI Assistant" : "Start My Event"}
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {isAdmin && (
             <div className="mb-8">
               <Card variant="glow" className="border-secondary/30 bg-secondary/10">
@@ -214,33 +238,90 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Quick Actions */}
+          {/* Primary Experience Features */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <Link to="/#quote-calculator">
-              <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
-                <CardContent className="py-6 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10"><Plus className="w-6 h-6 text-primary" /></div>
-                  <div><p className="font-semibold">New Quote</p><p className="text-sm text-muted-foreground">Build a custom quote</p></div>
+            <Link to={activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid) ? `/event-planner/${activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid)?.id}` : "/#quote-calculator"}>
+              <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                <CardContent className="py-5 flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/30"><Bot className="w-6 h-6 text-primary animate-pulse-glow" /></div>
+                  <div><p className="font-semibold">AI Assistant</p><p className="text-sm text-muted-foreground">Voice-aware event concierge</p></div>
                 </CardContent>
               </Card>
             </Link>
-            <Link to="/#packages">
-              <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
-                <CardContent className="py-6 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-secondary/10"><FileText className="w-6 h-6 text-secondary" /></div>
-                  <div><p className="font-semibold">View Packages</p><p className="text-sm text-muted-foreground">Browse our packages</p></div>
+            <Link to={activeQuotes[0] ? `/quote/${activeQuotes[0].id}` : "/#quote-calculator"}>
+              <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                <CardContent className="py-5 flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-secondary/10 border border-secondary/30"><Calendar className="w-6 h-6 text-secondary" /></div>
+                  <div><p className="font-semibold">My Event</p><p className="text-sm text-muted-foreground">Core event plan and details</p></div>
                 </CardContent>
               </Card>
             </Link>
-            <Link to="/profile">
-              <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer">
-                <CardContent className="py-6 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-muted"><Settings className="w-6 h-6 text-muted-foreground" /></div>
-                  <div><p className="font-semibold">Edit Profile</p><p className="text-sm text-muted-foreground">Update contact details</p></div>
+            <Link to={activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid) ? `/event-planner/${activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid)?.id}` : "/#quote-calculator"}>
+              <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                <CardContent className="py-5 flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/30"><ClipboardList className="w-6 h-6 text-accent" /></div>
+                  <div><p className="font-semibold">Timeline</p><p className="text-sm text-muted-foreground">Auto-generated cue sequence</p></div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to={activeQuotes[0] ? `/event-day/${activeQuotes[0].id}` : "/#packages"}>
+              <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                <CardContent className="py-5 flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/30"><Music className="w-6 h-6 text-primary" /></div>
+                  <div><p className="font-semibold">Music Player</p><p className="text-sm text-muted-foreground">Live control and wave visualizer</p></div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to={activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid) ? `/event-planner/${activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid)?.id}` : "/#quote-calculator"}>
+              <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                <CardContent className="py-5 flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-secondary/10 border border-secondary/30"><Film className="w-6 h-6 text-secondary" /></div>
+                  <div><p className="font-semibold">Virtual Rehearsal</p><p className="text-sm text-muted-foreground">Cinematic event preview</p></div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to={activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid) ? `/event-planner/${activeQuotes.find((q) => q.status === "accepted" || q.deposit_paid)?.id}` : "/#quote-calculator"}>
+              <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                <CardContent className="py-5 flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-success/10 border border-success/30"><CheckCircle2 className="w-6 h-6 text-success" /></div>
+                  <div><p className="font-semibold">Client Approval</p><p className="text-sm text-muted-foreground">Sign-off and review workflow</p></div>
                 </CardContent>
               </Card>
             </Link>
           </div>
+
+          {/* Secondary Tools */}
+          <details className="mb-8 rounded-xl border border-border/60 bg-black/20 p-4">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-muted-foreground">
+              More tools and settings
+            </summary>
+            <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Link to="/#quote-calculator">
+                <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                  <CardContent className="py-4 flex items-center gap-3">
+                    <Plus className="w-5 h-5 text-primary" />
+                    <div><p className="font-semibold">New Quote</p><p className="text-xs text-muted-foreground">Build a custom quote</p></div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/#packages">
+                <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                  <CardContent className="py-4 flex items-center gap-3">
+                    <FileText className="w-5 h-5 text-secondary" />
+                    <div><p className="font-semibold">View Packages</p><p className="text-xs text-muted-foreground">Browse offerings</p></div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/profile">
+                <Card variant="glass" className="feature-card-luxe cursor-pointer">
+                  <CardContent className="py-4 flex items-center gap-3">
+                    <Settings className="w-5 h-5 text-accent" />
+                    <div><p className="font-semibold">Profile Settings</p><p className="text-xs text-muted-foreground">Update account details</p></div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </details>
 
           {/* Active Quotes */}
           <div>
@@ -254,7 +335,7 @@ export default function Dashboard() {
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : activeQuotes.length === 0 ? (
-              <Card variant="glass" className="text-center py-12">
+              <Card variant="glass" className="feature-card-luxe text-center py-12">
                 <CardContent>
                   <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-semibold text-lg mb-2">No Quotes Yet</h3>
@@ -278,7 +359,7 @@ export default function Dashboard() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {activeQuotes.filter(q => q.status === "accepted" || q.deposit_paid).map(q => (
                   <Link key={q.id} to={`/event-planner/${q.id}`}>
-                    <Card variant="glass" className="hover:border-primary/30 transition-colors cursor-pointer border-l-4 border-l-success">
+                    <Card variant="glass" className="feature-card-luxe cursor-pointer border-l-4 border-l-success">
                       <CardContent className="py-4 flex items-center gap-4">
                         <div className="p-3 rounded-lg bg-success/10"><ClipboardList className="w-5 h-5 text-success" /></div>
                         <div>

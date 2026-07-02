@@ -321,6 +321,42 @@ export type Database = {
         }
         Relationships: []
       }
+      extra_features: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          price: number
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          price?: number
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          price?: number
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_photos: {
         Row: {
           caption: string | null
@@ -640,11 +676,14 @@ export type Database = {
           needs_sound: boolean
           needs_special_effects: boolean
           notes: string | null
+          payment_preference: string
           package_id: string | null
           package_name: string | null
           quote_id: string | null
           start_time: string | null
           status: string
+          terms_accepted: boolean
+          terms_accepted_at: string | null
           updated_at: string
           venue_address: string | null
           venue_name: string | null
@@ -666,11 +705,14 @@ export type Database = {
           needs_sound?: boolean
           needs_special_effects?: boolean
           notes?: string | null
+          payment_preference?: string
           package_id?: string | null
           package_name?: string | null
           quote_id?: string | null
           start_time?: string | null
           status?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_name?: string | null
@@ -692,11 +734,14 @@ export type Database = {
           needs_sound?: boolean
           needs_special_effects?: boolean
           notes?: string | null
+          payment_preference?: string
           package_id?: string | null
           package_name?: string | null
           quote_id?: string | null
           start_time?: string | null
           status?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_name?: string | null
@@ -740,6 +785,8 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          payment_plan_installments: Json
+          payment_structure: string
           start_time: string | null
           status: string | null
           subtotal: number | null
@@ -785,6 +832,8 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          payment_plan_installments?: Json
+          payment_structure?: string
           start_time?: string | null
           status?: string | null
           subtotal?: number | null
@@ -830,6 +879,8 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          payment_plan_installments?: Json
+          payment_structure?: string
           start_time?: string | null
           status?: string | null
           subtotal?: number | null
@@ -961,6 +1012,9 @@ export type Database = {
           photo_url: string | null
           rating: number
           sort_order: number
+          source_platform: string | null
+          source_review_id: string | null
+          source_url: string | null
           updated_at: string
         }
         Insert: {
@@ -973,6 +1027,9 @@ export type Database = {
           photo_url?: string | null
           rating?: number
           sort_order?: number
+          source_platform?: string | null
+          source_review_id?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -985,7 +1042,40 @@ export type Database = {
           photo_url?: string | null
           rating?: number
           sort_order?: number
+          source_platform?: string | null
+          source_review_id?: string | null
+          source_url?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tracks: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -1104,6 +1194,8 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          payment_plan_installments: Json
+          payment_structure: string
           start_time: string | null
           status: string | null
           subtotal: number | null

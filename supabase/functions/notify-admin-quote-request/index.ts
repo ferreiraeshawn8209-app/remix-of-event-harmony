@@ -1,0 +1,155 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function parseFallbackEmails(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const fromEmail = Deno.env.get("ADMIN_NOTIFY_FROM_EMAIL") || "BeatKulture Entertainment <onboarding@resend.dev>";
+    const fallbackEmails = parseFallbackEmails(Deno.env.get("ADMIN_NOTIFICATION_EMAILS"));
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Supabase service configuration missing" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!resendApiKey) {
+      return new Response(JSON.stringify({ error: "RESEND_API_KEY is not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = await req.json();
+    const requestId = String(payload?.requestId || "");
+    const clientName = String(payload?.clientName || "Client");
+    const clientEmail = String(payload?.clientEmail || "");
+    const eventType = String(payload?.eventType || "Event");
+    const eventDate = payload?.eventDate ? String(payload.eventDate) : "";
+    const packageName = payload?.packageName ? String(payload.packageName) : "";
+
+    if (!requestId) {
+      return new Response(JSON.stringify({ error: "requestId is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: roleRows, error: roleError } = await adminClient
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+
+    if (roleError) throw roleError;
+
+    const adminUserIds = [...new Set((roleRows || []).map((row: any) => row.user_id).filter(Boolean))];
+
+    let recipientEmails: string[] = [];
+    if (adminUserIds.length > 0) {
+      const { data: profileRows, error: profileError } = await adminClient
+        .from("profiles")
+        .select("email")
+        .in("user_id", adminUserIds);
+
+      if (profileError) throw profileError;
+
+      recipientEmails = (profileRows || [])
+        .map((row: any) => String(row.email || "").trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    if (recipientEmails.length === 0) {
+      recipientEmails = fallbackEmails;
+    }
+
+    recipientEmails = [...new Set(recipientEmails)];
+
+    if (recipientEmails.length === 0) {
+      return new Response(JSON.stringify({ sent: 0, reason: "No admin recipient emails found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const packageLine = packageName
+      ? `<p><strong>Package:</strong> ${packageName}</p>`
+      : `<p><strong>Quote type:</strong> Custom quote request</p>`;
+    const eventDateLine = eventDate ? `<p><strong>Event date:</strong> ${eventDate}</p>` : "";
+    const safeClientEmail = clientEmail || "Not provided";
+
+    const subject = `New quote request: ${clientName} (${eventType})`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
+        <h2 style="margin: 0 0 12px;">BeatKulture Entertainment — New Quote Request</h2>
+        <p>A new quote request has been submitted and pushed to the admin portal.</p>
+        <p><strong>Request ID:</strong> ${requestId}</p>
+        <p><strong>Client:</strong> ${clientName}</p>
+        <p><strong>Client email:</strong> ${safeClientEmail}</p>
+        <p><strong>Event type:</strong> ${eventType}</p>
+        ${eventDateLine}
+        ${packageLine}
+        <p style="margin-top: 16px;">Open the admin portal to review and action this request.</p>
+      </div>
+    `;
+
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: recipientEmails,
+        subject,
+        html,
+      }),
+    });
+
+    if (!resendResponse.ok) {
+      const text = await resendResponse.text();
+      return new Response(JSON.stringify({ error: `Resend error: ${text}` }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const resendPayload = await resendResponse.json();
+    return new Response(JSON.stringify({ sent: recipientEmails.length, recipients: recipientEmails, resend: resendPayload }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

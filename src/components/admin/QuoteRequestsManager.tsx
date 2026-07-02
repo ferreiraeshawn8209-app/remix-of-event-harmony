@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useQuoteRequests, QuoteRequest } from "@/hooks/useQuoteRequests";
+import { useSpecials } from "@/hooks/useSpecials";
+import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
 import {
-  Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users,
-  ArrowRight, MessageSquare, Phone,
+  Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users, Sparkles,
+  ArrowRight, MessageSquare, Phone, Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -20,7 +22,8 @@ const statusColors: Record<string, string> = {
 };
 
 export function QuoteRequestsManager() {
-  const { requests, isLoading, updateRequest } = useQuoteRequests();
+  const { requests, isLoading, updateRequest, deleteRequest } = useQuoteRequests();
+  const { activeSpecials } = useSpecials();
   const [acting, setActing] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -49,6 +52,17 @@ export function QuoteRequestsManager() {
     setActing(null);
   };
 
+  const removeRequest = async (r: QuoteRequest) => {
+    const confirmed = window.confirm(`Delete quote request from ${r.client_name}? This cannot be undone.`);
+    if (!confirmed) return;
+    setActing(r.id);
+    try {
+      await deleteRequest(r.id);
+    } finally {
+      setActing(null);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
@@ -65,7 +79,9 @@ export function QuoteRequestsManager() {
 
   return (
     <div className="space-y-3">
-      {requests.map(r => (
+      {requests.map(r => {
+        const autoDiscount = inferAutoDiscountPercent(r.event_type, activeSpecials);
+        return (
         <Card key={r.id} variant="glass">
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between flex-wrap gap-2">
@@ -77,6 +93,14 @@ export function QuoteRequestsManager() {
                 <CardDescription className="text-xs">
                   {r.email}{r.contact_no ? ` • ${r.contact_no}` : ""} • Submitted {new Date(r.created_at).toLocaleString("en-ZA")}
                 </CardDescription>
+                {autoDiscount > 0 && (
+                  <Badge variant="outline" className="mt-2 text-[10px] border-success/40 text-success">
+                    Auto discount to apply: {autoDiscount}%
+                  </Badge>
+                )}
+                <Badge variant="outline" className="mt-2 ml-2 text-[10px]">
+                  Payment preference: {r.payment_preference === "monthly_installments" ? "Monthly installments" : "Deposit + balance"}
+                </Badge>
               </div>
               <Badge variant="outline" className={statusColors[r.status] || ""}>
                 {r.status.replace("_", " ")}
@@ -88,6 +112,9 @@ export function QuoteRequestsManager() {
               <div className="space-y-1.5 text-muted-foreground">
                 <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> {r.event_date || "Date TBD"} {r.start_time ? `• ${r.start_time.slice(0,5)}` : ""}{r.end_time ? `–${r.end_time.slice(0,5)}` : ""}</div>
                 <div className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {r.venue_name || "Venue TBD"}{r.venue_address ? ` — ${r.venue_address}` : ""}</div>
+                {r.city && (
+                  <div className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {r.city}</div>
+                )}
                 {r.guest_count != null && (
                   <div className="flex items-center gap-2"><Users className="w-3 h-3" /> ~{r.guest_count} guests</div>
                 )}
@@ -98,11 +125,25 @@ export function QuoteRequestsManager() {
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Requirements</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {r.needs_sound && <Badge variant="outline" className="text-[10px] gap-1"><Speaker className="w-3 h-3" /> Sound</Badge>}
-                  {r.needs_lighting && <Badge variant="outline" className="text-[10px] gap-1"><Lightbulb className="w-3 h-3" /> Lighting</Badge>}
-                  {r.needs_special_effects && <Badge variant="outline" className="text-[10px] gap-1"><Wand2 className="w-3 h-3" /> FX</Badge>}
-                  {r.needs_mic && <Badge variant="outline" className="text-[10px] gap-1"><Mic className="w-3 h-3" /> Mic</Badge>}
-                  {!r.needs_sound && !r.needs_lighting && !r.needs_special_effects && !r.needs_mic && (
+                  {!r.venue_provides_sound && <Badge variant="outline" className="text-[10px] gap-1"><Speaker className="w-3 h-3" /> Sound setup</Badge>}
+                  {r.requires_microphones && <Badge variant="outline" className="text-[10px] gap-1"><Mic className="w-3 h-3" /> Microphones</Badge>}
+                  {r.requires_lighting && <Badge variant="outline" className="text-[10px] gap-1"><Lightbulb className="w-3 h-3" /> Lighting</Badge>}
+                  {r.requires_laser_effects && <Badge variant="outline" className="text-[10px] gap-1"><Wand2 className="w-3 h-3" /> Lasers</Badge>}
+                  {r.requires_smoke_machine && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Smoke</Badge>}
+                  {r.requires_fog_machine && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Fog</Badge>}
+                  {r.requires_low_fog_machine && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Low fog</Badge>}
+                  {r.requires_cold_spark_machines && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Cold sparks</Badge>}
+                  {r.venue_provides_sound && (
+                    <Badge variant="outline" className="text-[10px]">Venue sound provided</Badge>
+                  )}
+                  {r.venue_provides_sound &&
+                    !r.requires_microphones &&
+                    !r.requires_lighting &&
+                    !r.requires_laser_effects &&
+                    !r.requires_smoke_machine &&
+                    !r.requires_fog_machine &&
+                    !r.requires_low_fog_machine &&
+                    !r.requires_cold_spark_machines && (
                     <span className="text-xs text-muted-foreground">None specified</span>
                   )}
                 </div>
@@ -136,10 +177,14 @@ export function QuoteRequestsManager() {
                   <a href={`tel:${r.contact_no}`}><Phone className="w-3 h-3 mr-1" /> Call</a>
                 </Button>
               )}
+              <Button size="sm" variant="ghost" className="text-destructive" disabled={acting === r.id} onClick={() => removeRequest(r)}>
+                <Trash2 className="w-3 h-3 mr-1" /> Delete
+              </Button>
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }

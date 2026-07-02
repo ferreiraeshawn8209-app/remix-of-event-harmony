@@ -44,6 +44,10 @@ function ImageSettingRow({
   const handlePick = () => {
     const f = fileRef.current?.files?.[0];
     if (!f) { toast({ title: "Choose a file first", variant: "destructive" }); return; }
+    if (settingKey === "logo_url" && f.type === "image/gif") {
+      void doUpload(f);
+      return;
+    }
     setPendingFile(f);
   };
 
@@ -188,6 +192,12 @@ export function BusinessSettingsManager() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <ImageSettingRow
+            label="Brand Logo (Static or GIF)"
+            description="Main BeatKulture Entertainment logo used across pages and documents. PNG/JPG/GIF supported."
+            settingKey="logo_url"
+            defaultAspect="free"
+          />
           <ImageSettingRow
             label="Homepage Hero Image"
             description="Big background photo behind 'Your Event, Our Beat' on the homepage."

@@ -19,17 +19,35 @@ export interface PaymentPlan {
   isDoublePaymentRequired: boolean;
 }
 
+function normalizeDateOnly(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function addMonthClamped(baseDate: Date, dayOfMonth: number): Date {
+  const next = new Date(baseDate);
+  next.setDate(1);
+  next.setMonth(next.getMonth() + 1);
+  const lastDay = getLastDayOfMonth(next).getDate();
+  next.setDate(Math.min(dayOfMonth, lastDay));
+  return normalizeDateOnly(next);
+}
+
 /**
  * Calculate months between today and event date
  */
 export function calculateMonthsBetween(eventDate: Date): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const target = new Date(eventDate);
+  target.setHours(0, 0, 0, 0);
+  if (target <= today) return 1;
   
   let months = 0;
   const current = new Date(today);
   
-  while (current < eventDate) {
+  while (current < target) {
     current.setMonth(current.getMonth() + 1);
     months++;
   }
@@ -58,11 +76,20 @@ export function generateMonthlyPlan(
   
   const installments: PaymentInstallment[] = [];
   const today = new Date();
-  
+  const lastDueDate = new Date(eventDate);
+  lastDueDate.setHours(0, 0, 0, 0);
+  lastDueDate.setDate(lastDueDate.getDate() - 1);
+  if (lastDueDate <= today) {
+    lastDueDate.setTime(today.getTime());
+  }
+
   for (let i = 0; i < monthsAvailable; i++) {
     const dueDate = new Date(today);
     dueDate.setMonth(dueDate.getMonth() + i + 1);
     dueDate.setDate(1); // First of each month
+    if (dueDate > lastDueDate) {
+      dueDate.setTime(lastDueDate.getTime());
+    }
     
     // Last payment gets remainder to avoid rounding issues
     const amount = i === monthsAvailable - 1 
@@ -83,6 +110,68 @@ export function generateMonthlyPlan(
     numberOfPayments: monthsAvailable,
     installments,
     monthsAvailable,
+    isDoublePaymentRequired: false,
+  };
+}
+
+/**
+ * Generate installments from first payment date through final payment on event day.
+ */
+export function generateEventDayMonthlyPlan(
+  totalAmount: number,
+  firstPaymentDate: Date,
+  eventDate: Date,
+  planName: string = "Monthly Installments to Event Day",
+): PaymentPlan {
+  const start = normalizeDateOnly(firstPaymentDate);
+  const eventDay = normalizeDateOnly(eventDate);
+  const dueDates: Date[] = [];
+
+  if (eventDay <= start) {
+    dueDates.push(eventDay);
+  } else {
+    dueDates.push(start);
+    let cursor = new Date(start);
+    const anchorDay = start.getDate();
+    while (true) {
+      const nextMonthlyDate = addMonthClamped(cursor, anchorDay);
+      if (nextMonthlyDate >= eventDay) break;
+      dueDates.push(nextMonthlyDate);
+      cursor = nextMonthlyDate;
+    }
+    dueDates.push(eventDay);
+  }
+
+  const installmentCount = Math.max(1, dueDates.length);
+  const totalCents = Math.round(totalAmount * 100);
+  const baseCents = Math.floor(totalCents / installmentCount);
+
+  const installments: PaymentInstallment[] = dueDates.map((dueDate, index) => {
+    const amountCents = index === installmentCount - 1
+      ? totalCents - baseCents * (installmentCount - 1)
+      : baseCents;
+    const isFirst = index === 0;
+    const isFinal = index === installmentCount - 1;
+    const description = isFinal
+      ? `Final payment due on event day (${dueDate.toLocaleDateString("en-ZA")})`
+      : isFirst
+        ? `First payment (${dueDate.toLocaleDateString("en-ZA")})`
+        : dueDate.toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
+
+    return {
+      installmentNumber: index + 1,
+      dueDate,
+      amount: amountCents / 100,
+      description,
+    };
+  });
+
+  return {
+    planName,
+    totalAmount: Math.round(totalAmount * 100) / 100,
+    numberOfPayments: installmentCount,
+    installments,
+    monthsAvailable: installmentCount,
     isDoublePaymentRequired: false,
   };
 }

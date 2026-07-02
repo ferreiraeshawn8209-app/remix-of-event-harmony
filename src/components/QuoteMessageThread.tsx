@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, MessageCircle } from "lucide-react";
+import { Loader2, Send, MessageCircle, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { useQuoteMessages } from "@/hooks/useQuoteMessages";
 import { cn } from "@/lib/utils";
+import { useBrandingLogo } from "@/hooks/useBranding";
 
 interface Props {
   quoteId: string;
@@ -18,6 +19,9 @@ export function QuoteMessageThread({ quoteId, role, senderName, className }: Pro
   const { messages, isLoading, send, sending } = useQuoteMessages(quoteId);
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  const logoImg = useBrandingLogo();
+  const configuredBase = import.meta.env.BASE_URL || "/";
+  const appAuthUrl = `${window.location.origin}${configuredBase.endsWith("/") ? configuredBase : `${configuredBase}/`}auth`;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -27,6 +31,15 @@ export function QuoteMessageThread({ quoteId, role, senderName, className }: Pro
     if (!draft.trim()) return;
     await send({ message: draft, sender_role: role, sender_name: senderName });
     setDraft("");
+  };
+
+  const insertClientAccessLink = () => {
+    const template = `Client portal access: ${appAuthUrl}`;
+    setDraft((prev) => (prev.trim() ? `${prev.trim()}\n${template}` : template));
+  };
+
+  const isAppAccessLink = (message: string) => {
+    return message.includes(appAuthUrl);
   };
 
   return (
@@ -72,6 +85,34 @@ export function QuoteMessageThread({ quoteId, role, senderName, className }: Pro
                       </span>
                     </div>
                     <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                    {isAppAccessLink(m.message) && (
+                      <div
+                        className={cn(
+                          "mt-2 rounded-md border p-2.5",
+                          mine ? "border-primary-foreground/30 bg-primary-foreground/10" : "border-primary/25 bg-primary/10"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <img src={logoImg} alt="BeatKulture" className="w-6 h-6 object-contain rounded-sm bg-background/70 p-0.5" />
+                          <span className={cn("text-xs font-semibold", mine ? "text-primary-foreground" : "text-foreground")}>
+                            BeatKulture Client Portal
+                          </span>
+                        </div>
+                        <a
+                          href={appAuthUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "inline-flex items-center gap-1 text-xs font-medium rounded-md px-2 py-1 border",
+                            mine
+                              ? "border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
+                              : "border-primary/40 text-primary hover:bg-primary/10"
+                          )}
+                        >
+                          Open Client App <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -94,6 +135,12 @@ export function QuoteMessageThread({ quoteId, role, senderName, className }: Pro
             }}
           />
           <div className="flex justify-end">
+            {role === "admin" && (
+              <Button size="sm" variant="outline" onClick={insertClientAccessLink} className="mr-2">
+                <LinkIcon className="w-4 h-4 mr-2" />
+                Insert App Link
+              </Button>
+            )}
             <Button size="sm" variant="hero" disabled={sending || !draft.trim()} onClick={handleSend}>
               {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send
