@@ -78,6 +78,14 @@ const categoryLines: Record<HumorCategory, string[]> = {
     "Dance floor opens now. If your move has no name yet, tonight is its debut.",
     "No pressure, just rhythm. If you miss a beat, call it choreography.",
   ],
+  "mc-transition": [
+    "As we move to the next moment, keep that energy up and those smiles bigger.",
+    "Smooth transition time: great memories loading, dance floor preparing for action.",
+  ],
+  "filler-material": [
+    "Quick family-friendly filler: if your table has the loudest laugh, you're tonight's VIP section.",
+    "While we reset for the next highlight, give a shout if you're celebrating something special tonight.",
+  ],
   trivia: [
     "Event trivia: the fastest way to find your people is to ask who controls the playlist.",
     "Tonight's trivia: how many photos can one table take before dinner arrives?",
@@ -157,7 +165,7 @@ export class HumorEngine {
   }
 
   generateEntertainmentMoment(context: HumorContext): HumorSuggestion {
-    const picks: HumorCategory[] = ["mc-icebreaker", "dance-floor", "trivia", "personalized"];
+    const picks: HumorCategory[] = ["mc-icebreaker", "dance-floor", "mc-transition", "filler-material", "trivia", "personalized"];
     const category = picks[Math.floor(Math.random() * picks.length)];
     return this.generateHumor(category, "family-friendly", context, 1)[0];
   }
@@ -184,4 +192,3 @@ export class HumorEngine {
 }
 
 export const humorEngine = new HumorEngine();
-

@@ -31,6 +31,8 @@ const categories: HumorCategory[] = [
   "mc-icebreaker",
   "crowd-warmup",
   "dance-floor",
+  "mc-transition",
+  "filler-material",
   "trivia",
   "personalized",
 ];
@@ -93,6 +95,34 @@ export function HumorAssistantPanel({
           <Button className="w-full" variant="hero" onClick={() => onGenerateHumor(category, style, 4)}>
             Generate jokes and lines
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card variant="glass">
+        <CardHeader>
+          <CardTitle>Event Day Quick Tools</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("mc-icebreaker", "professional-mc", 3)}>
+              Emergency icebreakers
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("crowd-warmup", "family-friendly", 3)}>
+              Crowd engagement
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("dance-floor", "professional-mc", 3)}>
+              Dance floor hype lines
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("mc-transition", "professional-mc", 3)}>
+              MC transitions
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("trivia", "witty", 3)}>
+              Wedding trivia
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("filler-material", "family-friendly", 3)}>
+              Family-safe filler material
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -195,4 +225,3 @@ export function HumorAssistantPanel({
     </div>
   );
 }
-

@@ -11,6 +11,8 @@ export type HumorCategory =
   | "mc-icebreaker"
   | "crowd-warmup"
   | "dance-floor"
+  | "mc-transition"
+  | "filler-material"
   | "trivia"
   | "personalized";
 
@@ -78,4 +80,3 @@ export interface SpeechDraft {
   closing: string;
   estimatedMinutes: number;
 }
-
