@@ -90,6 +90,54 @@ export function useCommandCenter(eventId: string, initialCueList: any[] = []) {
     updateState();
   }, [engine, updateState]);
 
+  const addAudienceSongRequest = useCallback(
+    (songTitle: string, artist: string, guestName?: string) => {
+      engine.addAudienceSongRequest(songTitle, artist, guestName);
+      updateState();
+    },
+    [engine, updateState]
+  );
+
+  const voteAudienceSongRequest = useCallback(
+    (requestId: string) => {
+      engine.voteAudienceSongRequest(requestId);
+      updateState();
+    },
+    [engine, updateState]
+  );
+
+  const markSongRequestPlayed = useCallback(
+    (requestId: string) => {
+      engine.markSongRequestPlayed(requestId);
+      updateState();
+    },
+    [engine, updateState]
+  );
+
+  const createAudiencePoll = useCallback(
+    (prompt: string, options: string[], closesAt?: string) => {
+      engine.createAudiencePoll(prompt, options, closesAt);
+      updateState();
+    },
+    [engine, updateState]
+  );
+
+  const castAudiencePollVote = useCallback(
+    (pollId: string, optionId: string) => {
+      engine.castAudiencePollVote(pollId, optionId);
+      updateState();
+    },
+    [engine, updateState]
+  );
+
+  const closeAudiencePoll = useCallback(
+    (pollId: string) => {
+      engine.closeAudiencePoll(pollId);
+      updateState();
+    },
+    [engine, updateState]
+  );
+
   return {
     state,
     actions: {
@@ -106,12 +154,20 @@ export function useCommandCenter(eventId: string, initialCueList: any[] = []) {
       reportIssue,
       resolveIssue,
       clearNotifications,
+      addAudienceSongRequest,
+      voteAudienceSongRequest,
+      markSongRequestPlayed,
+      createAudiencePoll,
+      castAudiencePollVote,
+      closeAudiencePoll,
     },
     getters: {
       getCurrentCue: () => engine.getCurrentCue(),
       getUpcomingCues: (count?: number) => engine.getUpcomingCues(count),
       getPendingIssues: () => engine.getPendingIssues(),
       getRecentMessages: (count?: number) => engine.getRecentMessages(count),
+      getTopAudienceSongRequests: (count?: number) => engine.getTopAudienceSongRequests(count),
+      getActiveAudiencePoll: () => engine.getActiveAudiencePoll(),
     },
   };
 }

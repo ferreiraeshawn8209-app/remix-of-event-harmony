@@ -94,6 +94,8 @@ export interface CommandCenterState {
   cueList: TimelineCue[];
   djControl: DjControl;
   audienceReactions: AudienceReaction[];
+  audienceSongRequests: AudienceSongRequest[];
+  audiencePolls: AudiencePoll[];
   staffMessages: StaffMessage[];
   liveNotifications: LiveNotification[];
 }
@@ -118,4 +120,31 @@ export interface LiveNotification {
     label: string;
     handler: string;
   };
+}
+
+export interface AudienceSongRequest {
+  id: string;
+  eventId: string;
+  songTitle: string;
+  artist: string;
+  guestName?: string;
+  requestedAt: string;
+  votes: number;
+  status: 'queued' | 'played' | 'rejected';
+}
+
+export interface AudiencePollOption {
+  id: string;
+  label: string;
+  votes: number;
+}
+
+export interface AudiencePoll {
+  id: string;
+  eventId: string;
+  prompt: string;
+  createdAt: string;
+  closesAt?: string;
+  status: 'active' | 'closed';
+  options: AudiencePollOption[];
 }
