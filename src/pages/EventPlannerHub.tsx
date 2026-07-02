@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AiEventPlannerWithAvatar } from "@/components/planner/AiEventPlannerWithAvatar";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -23,7 +24,8 @@ export function EventPlannerHub() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-950 to-slate-900">
+      <div className="cinematic-shell min-h-screen flex items-center justify-center">
+        <CinematicAmbient intensity="soft" />
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
           <p className="text-muted-foreground">Loading planner...</p>
@@ -34,7 +36,8 @@ export function EventPlannerHub() {
 
   if (!user || !profile?.id || !quoteId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-950 to-slate-900">
+      <div className="cinematic-shell min-h-screen flex items-center justify-center">
+        <CinematicAmbient intensity="soft" />
         <div className="text-center text-muted-foreground">
           <p>Invalid session or quote</p>
         </div>

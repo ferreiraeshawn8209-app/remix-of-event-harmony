@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { BeatkultureMascot } from '@/components/BeatkultureMascot';
+import { CinematicAmbient } from '@/components/CinematicAmbient';
 import {
   Play,
   Pause,
@@ -65,7 +67,8 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950 p-6">
+    <div className="cinematic-shell min-h-screen p-6">
+      <CinematicAmbient intensity="high" />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -78,11 +81,38 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
           </Badge>
         </div>
 
+        <Card variant="glass" className="feature-card-luxe border-primary/25">
+          <CardContent className="py-4 flex flex-col lg:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <BeatkultureMascot mood={state.eventDayStatus.status === 'in_progress' ? 'speaking' : 'idle'} />
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-primary/80">AI Concierge</p>
+                <h2 className="text-xl font-display font-semibold">Tonight's Luxury Event Experience</h2>
+                <p className="text-sm text-muted-foreground">Command center + music momentum + guest interaction in one cinematic flow.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+              <div className="feature-card-luxe rounded-xl p-3 text-center">
+                <p className="text-xs text-muted-foreground">Live Cues</p>
+                <p className="text-xl font-bold text-primary">{state.cueList.filter((cue) => cue.status === 'active').length}</p>
+              </div>
+              <div className="feature-card-luxe rounded-xl p-3 text-center">
+                <p className="text-xs text-muted-foreground">Song Requests</p>
+                <p className="text-xl font-bold text-secondary">{state.audienceSongRequests.filter((request) => request.status === 'queued').length}</p>
+              </div>
+              <div className="feature-card-luxe rounded-xl p-3 text-center">
+                <p className="text-xs text-muted-foreground">Engagement</p>
+                <p className="text-xl font-bold text-accent">{Math.round(state.audienceReactions.reduce((sum, reaction) => sum + reaction.intensity, 0) / Math.max(1, state.audienceReactions.length))}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Control Panel */}
           <div className="lg:col-span-2 space-y-6">
             {/* DJ Controls */}
-            <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+            <Card className="feature-card-luxe border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-amber-400" />
@@ -205,7 +235,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
 
             {/* Current Cue Display */}
             {currentCue && (
-              <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+              <Card className="feature-card-luxe border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
                 <CardHeader>
                   <CardTitle className="text-green-400">Now Playing</CardTitle>
                 </CardHeader>
@@ -229,6 +259,11 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
                       <p className="text-xs text-muted-foreground">Music</p>
                       <p className="font-semibold">{currentCue.musicTrack.title}</p>
                       <p className="text-sm text-muted-foreground">{currentCue.musicTrack.artist}</p>
+                      <div className="mt-2 flex items-end gap-1 h-6">
+                        {Array.from({ length: 14 }).map((_, index) => (
+                          <span key={index} className="wave-bar" style={{ animationDelay: `${index * 0.08}s` }} />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -236,7 +271,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
             )}
 
             {/* Upcoming Cues */}
-            <Card className="border-purple-500/20">
+            <Card className="feature-card-luxe border-purple-500/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
@@ -270,7 +305,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
           {/* Sidebar - Issues & Messages */}
           <div className="space-y-6">
             {/* Audience Requests */}
-            <Card className="border-fuchsia-500/20 bg-fuchsia-500/5">
+            <Card className="feature-card-luxe border-fuchsia-500/30 bg-fuchsia-500/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Music2 className="w-5 h-5 text-fuchsia-400" />
@@ -334,7 +369,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
             </Card>
 
             {/* Audience Poll */}
-            <Card className="border-cyan-500/20 bg-cyan-500/5">
+            <Card className="feature-card-luxe border-cyan-500/30 bg-cyan-500/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Vote className="w-5 h-5 text-cyan-400" />
@@ -381,8 +416,8 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
             <Card
               className={
                 pendingIssues.length > 0
-                  ? 'border-red-500/50 bg-red-500/5'
-                  : 'border-green-500/20 bg-green-500/5'
+                  ? 'feature-card-luxe border-red-500/50 bg-red-500/10'
+                  : 'feature-card-luxe border-green-500/30 bg-green-500/10'
               }
             >
               <CardHeader>
@@ -430,7 +465,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
             </Card>
 
             {/* Staff Messages */}
-            <Card className="border-blue-500/20">
+            <Card className="feature-card-luxe border-blue-500/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" />
@@ -466,7 +501,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
             </Card>
 
             {/* Live Notifications */}
-            <Card className="border-purple-500/20">
+            <Card className="feature-card-luxe border-purple-500/30">
               <CardHeader>
                 <CardTitle>Live Feed ({state.liveNotifications.length})</CardTitle>
               </CardHeader>

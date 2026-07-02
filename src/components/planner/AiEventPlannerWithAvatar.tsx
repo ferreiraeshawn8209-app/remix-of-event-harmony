@@ -19,6 +19,8 @@ import { useTimeline } from "@/hooks/useTimeline";
 import { useVisualization } from "@/hooks/useVisualization";
 import { useHumorAssistant } from "@/hooks/useHumorAssistant";
 import { useRehearsal } from "@/hooks/useRehearsal";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
+import { BeatkultureMascot } from "@/components/BeatkultureMascot";
 import type { TimelineConfig } from "@/packages/shared-types/timeline";
 import type { AvatarEmotion } from "@/packages/shared-types/avatar";
 
@@ -357,7 +359,8 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950">
+    <div className="cinematic-shell min-h-screen">
+      <CinematicAmbient intensity="medium" />
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="mb-6">
           <h1 className="font-display text-3xl font-bold gradient-text mb-2">Beatkulture Event Planner</h1>
@@ -366,33 +369,25 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
 
         <div className="grid lg:grid-cols-2 gap-6">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-            <Card variant="glass" className="h-full overflow-hidden">
+            <Card variant="glass" className="feature-card-luxe h-full overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Sparkles className="w-4 h-4" /> Your AI Host
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="relative aspect-square rounded-xl border border-border/50 bg-black/40 flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-square rounded-xl border border-primary/20 bg-black/45 flex items-center justify-center overflow-hidden">
                   <motion.div
-                    animate={{
-                      scale: avatarEmotion === "listening" || avatarEmotion === "speaking" ? [1, 1.08, 1] : 1,
-                    }}
-                    transition={{ duration: 1.2, repeat: Infinity }}
-                    className={`w-36 h-36 rounded-full blur-[1px] ${
-                      avatarEmotion === "speaking"
-                        ? "bg-green-500/60"
-                        : avatarEmotion === "thinking"
-                          ? "bg-purple-500/60"
-                          : avatarEmotion === "listening"
-                            ? "bg-blue-500/60"
-                            : avatarEmotion === "celebrating"
-                              ? "bg-orange-500/60"
-                              : "bg-slate-500/40"
-                    }`}
+                    animate={{ opacity: [0.45, 0.8, 0.45], scale: [1, 1.06, 1] }}
+                    transition={{ duration: 2.3, repeat: Infinity }}
+                    className="absolute inset-8 rounded-full bg-gradient-to-br from-secondary/30 via-primary/10 to-accent/30 blur-2xl"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-200 font-medium">
-                    {avatarEmotion === "celebrating" ? "Plan Ready 🎉" : `Emotion: ${avatarEmotion}`}
+                  <BeatkultureMascot
+                    mood={avatarEmotion === "celebrating" ? "celebrating" : isSpeaking ? "speaking" : "idle"}
+                    className="z-10"
+                  />
+                  <div className="absolute bottom-3 rounded-full border border-primary/30 bg-black/55 px-3 py-1 text-xs text-primary">
+                    {avatarEmotion === "celebrating" ? "Milestone celebration" : `Host mode: ${avatarEmotion}`}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -424,7 +419,7 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
             transition={{ duration: 0.5 }}
             className="flex flex-col"
           >
-            <Card variant="glass" className="flex-1 flex flex-col overflow-hidden">
+            <Card variant="glass" className="feature-card-luxe flex-1 flex flex-col overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Planning Workspace</CardTitle>
                 <CardDescription>Switch between live conversation and generated timeline</CardDescription>
