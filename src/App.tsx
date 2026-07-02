@@ -16,6 +16,7 @@ import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
 import { AdminDashboardHub } from "./pages/AdminDashboardHub";
+import EventDayPage from "./pages/EventDayPage";
 import { BackgroundAudio } from "@/components/BackgroundAudio";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             <Route path="/client" element={<ClientPortal />} />
             <Route path="/admin-dashboard" element={<AdminDashboardHub />} />
+            <Route path="/event-day/:eventId" element={<EventDayPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
