@@ -1417,6 +1417,7 @@ function Questionnaire({
     requires_microphones: false,
     requires_lighting: false,
     requires_special_effects: false,
+    payment_preference: "deposit" as "deposit" | "monthly_installments",
     feature_kids_corner: false,
     feature_human_jukebox: false,
     feature_qr_song_requests: false,
@@ -1473,7 +1474,7 @@ function Questionnaire({
       needs_mic: form.requires_microphones,
       package_id: selectedPackage?.id || null,
       package_name: selectedPackage?.name || null,
-      payment_preference: "deposit",
+      payment_preference: form.payment_preference,
       notes: [
         form.feature_kids_corner ? "Extra feature: Kids Corner" : null,
         form.feature_human_jukebox ? "Extra feature: Human Jukebox" : null,
@@ -1583,6 +1584,32 @@ function Questionnaire({
                 icon={<Wand2 className="w-3 h-3" />}
                 label="Do you require special effects?"
               />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold">Payment option</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => update("payment_preference", "deposit")}
+                  className={`rounded-lg border px-3 py-3 text-left text-xs transition ${form.payment_preference === "deposit" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
+                >
+                  <p className="font-semibold text-sm">30% deposit booking</p>
+                  <p className="text-muted-foreground mt-1">
+                    Pay 30% now, then settle the balance on or before the event day.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update("payment_preference", "monthly_installments")}
+                  className={`rounded-lg border px-3 py-3 text-left text-xs transition ${form.payment_preference === "monthly_installments" ? "border-primary bg-primary/10" : "border-border bg-background/40"}`}
+                >
+                  <p className="font-semibold text-sm">Payment plan</p>
+                  <p className="text-muted-foreground mt-1">
+                    Split payments monthly up to your event date.
+                  </p>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3">
