@@ -3,13 +3,16 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Mic, Send, Sparkles, Volume2, CalendarDays, MessagesSquare, Image } from "lucide-react";
+import { Loader2, Mic, Send, Sparkles, Volume2, CalendarDays, MessagesSquare, Image, SmilePlus } from "lucide-react";
 import { EventTimelineComponent } from "@/components/timeline/EventTimeline";
 import { EventVisualizationPanel } from "@/components/visualization/EventVisualizationPanel";
+import { HumorAssistantPanel } from "@/components/humor/HumorAssistantPanel";
+import { EntertainmentMomentWidget } from "@/components/humor/EntertainmentMomentWidget";
 import { useAiPlanner } from "@/hooks/useAiPlanner";
 import { useVoiceAi } from "@/hooks/useVoiceAi";
 import { useTimeline } from "@/hooks/useTimeline";
 import { useVisualization } from "@/hooks/useVisualization";
+import { useHumorAssistant } from "@/hooks/useHumorAssistant";
 import type { TimelineConfig } from "@/packages/shared-types/timeline";
 import type { AvatarEmotion } from "@/packages/shared-types/avatar";
 
@@ -18,7 +21,7 @@ interface AiEventPlannerWithAvatarProps {
   clientId: string;
 }
 
-type PlannerPanel = "chat" | "timeline" | "visualization";
+type PlannerPanel = "chat" | "timeline" | "visualization" | "humor";
 
 const safeNumber = (value: unknown, fallback: number) => {
   const asNumber = Number(value);
@@ -79,6 +82,18 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
     error: visualizationError,
     generateStoryboard,
   } = useVisualization();
+  const {
+    suggestions: humorSuggestions,
+    speechDraft,
+    moment,
+    widgetEnabled,
+    widgetMinimized,
+    generateHumor,
+    generateSpeech,
+    refreshMoment,
+    toggleWidgetEnabled,
+    toggleWidgetMinimized,
+  } = useHumorAssistant(humorContext);
 
   const messages = state.messages;
   const plannerLoading = state.loading;
@@ -90,6 +105,24 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
     }
     return null;
   }, [messages]);
+
+  const humorContext = useMemo(() => {
+    const collected = state.collectedData || {};
+    const wedding = collected.weddingDetails || {};
+    const style = collected.eventStyle || {};
+    return {
+      eventType: String(collected.event_type || collected.eventDetails?.type || "wedding"),
+      audienceAgeGroup: "mixed" as const,
+      eventFormality: "semi-formal" as const,
+      culturalContext: wedding.culturalTraditions?.join(", "),
+      coupleNames: [wedding.partnerA, wedding.partnerB].filter(Boolean),
+      howTheyMet: collected.clientDetails?.timeline,
+      sharedHobbies: style.musicGenres,
+      funnyStories: wedding.specialMoments,
+      eventTheme: style.specialTheme,
+      weddingPartyInfo: collected.entertainmentInfo?.additionalServices,
+    };
+  }, [state.collectedData]);
 
   const timelineConfig = useMemo<TimelineConfig>(() => {
     const collected = state.collectedData || {};
@@ -309,6 +342,14 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                   <Image className="w-3 h-3 mr-1" />
                   Visuals
                 </Badge>
+                <Badge
+                  variant={activePanel === "humor" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setActivePanel("humor")}
+                >
+                  <SmilePlus className="w-3 h-3 mr-1" />
+                  Humor
+                </Badge>
               </div>
 
               {activePanel === "chat" ? (
@@ -376,7 +417,7 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                   )}
                   <EventTimelineComponent timeline={timeline} djSchedule={djSchedule} isLoading={timelineLoading} />
                 </CardContent>
-              ) : (
+              ) : activePanel === "visualization" ? (
                 <CardContent className="flex-1 overflow-y-auto space-y-4 pb-4">
                   {visualizationError && (
                     <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive">
@@ -395,6 +436,16 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                     </Button>
                   )}
                   <EventVisualizationPanel storyboard={storyboard} isLoading={visualizationLoading} />
+                </CardContent>
+              ) : (
+                <CardContent className="flex-1 overflow-y-auto space-y-4 pb-4">
+                  <HumorAssistantPanel
+                    suggestions={humorSuggestions}
+                    speechDraft={speechDraft}
+                    onGenerateHumor={generateHumor}
+                    onGenerateSpeech={generateSpeech}
+                    onSpeak={speak}
+                  />
                 </CardContent>
               )}
 
@@ -534,11 +585,20 @@ export function AiEventPlannerWithAvatar({ eventId, clientId }: AiEventPlannerWi
                 </Badge>
               )}
               {storyboard && <Badge variant="outline" className="bg-fuchsia-500/20">Scenes: {storyboard.scenes.length}</Badge>}
+              {humorSuggestions.length > 0 && <Badge variant="outline" className="bg-teal-500/20">Humor lines: {humorSuggestions.length}</Badge>}
               {state.isComplete && <Badge className="bg-orange-500/20">✅ Plan Complete</Badge>}
             </div>
           </motion.div>
         </div>
       </div>
+      <EntertainmentMomentWidget
+        suggestion={moment}
+        enabled={widgetEnabled}
+        minimized={widgetMinimized}
+        onRefresh={refreshMoment}
+        onToggleEnabled={toggleWidgetEnabled}
+        onToggleMinimized={toggleWidgetMinimized}
+      />
     </div>
   );
 }
