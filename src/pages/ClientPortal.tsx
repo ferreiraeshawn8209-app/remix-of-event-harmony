@@ -171,6 +171,7 @@ export default function ClientPortal() {
   if (view === "dashboard") {
     return (
       <div className="min-h-screen bg-background pb-24 relative">
+        <AmbientBackdrop />
         <PageBackground pageKey="bg_client_portal" />
         <Header profile={profile} onSignOut={handleSignOut} />
         <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
@@ -178,19 +179,48 @@ export default function ClientPortal() {
           {/* Top-end mix player — admin-uploaded tracks, skippable */}
           <TopMixPlayer />
 
+          {/* Concierge welcome */}
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="glass-premium rounded-3xl p-5 sm:p-6 relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/15 via-transparent to-neon-orange/15 pointer-events-none" />
+            <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+              <div className="space-y-2 max-w-xl">
+                <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-gold/90">
+                  <span className="h-1 w-6 rounded-full bg-gradient-to-r from-gold to-neon-orange" />
+                  BeatKulture Concierge
+                </span>
+                <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">
+                  Welcome, <span className="gold-text text-glow-gold">{profile?.full_name || user.email}</span>
+                </h1>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                  Choose a <span className="text-foreground font-semibold">signature package</span> below —
+                  or let us craft something <span className="text-foreground font-semibold">bespoke</span>.
+                  Your evening, orchestrated end‑to‑end.
+                </p>
+              </div>
+              <ConciergeMascot name="Kulture" />
+            </div>
+          </motion.section>
 
-
-          {/* Welcome + Slogan */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-            <h1 className="font-display text-2xl md:text-3xl font-bold">
-              Welcome, <span className="gradient-text">{profile?.full_name || user.email}</span>
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              Pick one of our <span className="text-foreground font-semibold">ready-made packages</span> below —
-              or, if you'd prefer something <span className="text-foreground font-semibold">tailored to your needs</span>,
-              tap the button to request a <span className="text-primary font-semibold">custom quotation</span>.
-            </p>
-          </motion.div>
+          {/* Command deck — premium feature tiles */}
+          <FeatureShowcase
+            onOpen={(id: FeatureId) => {
+              const map: Record<FeatureId, string> = {
+                "ai-assistant": "planner-assistant",
+                "my-event": "planner-hub",
+                "timeline": "planner-timeline",
+                "music": "top-mix-player",
+                "rehearsal": "planner-rehearsal",
+                "approval": "quotes-section",
+              };
+              const el = document.getElementById(map[id]) || document.getElementById("planner-hub");
+              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          />
 
           {/* Mixcloud Rotator — random genre each load + prev/next */}
           <MixcloudRotator />
@@ -200,6 +230,7 @@ export default function ClientPortal() {
 
           {/* YouTube Showcase */}
           <YoutubeShowcase />
+
 
 
 
