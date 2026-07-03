@@ -261,8 +261,8 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
   };
 
   const handleSubmit = async () => {
-    // Non-admin with callback: delegate entirely to the callback (e.g. QuoteEdit handles its own save)
-    if (!effectiveIsAdmin && onSaveQuote) {
+    // If callback provided, use it
+    if (onSaveQuote) {
       onSaveQuote(quoteData, calculations);
       return;
     }
@@ -316,12 +316,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         discountPercent: 0,
       });
 
-      // Admin: invoke callback (e.g. return to quotes tab) instead of navigating away
-      if (effectiveIsAdmin) {
-        onSaveQuote?.();
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error saving quote:", error);
     }

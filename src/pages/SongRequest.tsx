@@ -147,12 +147,12 @@ export default function SongRequest() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative isolate">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
       <PageBackground pageKey="bg_song_request" />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 w-full max-w-md"
+        className="w-full max-w-md"
       >
         <Card variant="glow" className="relative overflow-hidden">
           <CardHeader className="text-center pb-4">

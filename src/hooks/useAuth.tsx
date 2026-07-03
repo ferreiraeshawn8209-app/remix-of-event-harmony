@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -10,29 +10,8 @@ interface Profile {
   phone: string | null;
   email: string;
   avatar_url: string | null;
-  event_type: string | null;
-  event_date: string | null;
-  venue_name: string | null;
-  venue_address: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  guest_count: number | null;
-  event_setting: string | null;
-  city: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface EventProfileInput {
-  eventType: string;
-  eventDate: string;
-  venueName: string;
-  venueAddress: string;
-  startTime: string;
-  endTime: string;
-  guestCount: number;
-  eventSetting: "indoor" | "outdoor";
-  city: string;
 }
 
 interface AuthContextType {
@@ -41,13 +20,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   isLoading: boolean;
-  signUp: (
-    email: string,
-    password: string,
-    fullName: string,
-    phone?: string,
-    eventProfile?: EventProfileInput
-  ) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -62,36 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const hydrationRequestRef = useRef(0);
-  const pendingAuthEventRef = useRef<"signup" | "signin" | null>(null);
-  const lastNotifiedAccessTokenRef = useRef<string | null>(null);
-  const notificationRetryTimerRef = useRef<number | null>(null);
-
-  const notifyAdminAuthEvent = useCallback(async (eventType: "signup" | "signin") => {
-    const invoke = async () => {
-      const { error } = await supabase.rpc("notify_admin_on_app_auth", { _event: eventType });
-      return !error;
-    };
-
-    let succeeded = await invoke();
-    if (succeeded) return;
-
-    if (notificationRetryTimerRef.current) {
-      window.clearTimeout(notificationRetryTimerRef.current);
-    }
-
-    let attempt = 0;
-    const maxAttempts = 3;
-    const retry = () => {
-      notificationRetryTimerRef.current = window.setTimeout(async () => {
-        attempt += 1;
-        succeeded = await invoke();
-        if (!succeeded && attempt < maxAttempts) {
-          retry();
-        }
-      }, 1200 * attempt + 1200);
-    };
-    retry();
-  }, []);
 
   const hydrateAuthState = async (currentSession: Session | null, deferProfileFetch = false) => {
     const requestId = ++hydrationRequestRef.current;
@@ -166,28 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (typeof meta.full_name === "string" && meta.full_name) ||
       (email ? email.split("@")[0] : "User");
     const phoneRaw = typeof meta.phone === "string" ? meta.phone : null;
-    const baseProfilePayload = {
-      user_id: userId,
-      full_name: fullNameRaw,
-      email,
-      phone: phoneRaw,
-    };
-    const eventProfile = {
-      event_type: typeof meta.event_type === "string" ? meta.event_type : null,
-      event_date: typeof meta.event_date === "string" ? meta.event_date : null,
-      venue_name: typeof meta.venue_name === "string" ? meta.venue_name : null,
-      venue_address: typeof meta.venue_address === "string" ? meta.venue_address : null,
-      start_time: typeof meta.start_time === "string" ? meta.start_time : null,
-      end_time: typeof meta.end_time === "string" ? meta.end_time : null,
-      guest_count:
-        typeof meta.guest_count === "number"
-          ? meta.guest_count
-          : typeof meta.guest_count === "string" && meta.guest_count
-            ? Number(meta.guest_count)
-            : null,
-      event_setting: typeof meta.event_setting === "string" ? meta.event_setting : null,
-      city: typeof meta.city === "string" ? meta.city : null,
-    };
 
     const { data: existing, error: existingError } = await supabase
       .from("profiles")
@@ -203,68 +124,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return existing;
     }
 
-    if (existing) {
-      const profileNeedsBackfill = [
-        ["event_type", eventProfile.event_type],
-        ["event_date", eventProfile.event_date],
-        ["venue_name", eventProfile.venue_name],
-        ["venue_address", eventProfile.venue_address],
-        ["start_time", eventProfile.start_time],
-        ["end_time", eventProfile.end_time],
-        ["guest_count", eventProfile.guest_count],
-        ["event_setting", eventProfile.event_setting],
-        ["city", eventProfile.city],
-      ].some(([key, value]) => !existing[key as keyof typeof existing] && value);
-
-      if (!profileNeedsBackfill) return existing;
-
-      const { data: updated, error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          full_name: existing.full_name || fullNameRaw,
-          email: existing.email || email,
-          phone: existing.phone || phoneRaw,
-          ...eventProfile,
-        } as any)
-        .eq("id", existing.id)
-        .select("*")
-        .single();
-
-      if (updateError) {
-        console.error("Error backfilling profile:", updateError);
-        return existing;
-      }
-
-      return updated;
-    }
+    if (existing) return existing;
 
     const { data: created, error: createError } = await supabase
       .from("profiles")
       .insert({
-        ...baseProfilePayload,
-        ...eventProfile,
-      } as any)
+        user_id: userId,
+        full_name: fullNameRaw,
+        email,
+        phone: phoneRaw,
+      })
       .select("*")
       .single();
 
-    if (!createError) {
-      return created;
-    }
-
-    console.error("Error creating profile with event fields, retrying base profile:", createError);
-
-    const { data: fallbackCreated, error: fallbackCreateError } = await supabase
-      .from("profiles")
-      .insert(baseProfilePayload as any)
-      .select("*")
-      .single();
-
-    if (fallbackCreateError) {
-      console.error("Error creating fallback profile:", fallbackCreateError);
+    if (createError) {
+      console.error("Error creating profile:", createError);
       return null;
     }
 
-    return fallbackCreated;
+    return created;
   };
 
   const fetchProfile = async (u: User) => {
@@ -301,17 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        if (event === "SIGNED_IN" && currentSession?.access_token) {
-          const isNewSessionToken = lastNotifiedAccessTokenRef.current !== currentSession.access_token;
-          if (isNewSessionToken) {
-            lastNotifiedAccessTokenRef.current = currentSession.access_token;
-            const authEvent = pendingAuthEventRef.current ?? "signin";
-            pendingAuthEventRef.current = null;
-            void notifyAdminAuthEvent(authEvent);
-          }
-        }
-
+      (_event, currentSession) => {
         setIsLoading(true);
 
         void hydrateAuthState(currentSession, true);
@@ -356,83 +224,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
 
-    return () => {
-      subscription.unsubscribe();
-      if (notificationRetryTimerRef.current) {
-        window.clearTimeout(notificationRetryTimerRef.current);
-      }
-    };
-  }, [notifyAdminAuthEvent]);
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const signUp = async (
-    email: string,
-    password: string,
-    fullName: string,
-    phone?: string,
-    eventProfile?: EventProfileInput
-  ) => {
+  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
-      const configuredBase = import.meta.env.BASE_URL || "/";
-      const normalizedConfiguredBase = configuredBase.endsWith("/")
-        ? configuredBase.slice(0, -1)
-        : configuredBase;
-      const runtimeBase =
-        normalizedConfiguredBase &&
-        normalizedConfiguredBase !== "/" &&
-        (window.location.pathname === normalizedConfiguredBase ||
-          window.location.pathname.startsWith(`${normalizedConfiguredBase}/`))
-          ? configuredBase
-          : "/";
-
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}${runtimeBase}auth`,
+          emailRedirectTo: window.location.origin,
           data: {
             full_name: fullName,
             phone: phone || null,
-            event_type: eventProfile?.eventType || null,
-            event_date: eventProfile?.eventDate || null,
-            venue_name: eventProfile?.venueName || null,
-            venue_address: eventProfile?.venueAddress || null,
-            start_time: eventProfile?.startTime || null,
-            end_time: eventProfile?.endTime || null,
-            guest_count: eventProfile?.guestCount ?? null,
-            event_setting: eventProfile?.eventSetting || null,
-            city: eventProfile?.city || null,
           },
         },
       });
-
-      if (!error) {
-        pendingAuthEventRef.current = "signup";
-      }
 
       if (error) return { error };
 
       return { error: null };
     } catch (error) {
-      pendingAuthEventRef.current = null;
       return { error: error as Error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      pendingAuthEventRef.current = "signin";
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        pendingAuthEventRef.current = null;
-      }
-
       return { error: error ? new Error(error.message) : null };
     } catch (error) {
-      pendingAuthEventRef.current = null;
       return { error: error as Error };
     }
   };

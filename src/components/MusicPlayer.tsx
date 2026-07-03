@@ -1,287 +1,132 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Music, Loader2, Play, Pause, SkipBack, SkipForward, Shuffle, Volume2 } from "lucide-react";
-import { useActiveTracks, Track } from "@/hooks/useTracks";
-import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
+import { Music, Play, Pause, SkipForward, SkipBack, Shuffle, X, Volume2 } from "lucide-react";
+import { useMusicTracks } from "@/hooks/useMusicTracks";
 
-function randomIndex(len: number, exclude?: number): number {
-  if (len <= 1) return 0;
-  let i = Math.floor(Math.random() * len);
-  if (exclude !== undefined && i === exclude) i = (i + 1) % len;
-  return i;
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
-interface MusicPlayerProps {
-  /**
-   * Changing this value triggers a fresh autoplay attempt.
-   * Typically set to the authenticated user's ID so it fires once on login.
-   */
-  autoplayTrigger?: string;
-  mixcloudUrl?: string | null;
-}
+/**
+ * Global floating mini-player. Loads admin-uploaded music tracks and shuffles them
+ * with continuous playback. Browsers block autoplay-with-sound until the user
+ * interacts, so we show a "Tap to play" prompt on first load.
+ */
+export function MusicPlayer() {
+  const { activeTracks, isLoading } = useMusicTracks();
+  const [queue, setQueue] = useState<typeof activeTracks>([]);
+  const [idx, setIdx] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [needsTap, setNeedsTap] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) {
-  const { tracks, isLoading } = useActiveTracks();
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [index, setIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
-  const [initialized, setInitialized] = useState(false);
-  const mixcloudFallbackUrl = resolveMixcloudProfileUrl(mixcloudUrl);
-
-  const ensureCurrentTrackLoaded = useCallback(() => {
-    const audio = audioRef.current;
-    const track = tracks[index];
-    if (!audio || !track) return null;
-
-    if (audio.src !== track.url) {
-      audio.src = track.url;
-      audio.load();
-    } else if (audio.readyState === 0) {
-      audio.load();
-    }
-
-    return audio;
-  }, [index, tracks]);
-
-  // Pick a random track once tracks are loaded
+  // Build shuffled queue whenever the active list changes
   useEffect(() => {
-    if (tracks.length === 0) return;
-    if (!initialized) {
-      setIndex(randomIndex(tracks.length));
-      setInitialized(true);
-    }
-  }, [tracks, initialized]);
+    if (activeTracks.length === 0) return;
+    setQueue(shuffle(activeTracks));
+    setIdx(0);
+  }, [activeTracks.length]);
 
-  // When the trigger changes (e.g. user just logged in), pick a fresh random
-  // track and attempt autoplay
+  // Attempt autoplay muted so the queue starts even without a tap
   useEffect(() => {
-    if (!autoplayTrigger || tracks.length === 0) return;
-    const newIndex = randomIndex(tracks.length);
-    setIndex(newIndex);
-    setAutoplayBlocked(false);
-  }, [autoplayTrigger, tracks.length]);
-
-  // Attempt autoplay whenever the index changes (after init)
-  useEffect(() => {
-    if (!initialized || tracks.length === 0) return;
-    const audio = ensureCurrentTrackLoaded();
-    if (!audio) return;
-
-    const attempt = audio.play();
-    if (attempt !== undefined) {
-      attempt
-        .then(() => {
-          setIsPlaying(true);
-          setAutoplayBlocked(false);
-        })
-        .catch(() => {
-          // Autoplay blocked by browser — show manual play button
-          setIsPlaying(false);
-          setAutoplayBlocked(true);
-        });
-    }
-  }, [index, initialized, tracks, ensureCurrentTrackLoaded]);
-
-  const play = useCallback(() => {
-    const audio = ensureCurrentTrackLoaded();
-    if (!audio) return;
-    audio.play().then(() => {
-      setIsPlaying(true);
-      setAutoplayBlocked(false);
-    }).catch((err) => {
-      console.warn("MusicPlayer: play() rejected:", err);
+    if (!audioRef.current || queue.length === 0) return;
+    const a = audioRef.current;
+    a.src = queue[idx].file_url;
+    a.play().then(() => {
+      setPlaying(true);
+      setNeedsTap(false);
+    }).catch(() => {
+      setPlaying(false);
+      setNeedsTap(true);
     });
-  }, [ensureCurrentTrackLoaded]);
+  }, [queue, idx]);
 
-  // If autoplay is blocked, retry as soon as the user interacts anywhere on the page.
-  useEffect(() => {
-    if (!autoplayBlocked) return;
+  const skip = (delta: number) => {
+    if (queue.length === 0) return;
+    setIdx(i => (i + delta + queue.length) % queue.length);
+  };
 
-    const unlockAndPlay = () => {
-      play();
-    };
+  const toggle = () => {
+    if (!audioRef.current) return;
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play().then(() => { setPlaying(true); setNeedsTap(false); }).catch(() => {}); }
+  };
 
-    window.addEventListener("pointerdown", unlockAndPlay, { once: true });
-    window.addEventListener("keydown", unlockAndPlay, { once: true });
-    window.addEventListener("touchstart", unlockAndPlay, { once: true });
+  const shuffleNow = () => {
+    setQueue(shuffle(activeTracks));
+    setIdx(0);
+  };
 
-    return () => {
-      window.removeEventListener("pointerdown", unlockAndPlay);
-      window.removeEventListener("keydown", unlockAndPlay);
-      window.removeEventListener("touchstart", unlockAndPlay);
-    };
-  }, [autoplayBlocked, play]);
-
-  // If autoplay is blocked, retry as soon as the user interacts anywhere on the page.
-  useEffect(() => {
-    if (!autoplayBlocked) return;
-
-    const unlockAndPlay = () => {
-      play();
-    };
-
-    window.addEventListener("pointerdown", unlockAndPlay, { once: true });
-    window.addEventListener("keydown", unlockAndPlay, { once: true });
-    window.addEventListener("touchstart", unlockAndPlay, { once: true });
-
-    return () => {
-      window.removeEventListener("pointerdown", unlockAndPlay);
-      window.removeEventListener("keydown", unlockAndPlay);
-      window.removeEventListener("touchstart", unlockAndPlay);
-    };
-  }, [autoplayBlocked, play]);
-
-  const pause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.pause();
-    setIsPlaying(false);
-  }, []);
-
-  const next = useCallback(() => {
-    if (tracks.length === 0) return;
-    setIndex((i) => (i + 1) % tracks.length);
-    setAutoplayBlocked(false);
-  }, [tracks.length]);
-
-  const previous = useCallback(() => {
-    if (tracks.length === 0) return;
-    setIndex((i) => (i - 1 + tracks.length) % tracks.length);
-    setAutoplayBlocked(false);
-  }, [tracks.length]);
-
-  const shuffle = useCallback(() => {
-    if (tracks.length === 0) return;
-    setIndex((i) => randomIndex(tracks.length, i));
-    setAutoplayBlocked(false);
-  }, [tracks.length]);
-
-  // Auto-advance when a track ends
-  const handleEnded = useCallback(() => {
-    if (tracks.length <= 1) {
-      // Loop single track
-      audioRef.current?.play().then(() => setIsPlaying(true)).catch((err) => {
-        console.warn("MusicPlayer: loop play() rejected:", err);
-      });
-      return;
-    }
-    setIndex((i) => randomIndex(tracks.length, i));
-  }, [tracks.length]);
-
-  const currentTrack: Track | undefined = tracks[index];
-
-  if (isLoading) {
-    return (
-      <Card variant="glass" className="overflow-hidden border-primary/20">
-        <CardContent className="py-6 flex items-center justify-center gap-2 text-muted-foreground text-sm">
-          <Loader2 className="w-4 h-4 animate-spin" /> Loading music…
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (tracks.length === 0) {
-    return (
-      <Card variant="glass" className="overflow-hidden border-primary/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Music className="w-4 h-4 text-primary" /> BeatKulture Music Player
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            No live portal tracks are loaded yet. You can still listen to our latest mixes below.
-          </p>
-          <a
-            href={mixcloudFallbackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-xs text-primary hover:underline"
-          >
-            Listen to more mixes on Mixcloud
-          </a>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (isLoading || activeTracks.length === 0) return null;
+  const current = queue[idx];
 
   return (
-    <Card variant="glass" className="overflow-hidden border-primary/20">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Music className="w-4 h-4 text-primary" /> BeatKulture Music Player
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Hidden native audio element */}
-        <audio
-          ref={audioRef}
-          aria-label="BeatKulture background music player"
-          autoPlay
-          onEnded={handleEnded}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
-
-        {/* Track info */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0 ${isPlaying ? "animate-pulse" : ""}`}>
-            <Volume2 className="w-5 h-5 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold truncate">{currentTrack?.title}</p>
-            <p className="text-xs text-muted-foreground">
-              {isPlaying ? "Now playing" : autoplayBlocked ? "Tap play to start" : "Paused"}
-              {tracks.length > 1 && ` · ${index + 1} of ${tracks.length}`}
-            </p>
-          </div>
-        </div>
-
-        {/* Autoplay-blocked nudge */}
-        {autoplayBlocked && (
-          <div className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
-            Your browser requires interaction before audio can start. Tap anywhere and playback will begin automatically.
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant={isPlaying ? "outline" : "hero"}
-            onClick={isPlaying ? pause : play}
-            className="flex-1"
+    <>
+      <audio
+        ref={audioRef}
+        onEnded={() => skip(1)}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+      />
+      <AnimatePresence>
+        {!collapsed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-4 left-4 z-40 w-72 max-w-[90vw] rounded-2xl bg-card/95 backdrop-blur-xl border border-primary/30 shadow-xl overflow-hidden"
           >
-            {isPlaying
-              ? <><Pause className="w-4 h-4 mr-1" /> Pause</>
-              : <><Play className="w-4 h-4 mr-1" /> Play</>}
-          </Button>
-          {tracks.length > 1 && (
-            <Button size="sm" variant="ghost" onClick={previous} title="Previous track">
-              <SkipBack className="w-4 h-4" />
-            </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={shuffle} title="Shuffle">
-            <Shuffle className="w-4 h-4" />
-          </Button>
-          {tracks.length > 1 && (
-            <Button size="sm" variant="ghost" onClick={next} title="Next track">
-              <SkipForward className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-
-        <a
-          href={mixcloudFallbackUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-xs text-primary hover:underline"
+            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary/15 to-accent/15">
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <Music className="w-4 h-4 text-primary" />
+                BeatKulture Radio
+              </div>
+              <button onClick={() => setCollapsed(true)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 space-y-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{current?.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{current?.artist || "BeatKulture"}</p>
+              </div>
+              {needsTap && (
+                <p className="text-[11px] text-primary">Tap play to start the mix</p>
+              )}
+              <div className="flex items-center justify-between">
+                <Button size="icon" variant="ghost" onClick={() => skip(-1)}>
+                  <SkipBack className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="hero" onClick={toggle} className="rounded-full">
+                  {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => skip(1)}>
+                  <SkipForward className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={shuffleNow} title="Reshuffle">
+                  <Shuffle className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {collapsed && (
+        <button
+          onClick={() => setCollapsed(false)}
+          className="fixed bottom-4 left-4 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent shadow-xl flex items-center justify-center"
+          aria-label="Open music player"
         >
-          Listen to more mixes on Mixcloud
-        </a>
-      </CardContent>
-    </Card>
+          <Volume2 className="w-5 h-5 text-primary-foreground" />
+        </button>
+      )}
+    </>
   );
 }

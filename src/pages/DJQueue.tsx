@@ -110,7 +110,7 @@ export default function DJQueue() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="BeatKulture" className="w-8 h-8 object-contain" />
-            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
+            <span className="font-display text-xl font-bold gradient-text">BEATKULTURE</span>
           </Link>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/dashboard">

@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Music, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { PageBackground } from "@/components/PageBackground";
-import { useBrandingLogo } from "@/hooks/useBranding";
 
 const signUpSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
@@ -25,15 +24,6 @@ const signUpSchema = z.object({
     .regex(/[0-9]/, { message: "Password must contain a number" }),
   fullName: z.string().trim().min(1, { message: "Name is required" }).max(100),
   phone: z.string().optional(),
-  eventType: z.string().trim().min(1, { message: "Event type is required" }),
-  eventDate: z.string().trim().min(1, { message: "Event date is required" }),
-  venueName: z.string().trim().min(1, { message: "Venue name is required" }),
-  venueAddress: z.string().trim().min(1, { message: "Venue address is required" }),
-  startTime: z.string().trim().min(1, { message: "Start time is required" }),
-  endTime: z.string().trim().min(1, { message: "End time is required" }),
-  guestCount: z.coerce.number().int().min(1, { message: "Guest count is required" }),
-  eventSetting: z.enum(["indoor", "outdoor"]),
-  city: z.string().trim().min(1, { message: "City or location is required" }),
 });
 
 const signInSchema = z.object({
@@ -43,14 +33,12 @@ const signInSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn, resetPassword } = useAuth();
-  const logoImg = useBrandingLogo();
+  const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const initialTab = (new URLSearchParams(window.location.search).get("tab") === "signup"
     ? "signup"
     : "login") as "login" | "signup";
   const [tab, setTab] = useState<"login" | "signup">(initialTab);
-
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -62,32 +50,16 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
-  const [signupEventType, setSignupEventType] = useState("");
-  const [signupEventDate, setSignupEventDate] = useState("");
-  const [signupVenueName, setSignupVenueName] = useState("");
-  const [signupVenueAddress, setSignupVenueAddress] = useState("");
-  const [signupStartTime, setSignupStartTime] = useState("");
-  const [signupEndTime, setSignupEndTime] = useState("");
-  const [signupGuestCount, setSignupGuestCount] = useState("");
-  const [signupEventSetting, setSignupEventSetting] = useState<"indoor" | "outdoor" | "">("");
-  const [signupCity, setSignupCity] = useState("");
 
   const explicitRedirect = new URLSearchParams(window.location.search).get("redirect");
+  const redirectTo = explicitRedirect || (isAdmin ? "/admin" : "/client");
 
   useEffect(() => {
-    if (!user || authLoading) return;
-
-    if (explicitRedirect) {
-      navigate(explicitRedirect, { replace: true });
-      return;
+    // Wait for profile (and therefore isAdmin) to resolve before redirecting,
+    // otherwise admins get sent to /client before their role is known.
+    if (user && !authLoading && profile) {
+      navigate(explicitRedirect || (isAdmin ? "/admin" : "/client"));
     }
-
-    if (isAdmin) {
-      navigate("/admin", { replace: true });
-      return;
-    }
-
-    navigate(profile ? "/client" : "/dashboard", { replace: true });
   }, [user, authLoading, profile, isAdmin, navigate, explicitRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -113,6 +85,7 @@ export default function Auth() {
           title: "Welcome Back!",
           description: "You have successfully logged in.",
         });
+        // Redirect happens in the useEffect once the role is resolved.
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -137,33 +110,13 @@ export default function Auth() {
         password: signupPassword,
         fullName: signupName,
         phone: signupPhone || undefined,
-        eventType: signupEventType,
-        eventDate: signupEventDate,
-        venueName: signupVenueName,
-        venueAddress: signupVenueAddress,
-        startTime: signupStartTime,
-        endTime: signupEndTime,
-        guestCount: signupGuestCount,
-        eventSetting: signupEventSetting,
-        city: signupCity,
       });
 
       const { error } = await signUp(
         validated.email,
         validated.password,
         validated.fullName,
-        validated.phone,
-        {
-          eventType: validated.eventType,
-          eventDate: validated.eventDate,
-          venueName: validated.venueName,
-          venueAddress: validated.venueAddress,
-          startTime: validated.startTime,
-          endTime: validated.endTime,
-          guestCount: validated.guestCount,
-          eventSetting: validated.eventSetting,
-          city: validated.city,
-        }
+        validated.phone
       );
 
       if (error) {
@@ -175,8 +128,9 @@ export default function Auth() {
       } else {
         toast({
           title: "Account Created!",
-          description: "Welcome to BeatKulture Entertainment. Your event profile is ready for quoting.",
+          description: "Welcome to BEATKULTURE! You can now access your dashboard.",
         });
+        // Redirect happens in the useEffect once the role is resolved.
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -196,11 +150,11 @@ export default function Auth() {
       toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
       return;
     }
-
     setForgotLoading(true);
-    const { error } = await resetPassword(forgotEmail.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     setForgotLoading(false);
-
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -218,17 +172,17 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative isolate">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
       <PageBackground pageKey="bg_auth" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-md"
+        className="w-full max-w-md"
       >
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <img src={logoImg} alt="BeatKulture Entertainment logo" className="w-8 h-8 object-contain" />
-            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE ENTERTAINMENT</span>
+            <Music className="w-8 h-8 text-primary" />
+            <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE</span>
           </div>
           <p className="text-muted-foreground">Access your quotes and event planning</p>
         </div>
@@ -329,116 +283,6 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-event-type">Event type *</Label>
-                    <Select value={signupEventType} onValueChange={setSignupEventType}>
-                      <SelectTrigger id="signup-event-type">
-                        <SelectValue placeholder="Select event type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Wedding">Wedding</SelectItem>
-                        <SelectItem value="Corporate">Corporate</SelectItem>
-                        <SelectItem value="Birthday">Birthday</SelectItem>
-                        <SelectItem value="Private Party">Private Party</SelectItem>
-                        <SelectItem value="Anniversary">Anniversary</SelectItem>
-                        <SelectItem value="Matric Dance">Matric Dance</SelectItem>
-                        <SelectItem value="Baby Shower">Baby Shower</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-event-date">Event date *</Label>
-                      <Input
-                        id="signup-event-date"
-                        type="date"
-                        value={signupEventDate}
-                        onChange={(e) => setSignupEventDate(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-event-setting">Indoor or outdoor *</Label>
-                      <Select value={signupEventSetting} onValueChange={(value) => setSignupEventSetting(value as "indoor" | "outdoor")}>
-                        <SelectTrigger id="signup-event-setting">
-                          <SelectValue placeholder="Select setting" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="indoor">Indoor</SelectItem>
-                          <SelectItem value="outdoor">Outdoor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-venue-name">Venue name *</Label>
-                    <Input
-                      id="signup-venue-name"
-                      type="text"
-                      placeholder="Event venue"
-                      value={signupVenueName}
-                      onChange={(e) => setSignupVenueName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-venue-address">Venue address *</Label>
-                    <Input
-                      id="signup-venue-address"
-                      type="text"
-                      placeholder="Street address"
-                      value={signupVenueAddress}
-                      onChange={(e) => setSignupVenueAddress(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-city">City / location *</Label>
-                      <Input
-                        id="signup-city"
-                        type="text"
-                        placeholder="Pretoria"
-                        value={signupCity}
-                        onChange={(e) => setSignupCity(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-guests">Number of guests *</Label>
-                      <Input
-                        id="signup-guests"
-                        type="number"
-                        min="1"
-                        value={signupGuestCount}
-                        onChange={(e) => setSignupGuestCount(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-start-time">Event start time *</Label>
-                      <Input
-                        id="signup-start-time"
-                        type="time"
-                        value={signupStartTime}
-                        onChange={(e) => setSignupStartTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-end-time">Event end time *</Label>
-                      <Input
-                        id="signup-end-time"
-                        type="time"
-                        value={signupEndTime}
-                        onChange={(e) => setSignupEndTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
                       id="signup-password"
@@ -470,6 +314,7 @@ export default function Auth() {
           </CardContent>
         </Card>
 
+        {/* Forgot Password Overlay */}
         {showForgotPassword && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowForgotPassword(false)}>
             <Card variant="glass" className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>

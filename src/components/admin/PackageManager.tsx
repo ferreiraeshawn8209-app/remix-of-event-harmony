@@ -71,7 +71,7 @@ function PackageForm({
         popular,
         is_active: isActive,
         sort_order: Number(sortOrder),
-        includes: includesText.split("\n").filter((line) => line.length > 0),
+        includes: includesText.split("\n").map(s => s.trim()).filter(Boolean),
         image_url: imageUrl || null,
       });
       toast({ title: "Saved", description: `Package "${name}" saved.` });
@@ -217,27 +217,16 @@ export function PackageManager() {
                         onCancel={() => setEditingId(null)}
                       />
                     ) : (
-                      <div key={pkg.id} className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className="w-40 h-24 rounded-lg overflow-hidden bg-muted/50 shrink-0 border border-border/60">
-                            {pkg.image_url ? (
-                              <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain p-1" loading="lazy" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[11px] text-muted-foreground">
-                                No image
-                              </div>
-                            )}
+                      <div key={pkg.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{pkg.name}</span>
+                            {pkg.popular && <Badge variant="default" className="text-xs"><Star className="w-3 h-3 mr-1" />Popular</Badge>}
+                            {!pkg.is_active && <Badge variant="secondary" className="text-xs">Hidden</Badge>}
                           </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{pkg.name}</span>
-                              {pkg.popular && <Badge variant="default" className="text-xs"><Star className="w-3 h-3 mr-1" />Popular</Badge>}
-                              {!pkg.is_active && <Badge variant="secondary" className="text-xs">Hidden</Badge>}
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{pkg.description}</p>
-                            <p className="text-sm text-primary font-semibold mt-1">{formatCurrency(pkg.price)}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{pkg.includes.length} items included</p>
-                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">{pkg.description}</p>
+                          <p className="text-sm text-primary font-semibold mt-1">{formatCurrency(pkg.price)}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{pkg.includes.length} items included</p>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" onClick={() => { setEditingId(pkg.id); setShowCreate(false); }}>

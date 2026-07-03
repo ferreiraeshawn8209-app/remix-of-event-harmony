@@ -27,18 +27,28 @@ export function useServiceSettings() {
   const { data: settings = DEFAULTS, isLoading } = useQuery({
     queryKey: ["service-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_settings")
-        .select("setting_key, setting_value");
-
-      if (error) throw error;
-
       const result = { ...DEFAULTS };
-      data?.forEach((row: { setting_key: string; setting_value: number }) => {
-        if (row.setting_key in result) {
-          (result as any)[row.setting_key] = Number(row.setting_value);
-        }
-      });
+
+      // Try admin direct read first
+      const admin = await supabase.from("service_settings").select("setting_key, setting_value");
+      if (!admin.error && admin.data) {
+        admin.data.forEach((row: any) => {
+          if (row.setting_key in result) {
+            (result as any)[row.setting_key] = Number(row.setting_value);
+          }
+        });
+        return result;
+      }
+
+      // Fallback for authenticated non-admin clients
+      const rpc = await supabase.rpc("get_service_settings" as any);
+      if (!rpc.error && rpc.data) {
+        (rpc.data as any[]).forEach((row: any) => {
+          if (row.setting_key in result) {
+            (result as any)[row.setting_key] = Number(row.setting_value);
+          }
+        });
+      }
       return result;
     },
   });

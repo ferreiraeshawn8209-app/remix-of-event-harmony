@@ -9,8 +9,6 @@ import { cn } from "@/lib/utils";
 
 const typeIcon: Record<string, React.ReactNode> = {
   portal_login: <LogIn className="w-3.5 h-3.5 text-primary" />,
-  app_signin: <LogIn className="w-3.5 h-3.5 text-primary" />,
-  app_signup: <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />,
   event_plan_submitted: <ClipboardList className="w-3.5 h-3.5 text-emerald-400" />,
   package_quote_request: <Package className="w-3.5 h-3.5 text-amber-400" />,
   extra_request: <PlusCircle className="w-3.5 h-3.5 text-violet-400" />,

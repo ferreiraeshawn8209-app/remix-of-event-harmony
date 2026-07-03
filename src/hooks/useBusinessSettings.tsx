@@ -7,8 +7,7 @@ export type BusinessSettingKey =
   | "bank_account_number"
   | "bank_branch_code"
   | "bank_account_type"
-  | "mixcloud_url"
-  | "logo_url"
+  | "brand_logo_url"
   | "hero_image_url"
   | "site_background_url"
   | "bg_landing"
@@ -18,16 +17,36 @@ export type BusinessSettingKey =
   | "bg_auth"
   | "bg_song_request";
 
+/**
+ * Loads business settings using a public/safe RPC for non-admins.
+ * Admin-only rows (banking) are pulled through a separate authenticated RPC.
+ */
 export function useBusinessSettings() {
   const qc = useQueryClient();
 
   const { data: settings = {}, isLoading } = useQuery({
     queryKey: ["business_settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("business_settings").select("key,value");
-      if (error) throw error;
       const map: Record<string, string> = {};
-      (data || []).forEach((r: any) => { map[r.key] = r.value || ""; });
+
+      // Try admin-level full read first
+      const full = await supabase.from("business_settings").select("key,value");
+      if (!full.error && full.data) {
+        full.data.forEach((r: any) => { map[r.key] = r.value || ""; });
+        return map;
+      }
+
+      // Fallback: public safe subset (branding + backgrounds)
+      const pub = await supabase.rpc("get_public_business_settings" as any);
+      if (!pub.error && pub.data) {
+        (pub.data as any[]).forEach((r: any) => { map[r.key] = r.value || ""; });
+      }
+
+      // Authenticated banking read
+      const bank = await supabase.rpc("get_banking_details" as any);
+      if (!bank.error && bank.data) {
+        (bank.data as any[]).forEach((r: any) => { map[r.key] = r.value || ""; });
+      }
       return map;
     },
   });
@@ -60,12 +79,9 @@ export async function uploadSiteImage(file: File, prefix = "general"): Promise<s
 
 /** Fetch banking details synchronously-ish for PDF generation. */
 export async function fetchBankingDetails(): Promise<string[]> {
-  const { data } = await supabase
-    .from("business_settings")
-    .select("key,value")
-    .in("key", ["bank_name", "bank_account_name", "bank_account_number", "bank_branch_code", "bank_account_type"]);
+  const { data } = await supabase.rpc("get_banking_details" as any);
   const m: Record<string, string> = {};
-  (data || []).forEach((r: any) => { m[r.key] = r.value || ""; });
+  (data as any[] | null)?.forEach((r: any) => { m[r.key] = r.value || ""; });
   const lines: string[] = [];
   if (m.bank_name) lines.push(`Bank: ${m.bank_name}`);
   if (m.bank_account_name) lines.push(`Account: ${m.bank_account_name}`);

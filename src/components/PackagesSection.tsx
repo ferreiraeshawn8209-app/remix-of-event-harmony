@@ -55,7 +55,7 @@ function PackageCard({ pkg, onSelect }: { pkg: DbPackage; onSelect: (pkg: DbPack
             {pkg.includes.map((item, index) => (
               <li key={index} className="flex items-start gap-2 text-sm">
                 <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                <span className="text-muted-foreground whitespace-pre-wrap">{item}</span>
+                <span className="text-muted-foreground">{item}</span>
               </li>
             ))}
           </ul>

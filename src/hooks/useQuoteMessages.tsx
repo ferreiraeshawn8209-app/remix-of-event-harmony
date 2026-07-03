@@ -44,6 +44,7 @@ export function useQuoteMessages(quoteId?: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quoteId]);
 
   const send = useMutation({

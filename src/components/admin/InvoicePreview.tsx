@@ -43,7 +43,7 @@ export function InvoicePreview({ open, onOpenChange, quote }: InvoicePreviewProp
                 <Music className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h2 className="font-display font-bold text-xl">BEATKULTURE ENTERTAINMENT</h2>
+                <h2 className="font-display font-bold text-xl">BEATKULTURE</h2>
                 <p className="text-xs text-muted-foreground">(PTY) LTD</p>
               </div>
             </div>

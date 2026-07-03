@@ -9,52 +9,6 @@ import { formatCurrency } from "@/lib/pricing";
 import { motion } from "framer-motion";
 
 const CATEGORY_ORDER: Record<string, number> = { wedding: 1, corporate: 2, party: 3 };
-const CATEGORY_TITLES: Record<string, string> = {
-  wedding: "Wedding Packages",
-  corporate: "Corporate Packages",
-  party: "Party Packages",
-};
-const FALLBACK_PACKAGES = [
-  {
-    id: "fallback-wedding-premium",
-    name: "Premium Wedding",
-    category: "wedding",
-    description: "Enhanced sound, intelligent lighting, and dedicated coordination for your big day.",
-    price: 15000,
-    includes: ["8 hours DJ service", "Premium sound system", "Moving head lights & uplighting", "MC services"],
-    popular: true,
-    is_active: true,
-    sort_order: 2,
-    image_url: null,
-  },
-  {
-    id: "fallback-corporate-full",
-    name: "Corporate Full",
-    category: "corporate",
-    description: "Complete corporate entertainment and presentation support for polished events.",
-    price: 12000,
-    includes: ["6 hours service", "Enhanced sound system", "Elegant lighting setup", "Presentation audio support"],
-    popular: true,
-    is_active: true,
-    sort_order: 2,
-    image_url: null,
-  },
-  {
-    id: "fallback-party-premium",
-    name: "Party Premium",
-    category: "party",
-    description: "Club-style sound and effects to level up birthdays and private celebrations.",
-    price: 8000,
-    includes: ["6 hours DJ service", "Enhanced sound system", "Moving head lights", "Smoke & bubble machines"],
-    popular: true,
-    is_active: true,
-    sort_order: 2,
-    image_url: null,
-  },
-];
-
-const categoryHeading = (category: string) =>
-  CATEGORY_TITLES[category] || `${category.charAt(0).toUpperCase() + category.slice(1)} Packages`;
 
 export function PackagesShowcase() {
   const { packages, isLoading } = usePackages();
@@ -63,7 +17,6 @@ export function PackagesShowcase() {
   const active = packages.filter((p) => p.is_active).sort(
     (a, b) => (CATEGORY_ORDER[a.category] || 9) - (CATEGORY_ORDER[b.category] || 9) || a.sort_order - b.sort_order,
   );
-  const visiblePackages = active.length > 0 ? active : FALLBACK_PACKAGES;
 
   return (
     <section className="container mx-auto px-4 py-16">
@@ -95,11 +48,7 @@ export function PackagesShowcase() {
               </p>
             </div>
             <Button variant="hero" size="lg" asChild>
-              <Link
-                to={`/auth?tab=signup&redirect=${encodeURIComponent("/client?custom=1")}`}
-              >
-                <Sparkles className="w-4 h-4" /> Start my quote
-              </Link>
+              <Link to="/auth?tab=signup"><Sparkles className="w-4 h-4" /> Start my quote</Link>
             </Button>
           </CardContent>
         </Card>
@@ -108,18 +57,13 @@ export function PackagesShowcase() {
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading packages…</p>}
 
       {/* Grouped by category in the requested order */}
-      {Array.from(new Set(visiblePackages.map((p) => p.category)))
-        .sort(
-          (a, b) =>
-            (CATEGORY_ORDER[a] || 9) - (CATEGORY_ORDER[b] || 9) ||
-            a.localeCompare(b),
-        )
-        .map((cat) => {
-        const list = visiblePackages.filter((p) => p.category === cat);
+      {(["wedding", "corporate", "party"] as const).map((cat) => {
+        const list = active.filter((p) => p.category === cat);
         if (!list.length) return null;
+        const titleMap: Record<string, string> = { wedding: "Wedding Packages", corporate: "Corporate Packages", party: "Party Packages" };
         return (
           <div key={cat} className="mb-12">
-            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{categoryHeading(cat)}</h3>
+            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{titleMap[cat]}</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {list.map((p) => {
                 const discounted = applyDiscount(p.price, percent);
@@ -127,11 +71,6 @@ export function PackagesShowcase() {
                   <motion.div key={p.id} whileHover={{ y: -4 }} className="h-full">
                     <Card variant={p.popular ? "glow" : "glass"} className="h-full flex flex-col">
                       <CardContent className="p-5 flex flex-col flex-1">
-                        {p.image_url && (
-                          <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-lg bg-muted/40">
-                            <img src={p.image_url} alt={p.name} className="w-full h-44 object-contain p-2" loading="lazy" />
-                          </div>
-                        )}
                         {p.popular && <Badge className="self-start mb-2">Most popular</Badge>}
                         <h4 className="font-display text-lg font-bold">{p.name}</h4>
                         <p className="text-sm text-muted-foreground mt-1 mb-3">{p.description}</p>
@@ -147,19 +86,15 @@ export function PackagesShowcase() {
                           )}
                         </div>
                         <ul className="space-y-1.5 text-sm flex-1">
-                          {p.includes.map((inc, i) => (
+                          {p.includes.slice(0, 6).map((inc, i) => (
                             <li key={i} className="flex gap-2 text-muted-foreground">
                               <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                              <span className="whitespace-pre-wrap">{inc}</span>
+                              <span>{inc}</span>
                             </li>
                           ))}
                         </ul>
                         <Button variant="glass" className="mt-4" asChild>
-                          <Link
-                            to={`/auth?package=${encodeURIComponent(p.id)}&redirect=${encodeURIComponent(`/client?package=${p.id}`)}`}
-                          >
-                            Book this package
-                          </Link>
+                          <Link to="/auth?tab=signup">Book this package</Link>
                         </Button>
                       </CardContent>
                     </Card>
