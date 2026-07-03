@@ -32,6 +32,9 @@ import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { PageBackground } from "@/components/PageBackground";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { TopMixPlayer } from "@/components/TopMixPlayer";
+import { AmbientBackdrop } from "@/components/beatkulture/AmbientBackdrop";
+import { ConciergeMascot } from "@/components/beatkulture/ConciergeMascot";
+import { FeatureShowcase, FeatureId } from "@/components/beatkulture/FeatureShowcase";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
