@@ -69,6 +69,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        gold: {
+          DEFAULT: "hsl(var(--bk-gold))",
+          soft: "hsl(var(--bk-gold-soft))",
+        },
+        neon: {
+          purple: "hsl(var(--bk-purple))",
+          "purple-deep": "hsl(var(--bk-purple-deep))",
+          orange: "hsl(var(--bk-orange))",
+          "orange-warm": "hsl(var(--bk-orange-warm))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
