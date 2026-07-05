@@ -6,7 +6,7 @@ const MIXCLOUD_USERNAME = "beatkulture";
 const MIXCLOUD_EMBED_URL = `https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2F${MIXCLOUD_USERNAME}%2F`;
 
 export function BackgroundAudio() {
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center">
