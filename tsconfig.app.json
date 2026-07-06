@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/packages/*": [
+        "./packages/*"
       ]
     },
     "skipLibCheck": true,
@@ -30,6 +33,11 @@
     "useDefineForClassFields": true
   },
   "include": [
-    "src"
+    "src",
+    "packages/shared-types"
+  ],
+  "exclude": [
+    "services",
+    "src/components/landing/PackagesShowcase.test.tsx"
   ]
 }

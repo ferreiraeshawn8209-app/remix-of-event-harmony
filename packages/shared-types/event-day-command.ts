@@ -60,7 +60,7 @@ export interface AudienceReaction {
   relatedCueId?: string;
 }
 
-export interface EventDayStatus {
+export interface EventDayStatusSnapshot {
   eventId: string;
   status: EventDayStatus;
   startTime?: string;
