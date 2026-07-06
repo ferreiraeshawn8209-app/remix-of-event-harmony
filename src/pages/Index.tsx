@@ -111,7 +111,10 @@ const Index = () => {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }} className="space-y-4">
+            <div className="flex justify-center">
+              <DjAvatar mood="mixing" className="w-full max-w-[340px]" />
+            </div>
             <CoordinatorChat />
           </motion.div>
         </div>
