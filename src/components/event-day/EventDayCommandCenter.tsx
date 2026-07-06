@@ -76,15 +76,15 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
             <h1 className="font-display text-3xl font-bold gradient-text">Event Day Command Center</h1>
             <p className="text-muted-foreground mt-2">Real-time event management & DJ control</p>
           </div>
-          <Badge className={statusColor[state.eventDayStatus.status as keyof typeof statusColor]}>
-            {state.eventDayStatus.status.replace(/_/g, ' ').toUpperCase()}
+          <Badge className={statusColor[state.eventDayStatus as keyof typeof statusColor]}>
+            {state.eventDayStatus.replace(/_/g, ' ').toUpperCase()}
           </Badge>
         </div>
 
         <Card variant="glass" className="feature-card-luxe border-primary/25">
           <CardContent className="py-4 flex flex-col lg:flex-row gap-4 items-center justify-between">
             <div className="flex items-center gap-4">
-              <BeatkultureMascot mood={state.eventDayStatus.status === 'in_progress' ? 'speaking' : 'idle'} />
+              <BeatkultureMascot mood={state.eventDayStatus === 'in_progress' ? 'speaking' : 'idle'} />
               <div>
                 <p className="text-sm uppercase tracking-[0.2em] text-primary/80">AI Concierge</p>
                 <h2 className="text-xl font-display font-semibold">Tonight's Luxury Event Experience</h2>
@@ -122,7 +122,7 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
               <CardContent className="space-y-6">
                 {/* Playback Controls */}
                 <div className="flex gap-2 flex-wrap">
-                  {state.eventDayStatus.status === 'not_started' ? (
+                  {state.eventDayStatus === 'not_started' ? (
                     <Button
                       onClick={actions.startEvent}
                       size="lg"
@@ -131,12 +131,12 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
                       <Play className="w-4 h-4 mr-2" />
                       Start Event
                     </Button>
-                  ) : state.eventDayStatus.status === 'completed' ? (
+                  ) : state.eventDayStatus === 'completed' ? (
                     <Button disabled size="lg" className="flex-1">
                       <Square className="w-4 h-4 mr-2" />
                       Event Ended
                     </Button>
-                  ) : state.eventDayStatus.status === 'paused' ? (
+                  ) : state.eventDayStatus === 'paused' ? (
                     <Button
                       onClick={actions.resumeEvent}
                       size="lg"
@@ -221,12 +221,12 @@ export function EventDayCommandCenter({ eventId, timelinePhases }: EventDayComma
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Event Progress</span>
-                    <span className="font-semibold text-amber-400">{state.eventDayStatus.timelineProgress}%</span>
+                    <span className="font-semibold text-amber-400">{getters.getTimelineProgressPercent()}%</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
                     <div
                       className="bg-gradient-to-r from-amber-500 to-orange-500 h-full transition-all"
-                      style={{ width: `${state.eventDayStatus.timelineProgress}%` }}
+                      style={{ width: `${getters.getTimelineProgressPercent()}%` }}
                     />
                   </div>
                 </div>
