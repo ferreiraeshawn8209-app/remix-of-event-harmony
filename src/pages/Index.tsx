@@ -15,6 +15,8 @@ import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { useBrandingLogo } from "@/hooks/useBranding";
+import { DjAvatar } from "@/components/beatkulture/DjAvatar";
+import { CinematicOverlay } from "@/components/beatkulture/CinematicOverlay";
 import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
