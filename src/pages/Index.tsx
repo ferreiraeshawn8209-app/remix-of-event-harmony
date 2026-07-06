@@ -50,6 +50,7 @@ const Index = () => {
   return (
     <div className="relative isolate min-h-screen bg-background text-foreground">
       <PageBackground pageKey="bg_landing" />
+      <CinematicOverlay intensity="medium" />
 
       {/* Top bar */}
       <header className="container mx-auto px-4 py-5 flex items-center justify-between relative z-10">
