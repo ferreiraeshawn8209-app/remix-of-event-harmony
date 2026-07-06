@@ -15,6 +15,8 @@ import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { useBrandingLogo } from "@/hooks/useBranding";
+import { DjAvatar } from "@/components/beatkulture/DjAvatar";
+import { CinematicOverlay } from "@/components/beatkulture/CinematicOverlay";
 import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
@@ -48,6 +50,7 @@ const Index = () => {
   return (
     <div className="relative isolate min-h-screen bg-background text-foreground">
       <PageBackground pageKey="bg_landing" />
+      <CinematicOverlay intensity="medium" />
 
       {/* Top bar */}
       <header className="container mx-auto px-4 py-5 flex items-center justify-between relative z-10">
@@ -109,7 +112,10 @@ const Index = () => {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }} className="space-y-4">
+            <div className="flex justify-center">
+              <DjAvatar mood="mixing" className="w-full max-w-[340px]" />
+            </div>
             <CoordinatorChat />
           </motion.div>
         </div>
