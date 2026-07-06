@@ -1,19 +1,24 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
+import { Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import logoImg from "@/assets/logo.png";
 import { PageBackground } from "@/components/PageBackground";
 import { CoordinatorChat } from "@/components/landing/CoordinatorChat";
 import { UpcomingEventsTicker } from "@/components/landing/UpcomingEventsTicker";
 import { SpecialsBanner } from "@/components/landing/SpecialsBanner";
 import { PackagesShowcase } from "@/components/landing/PackagesShowcase";
+import { ExtraFeaturesSection } from "@/components/landing/ExtraFeaturesSection";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
+import { useBrandingLogo } from "@/hooks/useBranding";
+import { DjAvatar } from "@/components/beatkulture/DjAvatar";
+import { CinematicOverlay } from "@/components/beatkulture/CinematicOverlay";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
+import { resolveMixcloudProfileUrl } from "@/lib/mixcloud";
 
 /**
  * Public landing page — authenticated visitors are redirected to /admin or /client.
@@ -21,6 +26,9 @@ import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading } = useAuth();
+  const logoImg = useBrandingLogo();
+  const { get } = useBusinessSettings();
+  const mixcloudUrl = resolveMixcloudProfileUrl(get("mixcloud_url"));
 
   useEffect(() => {
     if (isLoading) return;
@@ -29,14 +37,8 @@ const Index = () => {
     }
   }, [user, profile, isAdmin, isLoading, navigate]);
 
-  if (isLoading || (user && !profile)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (user) return null;
+  // Always render the landing page (backgrounds + packages) immediately.
+  // Authenticated users are redirected by the effect above once their profile hydrates.
 
   const features = [
     { icon: Calendar, label: "Custom Quotes" },
@@ -46,15 +48,16 @@ const Index = () => {
   ];
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative isolate min-h-screen bg-background text-foreground">
       <PageBackground pageKey="bg_landing" />
+      <CinematicOverlay intensity="medium" />
 
       {/* Top bar */}
       <header className="container mx-auto px-4 py-5 flex items-center justify-between relative z-10">
         <Link to="/" className="flex items-center gap-3">
           <img src={logoImg} alt="BeatKulture" className="w-10 h-10 object-contain" />
           <div className="flex flex-col leading-tight">
-            <span className="font-display font-bold text-base sm:text-lg">BEATKULTURE</span>
+            <span className="font-display font-bold text-base sm:text-lg">BEATKULTURE ENTERTAINMENT</span>
             <span className="text-[10px] sm:text-xs text-muted-foreground">One Beat. One Kulture. One Love.</span>
           </div>
         </Link>
@@ -109,9 +112,34 @@ const Index = () => {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }} className="space-y-4">
+            <div className="flex justify-center">
+              <DjAvatar mood="mixing" className="w-full max-w-[340px]" />
+            </div>
             <CoordinatorChat />
           </motion.div>
+        </div>
+      </section>
+
+      {/* Packages — visible on landing before auth flow */}
+      <div id="packages"><PackagesShowcase /></div>
+
+      <ExtraFeaturesSection />
+
+      <section className="container mx-auto px-4 pb-8 relative z-10">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="glass-card rounded-xl p-4">
+            <h2 className="font-display text-xl font-bold mb-2">BeatKulture Entertainment</h2>
+            <p className="text-sm text-muted-foreground">
+              Premium DJ and event production platform with guided planning from quote to event day.
+            </p>
+          </div>
+          <div className="glass-card rounded-xl p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Platform features</p>
+            <p className="text-sm text-muted-foreground">
+              AI assistant, event planning tools, client music system, and transparent quote management in one portal.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -121,9 +149,6 @@ const Index = () => {
       {/* Specials */}
       <SpecialsBanner />
 
-      {/* Packages — Custom first, then Wedding / Corporate / Party */}
-      <div id="packages"><PackagesShowcase /></div>
-
       {/* Testimonials */}
       <TestimonialsCarousel />
 
@@ -131,7 +156,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-12"><YoutubeShowcase /></section>
 
       {/* Mixcloud rotator */}
-      <section className="container mx-auto px-4 py-8 max-w-3xl"><MixcloudRotator /></section>
+      <section className="container mx-auto px-4 py-8 max-w-3xl"><MixcloudRotator backupUrl={mixcloudUrl} /></section>
 
       {/* Competitions at the bottom */}
       <section className="container mx-auto px-4 py-12"><CompetitionsBanner /></section>

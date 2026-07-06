@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
-import logoImg from "@/assets/logo.png";
+import { useBrandingLogo } from "@/hooks/useBranding";
 
 type NavItem = {
   id: "home" | "quote" | "admin";
@@ -22,6 +22,7 @@ function getActiveNavId(pathname: string, hash: string): NavItem["id"] {
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
+  const logoImg = useBrandingLogo();
   const navigate = useNavigate();
   const location = useLocation();
 
