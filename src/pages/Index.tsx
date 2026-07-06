@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
+import { Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { PageBackground } from "@/components/PageBackground";
@@ -35,14 +35,8 @@ const Index = () => {
     }
   }, [user, profile, isAdmin, isLoading, navigate]);
 
-  if (isLoading || (user && !profile)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (user) return null;
+  // Always render the landing page (backgrounds + packages) immediately.
+  // Authenticated users are redirected by the effect above once their profile hydrates.
 
   const features = [
     { icon: Calendar, label: "Custom Quotes" },
