@@ -168,6 +168,12 @@ export function useCommandCenter(eventId: string, initialCueList: any[] = []) {
       getRecentMessages: (count?: number) => engine.getRecentMessages(count),
       getTopAudienceSongRequests: (count?: number) => engine.getTopAudienceSongRequests(count),
       getActiveAudiencePoll: () => engine.getActiveAudiencePoll(),
+      getTimelineProgressPercent: () => {
+        const total = state.cueList.length;
+        if (!total) return 0;
+        const done = state.cueList.filter((c) => c.status === "completed").length;
+        return Math.round((done / total) * 100);
+      },
     },
   };
 }
