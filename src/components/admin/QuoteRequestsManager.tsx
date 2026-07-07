@@ -33,13 +33,7 @@ export function QuoteRequestsManager() {
       // Move request to in_progress
       await updateRequest({ id: r.id, updates: { status: "in_progress" } });
 
-      // Stash request payload so the calculator can prefill (optional convenience)
-      try {
-        sessionStorage.setItem("prefill_quote_request", JSON.stringify(r));
-      } catch { /* ignore */ }
-
-      // Open the admin quote builder with the request payload available for prefill.
-      navigate(`/admin?tab=new-quote&fromRequest=${r.id}`);
+      navigate("/admin?tab=new-quote");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }

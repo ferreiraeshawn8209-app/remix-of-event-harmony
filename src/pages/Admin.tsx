@@ -30,9 +30,7 @@ import { FinancialLog } from "@/components/admin/FinancialLog";
 import { AlarmsManager } from "@/components/admin/AlarmsManager";
 import { PlanManagementDashboard } from "@/components/admin/PlanManagementDashboard";
 import { ApprovalWorkflowTracker } from "@/components/admin/ApprovalWorkflowTracker";
-import { useQuoteRequests } from "@/hooks/useQuoteRequests";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
-import { DJ_LIST, QuoteData } from "@/lib/pricing";
 import { toast } from "@/hooks/use-toast";
 import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
 import { formatCurrency } from "@/lib/pricing";
@@ -69,30 +67,6 @@ function statusClass(status: string) {
   if (status === "declined" || status === "rejected") return "text-destructive border-destructive/30";
   if (status === "sent") return "text-blue-400 border-blue-400/30";
   return "text-muted-foreground";
-}
-
-function buildPrefillFromRequest(payload: any): QuoteData | null {
-  if (!payload) return null;
-  return {
-    clientName: payload.client_name || "",
-    contactNo: payload.contact_no || "",
-    email: payload.email || "",
-    venue: [payload.venue_name, payload.venue_address].filter(Boolean).join(" — "),
-    eventDate: payload.event_date || "",
-    startTime: payload.start_time?.slice?.(0, 5) || "18:00",
-    endTime: payload.end_time?.slice?.(0, 5) || "00:00",
-    eventType: payload.event_type || "",
-    djName: DJ_LIST[0],
-    equipment: {},
-    customItems: [],
-    extras: [],
-    kidsCorner: false,
-    kidsHours: 0,
-    humanJukebox: false,
-    humanJukeboxHours: 0,
-    travelDistance: 0,
-    discountPercent: 0,
-  };
 }
 
 function QuotePipelineBoard({
@@ -187,10 +161,7 @@ export default function Admin() {
   const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuoteStatus } = useQuotes();
-  const { updateRequest } = useQuoteRequests();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const [requestPrefill, setRequestPrefill] = useState<QuoteData | null>(null);
-  const [requestToResolve, setRequestToResolve] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -209,28 +180,12 @@ export default function Admin() {
     if (tab && TAB_SET.has(tab as AdminTab)) {
       setActiveTab(tab as AdminTab);
     }
-    const fromRequest = params.get("fromRequest");
-    if (fromRequest) {
-      setRequestToResolve(fromRequest);
-      try {
-        const raw = sessionStorage.getItem("prefill_quote_request");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setRequestPrefill(buildPrefillFromRequest(parsed));
-        }
-      } catch {
-        setRequestPrefill(null);
-      }
-    }
   }, [location.search]);
 
   const setTab = (tab: AdminTab) => {
     setActiveTab(tab);
     const params = new URLSearchParams(location.search);
     params.set("tab", tab);
-    if (tab !== "new-quote") {
-      params.delete("fromRequest");
-    }
     navigate({ pathname: "/admin", search: params.toString() }, { replace: true });
   };
 
@@ -330,39 +285,9 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="new-quote" className="space-y-4">
-            {requestToResolve && (
-              <Card variant="glass">
-                <CardContent className="py-3 flex items-center justify-between gap-2">
-                  <p className="text-sm text-muted-foreground">
-                    Building quote for request <span className="font-semibold text-foreground">{requestToResolve}</span>.
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setRequestToResolve(null);
-                      setRequestPrefill(null);
-                      sessionStorage.removeItem("prefill_quote_request");
-                      const params = new URLSearchParams(location.search);
-                      params.delete("fromRequest");
-                      navigate({ pathname: "/admin", search: params.toString() }, { replace: true });
-                    }}
-                  >
-                    Clear request link
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
             <QuoteCalculator
               isAdmin
-              initialData={requestPrefill || undefined}
               onSaveQuote={async () => {
-                if (requestToResolve) {
-                  await updateRequest({ id: requestToResolve, updates: { status: "quoted" } });
-                  sessionStorage.removeItem("prefill_quote_request");
-                  setRequestToResolve(null);
-                  setRequestPrefill(null);
-                }
                 setTab("quotes");
               }}
             />
