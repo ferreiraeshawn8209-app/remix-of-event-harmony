@@ -13,6 +13,7 @@ import { ExtraFeaturesSection } from "@/components/landing/ExtraFeaturesSection"
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
+import { MusicPlayer } from "@/components/MusicPlayer";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { useBrandingLogo } from "@/hooks/useBranding";
 import { DjAvatar } from "@/components/beatkulture/DjAvatar";
@@ -45,6 +46,17 @@ const Index = () => {
     { icon: Music, label: "QR Song Requests" },
     { icon: PartyPopper, label: "Event Planner" },
     { icon: Sparkles, label: "AI Coordinator" },
+  ];
+  const aiShowcaseFeatures = [
+    "Build wedding timelines",
+    "Create invitations",
+    "Suggest music",
+    "Generate MC jokes",
+    "Organise seating plans",
+    "Create event schedules",
+    "Assist with speeches",
+    "Track bookings",
+    "Generate reminders",
   ];
 
   return (
@@ -124,6 +136,10 @@ const Index = () => {
       {/* Packages — visible on landing before auth flow */}
       <div id="packages"><PackagesShowcase /></div>
 
+      <section className="container mx-auto px-4 py-10 relative z-10">
+        <CardGlowGrid features={aiShowcaseFeatures} />
+      </section>
+
       <ExtraFeaturesSection />
 
       <section className="container mx-auto px-4 pb-8 relative z-10">
@@ -156,7 +172,10 @@ const Index = () => {
       <section className="container mx-auto px-4 py-12"><YoutubeShowcase /></section>
 
       {/* Mixcloud rotator */}
-      <section className="container mx-auto px-4 py-8 max-w-3xl"><MixcloudRotator backupUrl={mixcloudUrl} /></section>
+      <section className="container mx-auto px-4 py-8 max-w-4xl space-y-4">
+        <MusicPlayer mixcloudUrl={mixcloudUrl} />
+        <MixcloudRotator backupUrl={mixcloudUrl} />
+      </section>
 
       {/* Competitions at the bottom */}
       <section className="container mx-auto px-4 py-12"><CompetitionsBanner /></section>
@@ -170,3 +189,30 @@ const Index = () => {
 };
 
 export default Index;
+
+function CardGlowGrid({ features }: { features: string[] }) {
+  return (
+    <div className="rounded-2xl border border-primary/35 bg-[radial-gradient(circle_at_top,rgba(255,140,0,0.2),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(167,71,255,0.25),transparent_40%)] p-5 sm:p-6">
+      <div className="mb-4">
+        <p className="text-xs uppercase tracking-[0.25em] text-accent">AI Showcase</p>
+        <h3 className="font-display text-2xl sm:text-3xl font-bold">
+          Neon-powered companion features that keep your event alive
+        </h3>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {features.map((feature, index) => (
+          <motion.div
+            key={feature}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: index * 0.05 }}
+            className="rounded-xl border border-primary/25 bg-background/55 backdrop-blur-md p-3 text-sm shadow-[0_0_35px_rgba(255,140,0,0.12)]"
+          >
+            <p className="text-primary font-semibold">✓ {feature}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}

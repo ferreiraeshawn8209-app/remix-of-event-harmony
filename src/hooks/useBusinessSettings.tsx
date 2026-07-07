@@ -16,7 +16,9 @@ export type BusinessSettingKey =
   | "bg_admin"
   | "bg_planner"
   | "bg_auth"
-  | "bg_song_request";
+  | "bg_song_request"
+  | "admin_notification_emails"
+  | "admin_notification_whatsapp_to";
 
 export function useBusinessSettings() {
   const qc = useQueryClient();

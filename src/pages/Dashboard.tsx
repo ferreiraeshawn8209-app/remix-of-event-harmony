@@ -110,6 +110,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
+    if (!authLoading && user && isAdmin) navigate("/admin");
     if (!authLoading && user && !isAdmin && profile) navigate("/client");
   }, [user, authLoading, isAdmin, profile, navigate]);
 

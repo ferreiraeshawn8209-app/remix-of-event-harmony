@@ -7,6 +7,7 @@ import type {
   SpeechLength,
   SpeechRequest,
 } from "@/packages/shared-types/humor";
+import { isAdultHumorAllowed, type CompanionPersonality } from "@/lib/aiPersonality";
 
 const bannedTopics = [
   "offensive",
@@ -33,6 +34,30 @@ const categoryLines: Record<HumorCategory, string[]> = {
   wedding: [
     "Marriage is proof that teamwork can start with deciding on one playlist.",
     "Weddings are the only events where both romance and timeline management are headline acts.",
+  ],
+  crowd: [
+    "Alright crowd, if your table is already loud, you're tonight's VIP section.",
+    "Quick energy check: if you're ready for memories, hands up and smiles bigger.",
+  ],
+  reception: [
+    "Reception rule one: if the dessert is good and the dance floor is full, we've won.",
+    "This reception is running exactly as planned: elegant chaos with great music.",
+  ],
+  "ice-breaker": [
+    "Ice breaker: introduce yourself to someone new and compliment their dance confidence.",
+    "Warm-up challenge: biggest table cheer in 3...2...1.",
+  ],
+  family: [
+    "Family celebrations are where every laugh sounds familiar and every photo has 3 directors.",
+    "If your family table is smiling this much, tonight is already a success.",
+  ],
+  entertainment: [
+    "Entertainment tip: the best crowd moments start with one brave dancer.",
+    "Tonight's soundtrack is professionally mixed with zero room for boring.",
+  ],
+  "adult-humour": [
+    "Marriage is agreeing that the thermostat is now a diplomatic negotiation.",
+    "The secret to a happy relationship is simple: snacks, playlists, and strategic silence.",
   ],
   "best-man": [
     "As best man, your job is simple: be memorable, but not more memorable than the groom.",
@@ -108,19 +133,25 @@ export class HumorEngine {
     style: HumorStyle,
     context: HumorContext,
     count = 3,
+    personality?: CompanionPersonality,
   ): HumorSuggestion[] {
-    const source = categoryLines[category] || categoryLines.personalized;
+    const wantsAdultHumor = category === "adult-humour";
+    const canUseAdultHumor = personality ? isAdultHumorAllowed(personality) : false;
+    const effectiveCategory: HumorCategory =
+      wantsAdultHumor && !canUseAdultHumor ? "family" : category;
+    const source = categoryLines[effectiveCategory] || categoryLines.personalized;
     const selected = source.slice(0, Math.max(1, Math.min(count, source.length)));
 
     return selected
       .map((line, index) => this.personalize(line, context))
       .filter((line) => this.isSafe(line))
       .map((line, index) => ({
-        id: `${category}-${style}-${Date.now()}-${index}`,
-        category,
+        id: `${effectiveCategory}-${style}-${Date.now()}-${index}`,
+        category: effectiveCategory,
         style,
         line: `${styleLead[style]} ${line}`,
-        audienceSafe: true,
+        audienceSafe: !wantsAdultHumor || !canUseAdultHumor,
+        ageRating: wantsAdultHumor && canUseAdultHumor ? "18+" : "general",
       }));
   }
 
@@ -165,7 +196,7 @@ export class HumorEngine {
   }
 
   generateEntertainmentMoment(context: HumorContext): HumorSuggestion {
-    const picks: HumorCategory[] = ["mc-icebreaker", "dance-floor", "mc-transition", "filler-material", "trivia", "personalized"];
+    const picks: HumorCategory[] = ["wedding", "crowd", "reception", "ice-breaker", "family", "entertainment"];
     const category = picks[Math.floor(Math.random() * picks.length)];
     return this.generateHumor(category, "family-friendly", context, 1)[0];
   }

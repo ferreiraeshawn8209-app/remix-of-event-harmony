@@ -9,6 +9,17 @@ import { formatCurrency } from "@/lib/pricing";
 import { motion } from "framer-motion";
 
 const CATEGORY_ORDER: Record<string, number> = { wedding: 1, corporate: 2, party: 3 };
+const SELECTED_PACKAGE_STORAGE_KEY = "bk:selected-package-id";
+const CATEGORY_TITLE_MAP: Record<string, string> = {
+  wedding: "Wedding Packages",
+  party: "Party Packages",
+  corporate: "Corporate Packages",
+};
+
+function getCategoryTitle(category: string) {
+  if (CATEGORY_TITLE_MAP[category]) return CATEGORY_TITLE_MAP[category];
+  return `${category.charAt(0).toUpperCase()}${category.slice(1)} Packages`;
+}
 
 export function PackagesShowcase() {
   const { packages, isLoading } = usePackages();
@@ -16,6 +27,9 @@ export function PackagesShowcase() {
 
   const active = packages.filter((p) => p.is_active).sort(
     (a, b) => (CATEGORY_ORDER[a.category] || 9) - (CATEGORY_ORDER[b.category] || 9) || a.sort_order - b.sort_order,
+  );
+  const categoriesInOrder = Array.from(new Set(active.map((pkg) => pkg.category))).sort(
+    (a, b) => (CATEGORY_ORDER[a] || 9) - (CATEGORY_ORDER[b] || 9) || a.localeCompare(b),
   );
 
   return (
@@ -77,13 +91,12 @@ export function PackagesShowcase() {
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading packages…</p>}
 
       {/* Grouped by category in the requested order */}
-      {(["wedding", "party", "corporate"] as const).map((cat) => {
+      {categoriesInOrder.map((cat) => {
         const list = active.filter((p) => p.category === cat);
         if (!list.length) return null;
-        const titleMap: Record<string, string> = { wedding: "Wedding Packages", party: "Party Packages", corporate: "Corporate Packages" };
         return (
           <div key={cat} className="mb-12">
-            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{titleMap[cat]}</h3>
+            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{getCategoryTitle(cat)}</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {list.map((p) => {
                 const discounted = applyDiscount(p.price, percent);
@@ -106,15 +119,23 @@ export function PackagesShowcase() {
                           )}
                         </div>
                         <ul className="space-y-1.5 text-sm flex-1">
-                          {p.includes.slice(0, 6).map((inc, i) => (
+                          {p.includes.map((inc, i) => (
                             <li key={i} className="flex gap-2 text-muted-foreground">
                               <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
                               <span>{inc}</span>
                             </li>
                           ))}
                         </ul>
+                        <p className="mt-3 text-xs text-primary/90">
+                          Includes {p.includes.length} premium features for a complete event setup.
+                        </p>
                         <Button variant="glass" className="mt-4" asChild>
-                          <Link to="/auth?tab=signup">Book this package</Link>
+                          <Link
+                            to={`/auth?tab=signup&packageId=${encodeURIComponent(p.id)}`}
+                            onClick={() => localStorage.setItem(SELECTED_PACKAGE_STORAGE_KEY, p.id)}
+                          >
+                            Book this package
+                          </Link>
                         </Button>
                       </CardContent>
                     </Card>

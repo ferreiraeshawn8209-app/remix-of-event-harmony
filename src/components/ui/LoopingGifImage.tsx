@@ -22,7 +22,13 @@ export function LoopingGifImage({ src, alt, className, loading = "lazy" }: Loopi
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [useCanvas, setUseCanvas] = useState(true);
   const [ready, setReady] = useState(false);
-  const isGif = useMemo(() => isGifSource(src), [src]);
+  const resolvedSrc = useMemo(() => src.trim().replace(/\s/g, "%20"), [src]);
+  const isGif = useMemo(() => isGifSource(resolvedSrc), [resolvedSrc]);
+
+  useEffect(() => {
+    setUseCanvas(true);
+    setReady(false);
+  }, [resolvedSrc]);
 
   useEffect(() => {
     if (!isGif) return;
@@ -32,7 +38,7 @@ export function LoopingGifImage({ src, alt, className, loading = "lazy" }: Loopi
 
     const run = async () => {
       try {
-        const response = await fetch(src, { mode: "cors" });
+        const response = await fetch(resolvedSrc);
         if (!response.ok) throw new Error(`Failed GIF fetch: ${response.status}`);
 
         const gifBuffer = await response.arrayBuffer();
@@ -102,15 +108,15 @@ export function LoopingGifImage({ src, alt, className, loading = "lazy" }: Loopi
       cancelled = true;
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [isGif, src]);
+  }, [isGif, resolvedSrc]);
 
   if (!isGif || !useCanvas) {
-    return <img src={src} alt={alt} className={className} loading={loading} />;
+    return <img src={resolvedSrc} alt={alt} className={className} loading={loading} />;
   }
 
   return (
     <>
-      {!ready && <img src={src} alt={alt} className={className} loading={loading} />}
+      {!ready && <img src={resolvedSrc} alt={alt} className={className} loading={loading} />}
       <canvas
         ref={canvasRef}
         aria-label={alt}

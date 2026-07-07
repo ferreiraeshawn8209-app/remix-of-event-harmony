@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "@/hooks/use-toast";
+import { useAiPersonality } from "@/hooks/useAiPersonality";
+import type { CompanionMode, HumorAudience } from "@/lib/aiPersonality";
 import { formatCurrency } from "@/lib/pricing";
 import {
   Bot, Wallet, LayoutGrid, ListChecks, Music, CloudSun, Search, ClipboardList,
@@ -339,6 +341,7 @@ function AIPulseAvatar({ className = "" }: { className?: string }) {
 }
 
 function AIAssistant({ scopeKey, quote }: PlannerCtx) {
+  const { personality, personalityPrompt, setPersonality } = useAiPersonality(scopeKey);
   const [messages, setMessages] = useLocal<Msg[]>(`bk:planner:${scopeKey}:chat`, [
     { role: "assistant", content: "Hi! 👋 I'm your BeatKulture Event Assistant. Ask me anything about planning your event — songs, timelines, budget, vendors, you name it. Don't forget to subscribe to **@beatkulturesa** on YouTube for the latest mixes by DJ Shawn-E-Shawn! 🎧" },
   ]);
@@ -350,12 +353,26 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const guidedPrompts = [
-    "Build me a step-by-step run sheet for my event day.",
-    "Suggest ceremony + first dance songs based on my event type.",
-    "Create a DJ cue list for entrance, bouquet, garter, and closing.",
-    "Help me finalise a 35-song must-play list with genres.",
-  ];
+  const guidedPrompts = personality.mode === "mc"
+    ? [
+        "Give me MC lines for guest arrivals, formalities, and dance-floor energy.",
+        "Create classy reception jokes and crowd warmups for this event.",
+        "Write transitions between speeches, dinner, and open dance floor.",
+        "Build a hype sequence for peak dance-floor moments.",
+      ]
+    : personality.mode === "wedding-expert"
+      ? [
+          "Build a wedding ceremony-to-reception flow with practical timing.",
+          "Suggest first dance, father-daughter, and closing tracks.",
+          "Create a wedding MC run sheet with contingency ideas.",
+          "Give etiquette-safe speech tips for families and wedding party.",
+        ]
+      : [
+          "Build me a step-by-step run sheet for my event day.",
+          "Suggest ceremony + first dance songs based on my event type.",
+          "Create a DJ cue list for entrance, bouquet, garter, and closing.",
+          "Help me finalise a 35-song must-play list with genres.",
+        ];
 
   const send = async (preset?: string) => {
     const messageText = (preset ?? input).trim();
@@ -376,6 +393,7 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
         },
         body: JSON.stringify({
           messages: next.map(m => ({ role: m.role, content: m.content })),
+          personality: { prompt: personalityPrompt },
           context: quote ? {
             event_type: quote.event_type, event_date: quote.event_date,
             venue: quote.venue, guest_count: quote.guest_count,
@@ -427,6 +445,34 @@ function AIAssistant({ scopeKey, quote }: PlannerCtx) {
         <div className="flex items-center gap-2">
           <AIPulseAvatar className="h-8 w-8 shrink-0" />
           <p className="text-xs font-semibold text-foreground">Guided event planning</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Select value={personality.mode} onValueChange={(value) => setPersonality((prev) => ({ ...prev, mode: value as CompanionMode }))}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="assistant">Assistant mode</SelectItem>
+              <SelectItem value="planner">Planner mode</SelectItem>
+              <SelectItem value="mc">MC mode</SelectItem>
+              <SelectItem value="wedding-expert">Wedding expert mode</SelectItem>
+              <SelectItem value="friend">Friend mode</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={personality.humorAudience} onValueChange={(value) => setPersonality((prev) => ({ ...prev, humorAudience: value as HumorAudience }))}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="family">Family-safe humor</SelectItem>
+              <SelectItem value="mixed">Mixed audience humor</SelectItem>
+              <SelectItem value="adults-only">Adults-only humor</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            variant={personality.allowAdultHumor ? "default" : "outline"}
+            className="h-8 text-xs"
+            onClick={() => setPersonality((prev) => ({ ...prev, allowAdultHumor: !prev.allowAdultHumor }))}
+          >
+            {personality.allowAdultHumor ? "Adult humor: On" : "Adult humor: Off"}
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           {guidedPrompts.map((prompt) => (

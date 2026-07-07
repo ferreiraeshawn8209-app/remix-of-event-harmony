@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useBusinessSettings, BusinessSettingKey } from "@/hooks/useBusinessSettings";
 
 /**
@@ -6,7 +7,13 @@ import { useBusinessSettings, BusinessSettingKey } from "@/hooks/useBusinessSett
  */
 export function PageBackground({ pageKey, opacity = 0.25 }: { pageKey: BusinessSettingKey; opacity?: number }) {
   const { get } = useBusinessSettings();
-  const url = get(pageKey) || get("site_background_url");
+  const primary = get(pageKey);
+  const fallback = get("site_background_url") || get("hero_image_url");
+  const sanitizedPrimary = useMemo(() => primary?.trim().replace(/\s/g, "%20") || "", [primary]);
+  const sanitizedFallback = useMemo(() => fallback?.trim().replace(/\s/g, "%20") || "", [fallback]);
+  const [failedPrimary, setFailedPrimary] = useState(false);
+
+  const url = !failedPrimary && sanitizedPrimary ? sanitizedPrimary : sanitizedFallback;
   if (!url) return null;
 
   return (
@@ -17,6 +24,7 @@ export function PageBackground({ pageKey, opacity = 0.25 }: { pageKey: BusinessS
         className="h-full w-full object-cover object-center"
         loading="eager"
         decoding="async"
+        onError={() => setFailedPrimary(true)}
       />
       <div
         className="absolute inset-0"

@@ -170,6 +170,30 @@
     box-shadow: 0 0 0 1px hsl(40 96% 58% / 0.22), 0 0 42px hsl(280 95% 60% / 0.28);
   }
 
+  .ai-companion-panel::before {
+    content: "";
+    position: absolute;
+    inset: -35%;
+    background:
+      radial-gradient(circle at 10% 20%, hsl(280 95% 60% / 0.2), transparent 30%),
+      radial-gradient(circle at 85% 20%, hsl(28 98% 58% / 0.2), transparent 32%),
+      radial-gradient(circle at 65% 85%, hsl(40 96% 58% / 0.16), transparent 30%);
+    filter: blur(18px);
+    animation: ambient-drift 12s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ai-particle-field {
+    background-image:
+      radial-gradient(circle at 20% 20%, hsl(40 96% 58% / 0.45) 0 2px, transparent 3px),
+      radial-gradient(circle at 70% 30%, hsl(280 95% 60% / 0.4) 0 2px, transparent 3px),
+      radial-gradient(circle at 40% 80%, hsl(28 98% 58% / 0.38) 0 2px, transparent 3px);
+    background-size: 240px 240px, 290px 290px, 210px 210px;
+    animation: particle-sweep 14s linear infinite;
+    opacity: 0.35;
+  }
+
   .wave-bar {
     width: 4px;
     border-radius: 999px;
@@ -262,6 +286,15 @@
     50% {
       height: 22px;
       opacity: 1;
+    }
+  }
+
+  @keyframes particle-sweep {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    100% {
+      transform: translate3d(-120px, 80px, 0);
     }
   }
 }

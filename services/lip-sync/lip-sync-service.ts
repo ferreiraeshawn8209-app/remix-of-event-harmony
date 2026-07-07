@@ -188,9 +188,6 @@ export class LipSyncService {
       th: "th",
     };
 
-    let frameIndex = 0;
-    let textIndex = 0;
-
     for (let i = 0; i < totalFrames; i++) {
       const progress = i / totalFrames;
       const textPosition = Math.floor(text.length * progress);
@@ -199,7 +196,6 @@ export class LipSyncService {
       if (textPosition < text.length) {
         const char = text[textPosition].toLowerCase();
         phoneme = phonemeMap[char] || "rest";
-        textIndex = textPosition;
       }
 
       frames.push({

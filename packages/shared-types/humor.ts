@@ -1,5 +1,11 @@
 export type HumorCategory =
   | "wedding"
+  | "crowd"
+  | "reception"
+  | "ice-breaker"
+  | "family"
+  | "entertainment"
+  | "adult-humour"
   | "best-man"
   | "maid-of-honor"
   | "father-of-bride"
@@ -53,6 +59,7 @@ export interface HumorSuggestion {
   setup?: string;
   punchline?: string;
   audienceSafe: boolean;
+  ageRating?: "general" | "13+" | "18+";
 }
 
 export interface SpeechRequest {

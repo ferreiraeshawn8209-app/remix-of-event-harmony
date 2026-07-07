@@ -34,9 +34,10 @@ const signInSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
+  const queryParams = new URLSearchParams(window.location.search);
   const { user, profile, isAdmin, isLoading: authLoading, signUp, signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const initialTab = (new URLSearchParams(window.location.search).get("tab") === "signup"
+  const initialTab = (queryParams.get("tab") === "signup"
     ? "signup"
     : "login") as "login" | "signup";
   const [tab, setTab] = useState<"login" | "signup">(initialTab);
@@ -67,7 +68,14 @@ export default function Auth() {
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
 
-  const explicitRedirect = new URLSearchParams(window.location.search).get("redirect");
+  const explicitRedirect = queryParams.get("redirect");
+  const selectedPackageId = queryParams.get("packageId");
+
+  useEffect(() => {
+    if (!selectedPackageId) return;
+    localStorage.setItem("bk:selected-package-id", selectedPackageId);
+    if (tab !== "signup") setTab("signup");
+  }, [selectedPackageId, tab]);
 
   useEffect(() => {
     if (!user || authLoading) return;
@@ -148,9 +156,8 @@ export default function Auth() {
       } else {
         toast({
           title: "Account Created!",
-          description: "Welcome to BEATKULTURE! You can now access your dashboard.",
+          description: "Welcome to BEATKULTURE! Complete sign in to enter your dashboard.",
         });
-        navigate("/client", { replace: true });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

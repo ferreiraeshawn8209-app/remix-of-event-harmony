@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePackages, DbPackage } from "@/hooks/usePackages";
 import { useSpecials } from "@/hooks/useSpecials";
 import { useQuoteRequests } from "@/hooks/useQuoteRequests";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
@@ -27,11 +28,15 @@ import {
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
+import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
+import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { PageBackground } from "@/components/PageBackground";
 import { LoopingGifImage } from "@/components/ui/LoopingGifImage";
+import { MusicPlayer } from "@/components/MusicPlayer";
+import { MixcloudRotator } from "@/components/MixcloudRotator";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -77,6 +82,7 @@ export default function ClientPortal() {
   const navigate = useNavigate();
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
+  const { get: getSetting } = useBusinessSettings();
 
   const [view, setView] = useState<View>("dashboard");
   const [quotes, setQuotes] = useState<QuoteData[]>([]);
@@ -84,6 +90,9 @@ export default function ClientPortal() {
   const [activeQuote, setActiveQuote] = useState<QuoteData | null>(null);
   const [equipmentNames, setEquipmentNames] = useState<Record<string, string>>({});
   const [actioning, setActioning] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
+    () => localStorage.getItem("bk:selected-package-id"),
+  );
   const { requests, createRequest, isCreating } = useQuoteRequests(profile?.id);
 
   // Redirect to auth if not logged in
@@ -125,7 +134,6 @@ export default function ClientPortal() {
       if (error) console.warn("Portal visit log failed:", error.message);
     });
     // run once per session per profile
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, profile?.id, quotes.length > 0]);
 
   // Equipment label cache (for line items)
@@ -183,6 +191,21 @@ export default function ClientPortal() {
               tap the button to request a <span className="text-primary font-semibold">custom quotation</span>.
             </p>
           </motion.div>
+
+          {/* AI + Event Planning Tools */}
+          <PremiumAiCompanionPanel
+            userScope={profile?.id || user.id}
+            userName={profile?.full_name || user.email || "there"}
+            quoteCount={quotes.length}
+            requestCount={requests.length}
+            latestQuoteStatus={quotes[0]?.status}
+            eventType={quotes[0]?.event_type || profile?.event_type}
+          />
+
+          <EventWeatherCard
+            eventDate={quotes[0]?.event_date || profile?.event_date}
+            locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
+          />
 
           {/* AI + Event Planning Tools */}
           <PlannerHub
@@ -303,17 +326,24 @@ export default function ClientPortal() {
                           </CardHeader>
                           <CardContent className="space-y-3">
                             <ul className="text-xs text-muted-foreground space-y-1">
-                              {(pkg.includes || []).slice(0, 5).map((it, i) => (
+                              {(pkg.includes || []).map((it, i) => (
                                 <li key={i} className="flex items-start gap-1">
                                   <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {it}
                                 </li>
                               ))}
                             </ul>
+                            <p className="text-[11px] text-primary/90">
+                              Includes {pkg.includes?.length || 0} features in this package.
+                            </p>
                             <Button
                               variant="hero"
                               size="sm"
                               className="w-full"
-                              onClick={() => setView("questionnaire")}
+                              onClick={() => {
+                                setSelectedPackageId(pkg.id);
+                                localStorage.setItem("bk:selected-package-id", pkg.id);
+                                setView("questionnaire");
+                              }}
                             >
                               Select &amp; Confirm
                             </Button>
@@ -326,27 +356,13 @@ export default function ClientPortal() {
             )}
           </section>
 
-          {/* Mixcloud mini player */}
-          <Card variant="glass" className="overflow-hidden border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Music className="w-4 h-4 text-primary" /> BeatKulture Mixcloud Player
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Press play to preview our latest mixes while you browse your packages and quote options.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <iframe
-                width="100%"
-                height="60"
-                src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&light=1&autoplay=1&feed=%2FBeatkulture%2F"
-                frameBorder="0"
-                allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
-                title="BeatKulture Mixcloud"
-              />
-            </CardContent>
-          </Card>
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Music className="w-4 h-4 text-primary" /> Music Lounge
+            </h2>
+            <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
+            <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
+          </section>
 
           {/* YouTube Showcase */}
           <YoutubeShowcase />
@@ -432,9 +448,12 @@ export default function ClientPortal() {
         profile={profile}
         userEmail={user.email || ""}
         packages={packages.filter(p => p.is_active)}
+        selectedPackageId={selectedPackageId}
         onCancel={() => setView("dashboard")}
         onSubmit={async (payload) => {
           await createRequest(payload as any);
+          setSelectedPackageId(null);
+          localStorage.removeItem("bk:selected-package-id");
           setView("dashboard");
         }}
         submitting={isCreating}
@@ -685,11 +704,12 @@ function Header({ profile, onSignOut, extra }: { profile: any; onSignOut: () => 
 
 // ───────────── Questionnaire ─────────────
 function Questionnaire({
-  profile, userEmail, packages, onCancel, onSubmit, submitting,
+  profile, userEmail, packages, selectedPackageId, onCancel, onSubmit, submitting,
 }: {
   profile: any;
   userEmail: string;
   packages: DbPackage[];
+  selectedPackageId?: string | null;
   onCancel: () => void;
   onSubmit: (payload: any) => Promise<void>;
   submitting: boolean;
@@ -707,12 +727,18 @@ function Questionnaire({
     needs_special_effects: false,
     needs_mic: false,
     guest_count: "",
-    package_id: "none",
+    package_id: selectedPackageId && packages.some((p) => p.id === selectedPackageId) ? selectedPackageId : "none",
     notes: "",
     contact_no: profile?.phone || "",
   });
 
   const update = (k: string, v: any) => setForm(prev => ({ ...prev, [k]: v }));
+
+  useEffect(() => {
+    if (!selectedPackageId) return;
+    if (!packages.some((p) => p.id === selectedPackageId)) return;
+    setForm((prev) => ({ ...prev, package_id: selectedPackageId }));
+  }, [selectedPackageId, packages]);
 
   const submit = async () => {
     if (!form.event_type) {

@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type {
   HumorCategory,
   HumorStyle,
@@ -9,10 +12,13 @@ import type {
   SpeechDraft,
   SpeechRequest,
 } from "@/packages/shared-types/humor";
+import type { CompanionPersonality } from "@/lib/aiPersonality";
 
 interface HumorAssistantPanelProps {
   suggestions: HumorSuggestion[];
   speechDraft: SpeechDraft | null;
+  personality: CompanionPersonality;
+  onUpdatePersonality: (update: Partial<CompanionPersonality>) => void;
   onGenerateHumor: (category: HumorCategory, style: HumorStyle, count?: number) => void;
   onGenerateSpeech: (request: SpeechRequest) => void;
   onSpeak?: (line: string) => Promise<void>;
@@ -20,37 +26,29 @@ interface HumorAssistantPanelProps {
 
 const categories: HumorCategory[] = [
   "wedding",
-  "best-man",
-  "maid-of-honor",
-  "father-of-bride",
-  "groom",
-  "bride",
-  "couple",
-  "anniversary",
-  "corporate",
-  "mc-icebreaker",
-  "crowd-warmup",
-  "dance-floor",
-  "mc-transition",
-  "filler-material",
-  "trivia",
-  "personalized",
+  "crowd",
+  "reception",
+  "ice-breaker",
+  "family",
+  "entertainment",
+  "adult-humour",
 ];
 
 const styles: HumorStyle[] = [
-  "lighthearted",
   "family-friendly",
-  "witty",
-  "self-deprecating",
-  "story-based",
-  "observational",
-  "romantic-comedy",
   "professional-mc",
+  "witty",
+  "lighthearted",
+  "romantic-comedy",
+  "observational",
+  "story-based",
 ];
 
 export function HumorAssistantPanel({
   suggestions,
   speechDraft,
+  personality,
+  onUpdatePersonality,
   onGenerateHumor,
   onGenerateSpeech,
   onSpeak,
@@ -60,12 +58,32 @@ export function HumorAssistantPanel({
   const [speechRole, setSpeechRole] = useState<SpeechRequest["role"]>("mc");
   const [speechTone, setSpeechTone] = useState<SpeechRequest["tone"]>("balanced");
   const [speechLength, setSpeechLength] = useState<SpeechRequest["length"]>("medium");
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
+
+  useEffect(() => {
+    if (suggestions.length <= 1) return;
+    const interval = window.setInterval(() => {
+      setActiveSuggestionIndex((prev) => (prev + 1) % suggestions.length);
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [suggestions]);
+
+  useEffect(() => {
+    if (category === "adult-humour" && !personality.allowAdultHumor) {
+      setCategory("family");
+    }
+  }, [category, personality.allowAdultHumor]);
+
+  const activeSuggestion = useMemo(() => {
+    if (suggestions.length === 0) return null;
+    return suggestions[activeSuggestionIndex % suggestions.length];
+  }, [activeSuggestionIndex, suggestions]);
 
   return (
     <div className="space-y-4">
-      <Card variant="glass">
+      <Card variant="glass" className="border-secondary/40">
         <CardHeader>
-          <CardTitle>Humor Generator</CardTitle>
+          <CardTitle>Professional MC Joke Generator</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-2 sm:grid-cols-2">
@@ -75,7 +93,7 @@ export function HumorAssistantPanel({
               className="rounded-md border border-border bg-background px-3 py-2 text-sm"
             >
               {categories.map((item) => (
-                <option key={item} value={item}>
+                <option key={item} value={item} disabled={item === "adult-humour" && !personality.allowAdultHumor}>
                   {item}
                 </option>
               ))}
@@ -92,37 +110,26 @@ export function HumorAssistantPanel({
               ))}
             </select>
           </div>
-          <Button className="w-full" variant="hero" onClick={() => onGenerateHumor(category, style, 4)}>
-            Generate jokes and lines
-          </Button>
-        </CardContent>
-      </Card>
 
-      <Card variant="glass">
-        <CardHeader>
-          <CardTitle>Event Day Quick Tools</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("mc-icebreaker", "professional-mc", 3)}>
-              Emergency icebreakers
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("crowd-warmup", "family-friendly", 3)}>
-              Crowd engagement
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("dance-floor", "professional-mc", 3)}>
-              Dance floor hype lines
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("mc-transition", "professional-mc", 3)}>
-              MC transitions
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("trivia", "witty", 3)}>
-              Wedding trivia
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onGenerateHumor("filler-material", "family-friendly", 3)}>
-              Family-safe filler material
-            </Button>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="adult-humor-switch" className="text-xs text-muted-foreground">
+                Allow adult humor where appropriate
+              </Label>
+              <Switch
+                id="adult-humor-switch"
+                checked={personality.allowAdultHumor}
+                onCheckedChange={(checked) => onUpdatePersonality({ allowAdultHumor: checked })}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Adult humor is only available when audience mode is set to adults-only.
+            </p>
           </div>
+
+          <Button className="w-full" variant="hero" onClick={() => onGenerateHumor(category, style, 5)}>
+            Generate premium joke set
+          </Button>
         </CardContent>
       </Card>
 
@@ -183,26 +190,44 @@ export function HumorAssistantPanel({
         </CardContent>
       </Card>
 
-      {suggestions.length > 0 && (
-        <Card variant="glass">
+      {suggestions.length > 0 && activeSuggestion && (
+        <Card variant="glass" className="overflow-hidden">
           <CardHeader>
-            <CardTitle>Crowd-tested options</CardTitle>
+            <CardTitle>Animated joke cards</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {suggestions.map((suggestion) => (
-              <div key={suggestion.id} className="rounded-md border border-border/60 p-3 text-sm space-y-2">
+          <CardContent className="space-y-3">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSuggestion.id}
+                initial={{ opacity: 0, x: 24, scale: 0.98 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -24, scale: 0.98 }}
+                transition={{ duration: 0.25 }}
+                className="rounded-md border border-border/60 p-3 text-sm space-y-2 bg-gradient-to-br from-secondary/10 to-accent/10"
+              >
                 <div className="flex items-center justify-between gap-2">
-                  <Badge variant="outline">{suggestion.category}</Badge>
-                  <Badge variant="outline">{suggestion.style}</Badge>
+                  <Badge variant="outline">{activeSuggestion.category}</Badge>
+                  <Badge variant="outline">{activeSuggestion.style}</Badge>
                 </div>
-                <p>{suggestion.line}</p>
+                <p>{activeSuggestion.line}</p>
                 {onSpeak && (
-                  <Button size="sm" variant="ghost" onClick={() => void onSpeak(suggestion.line)}>
-                    Tell with avatar voice
+                  <Button size="sm" variant="ghost" onClick={() => void onSpeak(activeSuggestion.line)}>
+                    Voice playback
                   </Button>
                 )}
-              </div>
-            ))}
+              </motion.div>
+            </AnimatePresence>
+            <div className="flex flex-wrap gap-1">
+              {suggestions.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveSuggestionIndex(index)}
+                  className={`h-1.5 w-8 rounded-full transition ${index === activeSuggestionIndex % suggestions.length ? "bg-primary" : "bg-muted"}`}
+                  aria-label={`Show suggestion ${index + 1}`}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

@@ -30,7 +30,6 @@ export function SupabaseEnvBadge() {
   const displayLabel = SUPABASE_URL || MISSING_LABEL;
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
     console.log("[Admin] Active Supabase project URL:", displayLabel);
   }, [displayLabel]);
 
