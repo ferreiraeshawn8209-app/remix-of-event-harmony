@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star } from "lucide-react";
+import { Sparkles, Music, Calendar, PartyPopper, LogIn, UserPlus, Star, Gem, ShieldCheck, Headphones, Wand2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { PageBackground } from "@/components/PageBackground";
@@ -43,9 +43,31 @@ const Index = () => {
 
   const features = [
     { icon: Calendar, label: "Custom Quotes" },
-    { icon: Music, label: "QR Song Requests" },
-    { icon: PartyPopper, label: "Event Planner" },
-    { icon: Sparkles, label: "AI Coordinator" },
+    { icon: Music, label: "Music Curation" },
+    { icon: PartyPopper, label: "Bookings & Timelines" },
+    { icon: Sparkles, label: "Live AI Companion" },
+  ];
+  const packagePillars = [
+    {
+      icon: Gem,
+      title: "Price",
+      detail: "Transparent package totals before signup.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Description",
+      detail: "Purpose-built package outcomes for each event style.",
+    },
+    {
+      icon: Headphones,
+      title: "Services + Equipment",
+      detail: "Professional DJ services with listed sound and lighting gear.",
+    },
+    {
+      icon: Wand2,
+      title: "Extras",
+      detail: "Premium add-ons like MC flow, effects, and custom enhancements.",
+    },
   ];
   const aiShowcaseFeatures = [
     "Build wedding timelines",
@@ -60,7 +82,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="relative isolate min-h-screen bg-background text-foreground">
+    <div className="relative isolate min-h-screen bg-background text-foreground premium-page cinematic-shell">
       <PageBackground pageKey="bg_landing" />
       <CinematicOverlay intensity="medium" />
 
@@ -83,20 +105,51 @@ const Index = () => {
         </div>
       </header>
 
-      {/* HERO — AI Coordinator front and center */}
-      <section className="container mx-auto px-4 pt-4 pb-10 relative z-10">
+      <section className="container mx-auto px-4 pt-4 pb-8 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="rounded-2xl border border-primary/35 bg-[linear-gradient(145deg,hsl(252_35%_14%_/_0.86),hsl(252_35%_9%_/_0.7))] p-5 sm:p-7 shadow-[0_18px_52px_hsl(250_75%_2%_/_0.48)]"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-primary/90">Landing Hero</p>
+              <h2 className="premium-section-title text-2xl sm:text-3xl font-bold">Packages first. Experience premium before login.</h2>
+            </div>
+            <Button variant="hero" size="sm" asChild>
+              <a href="#packages">Explore premium packages</a>
+            </Button>
+          </div>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {packagePillars.map((item) => (
+              <div key={item.title} className="feature-card-luxe rounded-xl p-3">
+                <item.icon className="w-4 h-4 text-primary mb-2" />
+                <p className="text-sm font-semibold">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Packages — visible on landing before auth flow */}
+      <div id="packages"><PackagesShowcase /></div>
+
+      {/* HERO — AI Coordinator signature */}
+      <section className="container mx-auto px-4 pt-0 pb-10 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 mb-5 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full premium-chip mb-5 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium text-primary">26+ Years · 500+ Unforgettable Events</span>
+              <span className="text-xs sm:text-sm font-medium text-primary">AI Signature Experience · 26+ Years · 500+ Events</span>
             </div>
             <h1 className="font-display text-4xl sm:text-6xl font-bold leading-[1.05] mb-5">
-              <span className="text-foreground">Plan your night with</span>{" "}
-              <span className="gradient-text">Kulture</span>
+              <span className="text-foreground">Meet your living</span>{" "}
+              <span className="gradient-text">AI event companion</span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground mb-6">
-              Meet our AI Event Coordinator. Ask anything — packages, prices, planning, song requests — and she'll point you to the perfect setup. Or jump straight in.
+              Your charismatic planner + MC + assistant greets by name, recommends packages, builds timelines, and keeps your booking flow cinematic from quote to event day.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Button variant="hero" size="lg" asChild>
@@ -132,9 +185,6 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
-
-      {/* Packages — visible on landing before auth flow */}
-      <div id="packages"><PackagesShowcase /></div>
 
       <section className="container mx-auto px-4 py-10 relative z-10">
         <CardGlowGrid features={aiShowcaseFeatures} />

@@ -21,6 +21,34 @@ function getCategoryTitle(category: string) {
   return `${category.charAt(0).toUpperCase()}${category.slice(1)} Packages`;
 }
 
+function groupPackageIncludes(includes: string[]) {
+  const buckets: Record<"services" | "equipment" | "extras", string[]> = {
+    services: [],
+    equipment: [],
+    extras: [],
+  };
+  const equipmentPattern = /(sound|speaker|sub|woofer|monitor|mic|microphone|light|lighting|laser|fog|smoke|truss|booth|deck|controller|mixer|projector|screen)/i;
+  const extrasPattern = /(extra|bonus|upgrade|add-on|addon|travel|overtime|kids|human jukebox|spark|cold|confetti|mc|host|special)/i;
+
+  includes.forEach((item) => {
+    if (equipmentPattern.test(item)) {
+      buckets.equipment.push(item);
+      return;
+    }
+    if (extrasPattern.test(item)) {
+      buckets.extras.push(item);
+      return;
+    }
+    buckets.services.push(item);
+  });
+
+  if (buckets.services.length === 0 && buckets.equipment.length > 0) {
+    buckets.services.push(...buckets.equipment.splice(0, Math.min(2, buckets.equipment.length)));
+  }
+
+  return buckets;
+}
+
 export function PackagesShowcase() {
   const { packages, isLoading } = usePackages();
   const { percent, title } = useActiveDiscount();
@@ -33,16 +61,16 @@ export function PackagesShowcase() {
   );
 
   return (
-    <section className="container mx-auto px-4 py-16">
-      <div className="text-center max-w-2xl mx-auto mb-10">
-        <h2 className="font-display text-3xl sm:text-5xl font-bold mb-3">
-          <span className="gradient-text">Find your fit</span>
+    <section className="container mx-auto px-4 py-16 premium-page">
+      <div className="text-center max-w-3xl mx-auto mb-10">
+        <h2 className="premium-section-title text-3xl sm:text-5xl font-bold mb-3">
+          <span className="gradient-text">Choose your premium event package</span>
         </h2>
-        <p className="text-muted-foreground">
-          Start with a fully customised quote or pick a curated package. Every booking includes professional DJs, premium sound and lighting, and a planning consultation.
+        <p className="text-muted-foreground text-base sm:text-lg">
+          Packages are the hero of your planning journey. Every option shows full price, description, services, equipment, and extras so clients know exactly what they get before signing up.
         </p>
         {percent > 0 && (
-          <Badge className="mt-4 bg-gradient-to-r from-primary to-accent text-primary-foreground text-sm px-3 py-1">
+          <Badge className="mt-4 bg-gradient-to-r from-primary via-secondary to-accent text-primary-foreground text-sm px-3 py-1 shadow-[0_0_28px_hsl(var(--primary)/0.35)]">
             🎉 {title || "Limited-time special"}: {percent}% off all packages
           </Badge>
         )}
@@ -66,7 +94,7 @@ export function PackagesShowcase() {
               <Badge className="mb-3 bg-primary/15 text-primary border-primary/30 shadow-sm shadow-primary/20">
                 Most flexible · Start here
               </Badge>
-              <h3 className="font-display text-2xl sm:text-4xl font-bold mb-3 flex items-center gap-3">
+              <h3 className="premium-section-title text-2xl sm:text-4xl font-bold mb-3 flex items-center gap-3">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-lg shadow-primary/20 ring-1 ring-primary/25">
                   <Calculator className="w-6 h-6" />
                 </span>
@@ -74,7 +102,7 @@ export function PackagesShowcase() {
                   Build a Custom Quote
                 </span>
               </h3>
-              <p className="text-muted-foreground max-w-2xl">
+              <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
                 Tell us your venue, hours, guest count and the equipment you want — our calculator builds a transparent, itemised quote in seconds. Add a kids corner, Human Jukebox, travel, or outsourced catering as extras. Admin discounts can apply.
               </p>
             </div>
@@ -96,18 +124,23 @@ export function PackagesShowcase() {
         if (!list.length) return null;
         return (
           <div key={cat} className="mb-12">
-            <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">{getCategoryTitle(cat)}</h3>
+            <h3 className="premium-section-title text-xl sm:text-2xl font-bold mb-4">{getCategoryTitle(cat)}</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {list.map((p) => {
                 const discounted = applyDiscount(p.price, percent);
+                const grouped = groupPackageIncludes(p.includes);
                 return (
                   <motion.div key={p.id} whileHover={{ y: -4 }} className="h-full">
-                    <Card variant={p.popular ? "glow" : "glass"} className="h-full flex flex-col">
+                    <Card variant={p.popular ? "glow" : "glass"} className="h-full flex flex-col border-primary/25">
                       <CardContent className="p-5 flex flex-col flex-1">
                         {p.popular && <Badge className="self-start mb-2">Most popular</Badge>}
-                        <h4 className="font-display text-lg font-bold">{p.name}</h4>
-                        <p className="text-sm text-muted-foreground mt-1 mb-3">{p.description}</p>
-                        <div className="mb-3">
+                        <h4 className="premium-section-title text-lg font-bold">{p.name}</h4>
+                        <div className="mt-1 mb-3 rounded-lg border border-primary/20 bg-background/35 p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-primary/85 mb-1">Description</p>
+                          <p className="text-sm text-muted-foreground">{p.description}</p>
+                        </div>
+                        <div className="mb-3 rounded-lg border border-accent/20 bg-background/35 p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-accent mb-1">Price</p>
                           {percent > 0 ? (
                             <div className="flex items-baseline gap-2 flex-wrap">
                               <span className="text-muted-foreground line-through text-sm">{formatCurrency(p.price)}</span>
@@ -118,17 +151,21 @@ export function PackagesShowcase() {
                             <span className="font-display text-2xl font-bold text-primary">{formatCurrency(p.price)}</span>
                           )}
                         </div>
-                        <ul className="space-y-1.5 text-sm flex-1">
-                          {p.includes.map((inc, i) => (
-                            <li key={i} className="flex gap-2 text-muted-foreground">
-                              <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                              <span>{inc}</span>
-                            </li>
+                        <div className="space-y-2 flex-1">
+                          {(["services", "equipment", "extras"] as const).map((groupKey) => (
+                          <div key={groupKey} className="rounded-lg border border-border/60 bg-background/28 p-2.5">
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">
+                              {groupKey}
+                            </p>
+                            {(grouped[groupKey].length > 0 ? grouped[groupKey] : ["Included in package details"]).map((item, index) => (
+                              <p key={`${groupKey}-${index}`} className="flex gap-2 text-xs text-muted-foreground mb-1 last:mb-0">
+                                <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                                <span>{item}</span>
+                              </p>
+                            ))}
+                          </div>
                           ))}
-                        </ul>
-                        <p className="mt-3 text-xs text-primary/90">
-                          Includes {p.includes.length} premium features for a complete event setup.
-                        </p>
+                        </div>
                         <Button variant="glass" className="mt-4" asChild>
                           <Link
                             to={`/auth?tab=signup&packageId=${encodeURIComponent(p.id)}`}

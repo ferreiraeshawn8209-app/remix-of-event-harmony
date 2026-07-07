@@ -37,6 +37,7 @@ import { PageBackground } from "@/components/PageBackground";
 import { LoopingGifImage } from "@/components/ui/LoopingGifImage";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
@@ -75,6 +76,28 @@ interface QuoteData {
   balance_paid: boolean;
   balance_paid_at: string | null;
   created_at: string;
+}
+
+function groupPackageIncludes(includes: string[]) {
+  const buckets: Record<"services" | "equipment" | "extras", string[]> = {
+    services: [],
+    equipment: [],
+    extras: [],
+  };
+  const equipmentPattern = /(sound|speaker|sub|woofer|monitor|mic|microphone|light|lighting|laser|fog|smoke|truss|booth|deck|controller|mixer|projector|screen)/i;
+  const extrasPattern = /(extra|bonus|upgrade|add-on|addon|travel|overtime|kids|human jukebox|spark|cold|confetti|mc|host|special)/i;
+  includes.forEach((item) => {
+    if (equipmentPattern.test(item)) {
+      buckets.equipment.push(item);
+      return;
+    }
+    if (extrasPattern.test(item)) {
+      buckets.extras.push(item);
+      return;
+    }
+    buckets.services.push(item);
+  });
+  return buckets;
 }
 
 export default function ClientPortal() {
@@ -175,10 +198,11 @@ export default function ClientPortal() {
   // ─── DASHBOARD ────────────────────────────────────────────
   if (view === "dashboard") {
     return (
-      <div className="min-h-screen bg-background pb-24 relative">
+      <div className="min-h-screen bg-background pb-24 relative premium-page cinematic-shell">
         <PageBackground pageKey="bg_client_portal" />
+        <CinematicAmbient intensity="soft" />
         <Header profile={profile} onSignOut={handleSignOut} />
-        <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6">
+        <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6 relative z-10">
 
           {/* Welcome + Slogan */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
@@ -325,16 +349,19 @@ export default function ClientPortal() {
                             <p className="text-primary font-bold text-sm pt-1">{formatCurrency(pkg.price)}</p>
                           </CardHeader>
                           <CardContent className="space-y-3">
-                            <ul className="text-xs text-muted-foreground space-y-1">
-                              {(pkg.includes || []).map((it, i) => (
-                                <li key={i} className="flex items-start gap-1">
-                                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {it}
-                                </li>
-                              ))}
-                            </ul>
-                            <p className="text-[11px] text-primary/90">
-                              Includes {pkg.includes?.length || 0} features in this package.
-                            </p>
+                            {(["services", "equipment", "extras"] as const).map((groupKey) => {
+                              const grouped = groupPackageIncludes(pkg.includes || []);
+                              return (
+                                <div key={`${pkg.id}-${groupKey}`} className="rounded-lg border border-border/60 bg-background/28 p-2">
+                                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{groupKey}</p>
+                                  {(grouped[groupKey].length > 0 ? grouped[groupKey] : ["Included in package"]).map((line, idx) => (
+                                    <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1 mb-1 last:mb-0">
+                                      <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {line}
+                                    </p>
+                                  ))}
+                                </div>
+                              );
+                            })}
                             <Button
                               variant="hero"
                               size="sm"
@@ -507,13 +534,14 @@ export default function ClientPortal() {
     };
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background premium-page cinematic-shell">
+        <CinematicAmbient intensity="soft" />
         <Header profile={profile} onSignOut={handleSignOut} extra={
           <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
             <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
           </Button>
         } />
-        <main className="container mx-auto px-4 py-6 max-w-3xl space-y-4">
+        <main className="container mx-auto px-4 py-6 max-w-3xl space-y-4 relative z-10">
           {/* Status banner */}
           <Card variant="glass" className={`border-l-4 ${isFullyPaid ? "border-l-green-500" : isPaid ? "border-l-blue-500" : "border-l-orange-500"}`}>
             <CardContent className="py-4 flex items-center justify-between gap-3 flex-wrap">
@@ -770,7 +798,8 @@ function Questionnaire({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background premium-page cinematic-shell">
+      <CinematicAmbient intensity="soft" />
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={onCancel} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -780,7 +809,7 @@ function Questionnaire({
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-2xl">
+      <main className="container mx-auto px-4 py-6 max-w-2xl relative z-10">
         <Card variant="glass">
           <CardHeader>
             <CardTitle>Tell us about your event</CardTitle>

@@ -36,6 +36,7 @@ import { DJ_LIST, QuoteData } from "@/lib/pricing";
 import { toast } from "@/hooks/use-toast";
 import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
 import { formatCurrency } from "@/lib/pricing";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
 
 type AdminTab =
   | "overview"
@@ -257,7 +258,8 @@ export default function Admin() {
   if (!user || !isAdmin || !profile) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background premium-page cinematic-shell">
+      <CinematicAmbient intensity="soft" />
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/85 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div>
@@ -278,12 +280,12 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <main className="container mx-auto px-4 py-6 space-y-6 relative z-10">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card variant="glass"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Quotes</p><p className="font-display text-2xl">{quoteStats.total}</p></CardContent></Card>
-          <Card variant="glass"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Sent</p><p className="font-display text-2xl">{quoteStats.sent}</p></CardContent></Card>
-          <Card variant="glass"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Accepted</p><p className="font-display text-2xl">{quoteStats.accepted}</p></CardContent></Card>
-          <Card variant="glass"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Paid</p><p className="font-display text-2xl">{quoteStats.paid}</p></CardContent></Card>
+          <Card variant="glass" className="border-primary/25"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Quotes</p><p className="font-display text-2xl">{quoteStats.total}</p></CardContent></Card>
+          <Card variant="glass" className="border-secondary/25"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Sent</p><p className="font-display text-2xl">{quoteStats.sent}</p></CardContent></Card>
+          <Card variant="glass" className="border-accent/25"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Accepted</p><p className="font-display text-2xl">{quoteStats.accepted}</p></CardContent></Card>
+          <Card variant="glass" className="border-primary/25"><CardContent className="py-4"><p className="text-xs text-muted-foreground">Paid</p><p className="font-display text-2xl">{quoteStats.paid}</p></CardContent></Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setTab(value as AdminTab)} className="space-y-4">

@@ -32,6 +32,8 @@ export function PageBackground({ pageKey, opacity = 0.25 }: { pageKey: BusinessS
           backgroundColor: `hsl(var(--background) / ${Math.max(0.2, 1 - opacity - 0.3)})`,
         }}
       />
+      <div className="absolute inset-0 premium-grid opacity-70" />
+      <div className="absolute -inset-[24%] bg-[radial-gradient(circle_at_20%_20%,hsl(280_95%_60%_/_0.22),transparent_34%),radial-gradient(circle_at_80%_20%,hsl(40_96%_58%_/_0.18),transparent_36%),radial-gradient(circle_at_55%_80%,hsl(28_98%_58%_/_0.16),transparent_34%)] blur-2xl animate-gradient pointer-events-none" />
     </div>
   );
 }

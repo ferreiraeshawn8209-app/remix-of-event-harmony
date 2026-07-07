@@ -13,6 +13,7 @@ import { Music, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { PageBackground } from "@/components/PageBackground";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
 
 const signUpSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
@@ -225,24 +226,25 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative premium-page cinematic-shell">
       <PageBackground pageKey="bg_auth" />
+      <CinematicAmbient intensity="soft" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
+          <div className="inline-flex items-center gap-2 mb-4 premium-chip px-3 py-1.5">
             <Music className="w-8 h-8 text-primary" />
             <span className="font-display text-2xl font-bold gradient-text">BEATKULTURE</span>
           </div>
-          <p className="text-muted-foreground">Access your quotes and event planning</p>
+          <p className="text-muted-foreground">Luxury access to quotes, planning, bookings, and your AI companion.</p>
         </div>
 
-        <Card variant="glass">
+        <Card variant="glass" className="border-primary/30 shadow-[0_20px_60px_hsl(250_75%_3%_/_0.58)]">
           <CardHeader className="text-center pb-4">
-            <CardTitle>Welcome</CardTitle>
+            <CardTitle className="premium-section-title">Welcome</CardTitle>
             <CardDescription>Sign in or create an account to continue</CardDescription>
           </CardHeader>
           <CardContent>
