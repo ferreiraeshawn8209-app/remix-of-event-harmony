@@ -76,7 +76,7 @@ const Index = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full premium-chip mb-6 backdrop-blur-sm">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-primary">26+ Years Experience · 500+ Events · DJ Lady Leah</span>
+            <span className="text-xs sm:text-sm font-medium text-primary">26+ Years Experience · 500+ Events Delivered</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
@@ -88,9 +88,10 @@ const Index = () => {
 
           <p className="text-base sm:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
             <strong className="text-foreground">BeatKulture Entertainment</strong> is a luxury DJ and event production company
-            led by the iconic <strong className="text-primary">DJ Lady Leah</strong> — with over 26 years of experience
-            transforming weddings, corporate events, and private parties into unforgettable cinematic experiences.
+            with over 26 years of experience transforming weddings, corporate events, and private parties into
+            unforgettable cinematic experiences.
           </p>
+
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Button variant="hero" size="lg" asChild>
