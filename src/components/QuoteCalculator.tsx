@@ -29,7 +29,7 @@ interface QuoteCalculatorProps {
   isAdmin?: boolean;
   initialData?: QuoteData;
   editQuoteId?: string;
-  onSaveQuote?: (quote?: QuoteData, calculations?: ReturnType<typeof calculateQuote>) => void | Promise<void>;
+  onSaveQuote?: (quote: QuoteData, calculations: ReturnType<typeof calculateQuote>) => void | Promise<void>;
   selectedPackage?: DbPackage | null;
   onClearPackage?: () => void;
 }
@@ -318,7 +318,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
 
       // Admin: invoke callback (e.g. return to quotes tab) instead of navigating away
       if (effectiveIsAdmin) {
-        await onSaveQuote?.();
+        await onSaveQuote?.(quoteData, calculations);
       } else {
         navigate("/dashboard");
       }
