@@ -21,6 +21,9 @@ import { Footer } from "@/components/Footer";
  * Section order: Hero → Specials Banner → Curated Packages → Competition Banner
  *                → Embedded Music Player → Mixcloud → Footer
  */
+const YEARS_EXPERIENCE = "26+";
+const EVENTS_DELIVERED = "500+";
+
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -36,8 +39,8 @@ const Index = () => {
   }, [user, profile, isAdmin, isLoading, navigate]);
 
   const stats = [
-    { icon: Star, label: "26+ Years Experience" },
-    { icon: Calendar, label: "500+ Events Delivered" },
+    { icon: Star, label: `${YEARS_EXPERIENCE} Years Experience` },
+    { icon: Calendar, label: `${EVENTS_DELIVERED} Events Delivered` },
     { icon: Headphones, label: "Premium DJ & Production" },
     { icon: Music, label: "Curated Music Planning" },
   ];
@@ -76,7 +79,7 @@ const Index = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full premium-chip mb-6 backdrop-blur-sm">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-primary">26+ Years Experience · 500+ Events · DJ Lady Leah</span>
+            <span className="text-xs sm:text-sm font-medium text-primary">{YEARS_EXPERIENCE} Years Experience · {EVENTS_DELIVERED} Events · DJ Lady Leah</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
@@ -88,7 +91,7 @@ const Index = () => {
 
           <p className="text-base sm:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
             <strong className="text-foreground">BeatKulture Entertainment</strong> is a luxury DJ and event production company
-            led by the iconic <strong className="text-primary">DJ Lady Leah</strong> — with over 26 years of experience
+            led by the iconic <strong className="text-primary">DJ Lady Leah</strong> — with over {YEARS_EXPERIENCE} years of experience
             transforming weddings, corporate events, and private parties into unforgettable cinematic experiences.
           </p>
 

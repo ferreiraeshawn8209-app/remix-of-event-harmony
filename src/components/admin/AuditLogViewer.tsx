@@ -36,12 +36,12 @@ export function AuditLogViewer() {
 
       // Admin notifications as audit trail
       const { data: notifs } = await supabase
-        .from("admin_notifications" as any)
+        .from("admin_notifications")
         .select("id, type, title, message, created_at, email")
         .order("created_at", { ascending: false })
         .limit(30);
 
-      (notifs as any[] || []).forEach((n: any) => {
+      (notifs || []).forEach((n) => {
         results.push({
           id: `notif-${n.id}`,
           source: "notification",
@@ -59,7 +59,7 @@ export function AuditLogViewer() {
         .order("created_at", { ascending: false })
         .limit(30);
 
-      (logs as any[] || []).forEach((l: any) => {
+      (logs || []).forEach((l) => {
         results.push({
           id: `access-${l.id}`,
           source: "access",
@@ -77,7 +77,7 @@ export function AuditLogViewer() {
         .order("created_at", { ascending: false })
         .limit(30);
 
-      (msgs as any[] || []).forEach((m: any) => {
+      (msgs || []).forEach((m) => {
         const actionLabel =
           m.type === "approval_approved" ? "Quote accepted" :
           m.type === "approval_changes_requested" ? "Changes requested" :

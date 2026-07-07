@@ -4,19 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, TrendingUp, Calendar, AlertCircle, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/pricing";
+import { formatDate, formatShortDate, formatDateTime } from "@/lib/date-utils";
 import { DatabaseQuote } from "@/hooks/useQuotes";
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-function formatShortDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-ZA");
-}
-
-function formatDateTime(dateStr: string) {
-  return new Date(dateStr).toLocaleString("en-ZA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-}
 
 interface ReportData {
   conversionRate: number;

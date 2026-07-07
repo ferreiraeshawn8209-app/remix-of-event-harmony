@@ -138,9 +138,12 @@ function QuotePipelineBoard({
     if (selected.size === 0) return;
     setBulkLoading(true);
     try {
-      await supabase.from("quotes").delete().in("id", [...selected]);
+      const { error } = await supabase.from("quotes").delete().in("id", [...selected]);
+      if (error) throw error;
       toast({ title: "Bulk delete", description: `${selected.size} quote(s) deleted.` });
       setSelected(new Set());
+    } catch {
+      toast({ title: "Delete failed", description: "Some quotes could not be deleted.", variant: "destructive" });
     } finally {
       setBulkLoading(false);
       setShowDeleteConfirm(false);

@@ -788,7 +788,8 @@ function Questionnaire({
       return;
     }
     const chosenPkg = packages.find(p => p.id === form.package_id);
-    // Build notes string that includes music preferences and special requests
+    // music_preferences and special_requests don't have dedicated columns in quote_requests
+    // so they are appended to the notes field where admin can review them.
     const musicPart = form.music_preferences ? `Music preferences: ${form.music_preferences}` : "";
     const specialPart = form.special_requests ? `Special requests: ${form.special_requests}` : "";
     const basePart = form.notes || "";

@@ -10,7 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Music, Save, Loader2, Plus, X } from "lucide-react";
 
+/** Target playlist size — enough variety for a full event set */
 const RECOMMENDED_SONG_COUNT = 50;
+/** Minimum playlist size to ensure the DJ has sufficient options */
 const MIN_SONG_COUNT = 35;
 
 interface MusicPlanningFormProps {
