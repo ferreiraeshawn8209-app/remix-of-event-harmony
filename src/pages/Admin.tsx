@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, LogOut, Plus, BarChart3, FileText, CalendarRange, Bell, Settings, Package2, Radio } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, LogOut, Plus, BarChart3, FileText, CalendarRange, Bell, Settings, Package2, Radio, Trash2, Archive, Download } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DatabaseQuote, useQuotes } from "@/hooks/useQuotes";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
@@ -31,10 +32,13 @@ import { AlarmsManager } from "@/components/admin/AlarmsManager";
 import { PlanManagementDashboard } from "@/components/admin/PlanManagementDashboard";
 import { ApprovalWorkflowTracker } from "@/components/admin/ApprovalWorkflowTracker";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
+import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { AdminReporting } from "@/components/admin/AdminReporting";
 import { toast } from "@/hooks/use-toast";
 import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
 import { formatCurrency } from "@/lib/pricing";
 import { CinematicAmbient } from "@/components/CinematicAmbient";
+import { supabase } from "@/integrations/supabase/client";
 
 type AdminTab =
   | "overview"
@@ -77,6 +81,9 @@ function QuotePipelineBoard({
   onSetStatus: (quoteId: string, status: string) => Promise<void>;
 }) {
   const { items: equipmentCatalog } = useEquipmentCatalog();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const equipmentNameMap = useMemo(() => {
     const map: Record<string, string> = {};
     equipmentCatalog.forEach((item) => {
@@ -90,6 +97,62 @@ function QuotePipelineBoard({
     [quotes],
   );
 
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === sorted.length) setSelected(new Set());
+    else setSelected(new Set(sorted.map((q) => q.id)));
+  };
+
+  const bulkArchive = async () => {
+    if (selected.size === 0) return;
+    setBulkLoading(true);
+    try {
+      await Promise.all([...selected].map((id) => onSetStatus(id, "declined")));
+      toast({ title: "Bulk archive", description: `${selected.size} quote(s) archived.` });
+      setSelected(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`Delete ${selected.size} quote(s)? This cannot be undone.`)) return;
+    setBulkLoading(true);
+    try {
+      await supabase.from("quotes").delete().in("id", [...selected]);
+      toast({ title: "Bulk delete", description: `${selected.size} quote(s) deleted.` });
+      setSelected(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkExport = () => {
+    const rows = sorted.filter((q) => selected.has(q.id));
+    const csv = [
+      ["ID", "Client", "Email", "Event", "Date", "Total", "Status"].join(","),
+      ...rows.map((q) =>
+        [q.id, `"${q.client_name}"`, q.email, `"${q.event_type || ""}"`, q.event_date || "", q.total, q.status].join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `quotes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (sorted.length === 0) {
     return (
       <Card variant="glass">
@@ -102,17 +165,59 @@ function QuotePipelineBoard({
 
   return (
     <div className="space-y-3">
+      {/* Bulk action toolbar */}
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={selected.size === sorted.length && sorted.length > 0}
+            onCheckedChange={toggleAll}
+            aria-label="Select all"
+          />
+          <span className="text-xs text-muted-foreground">
+            {selected.size > 0 ? `${selected.size} selected` : "Select all"}
+          </span>
+        </div>
+        {selected.size > 0 && (
+          <>
+            <Separator orientation="vertical" className="h-4" />
+            <Button size="sm" variant="outline" onClick={bulkArchive} disabled={bulkLoading}>
+              <Archive className="w-3.5 h-3.5 mr-1" /> Archive
+            </Button>
+            <Button size="sm" variant="outline" onClick={bulkExport} disabled={bulkLoading}>
+              <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={bulkDelete}
+              disabled={bulkLoading}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+            </Button>
+          </>
+        )}
+      </div>
+
       {sorted.map((quote) => (
-        <Card key={quote.id} variant="glass" className="border-border/60">
+        <Card key={quote.id} variant="glass" className={`border-border/60 ${selected.has(quote.id) ? "ring-1 ring-primary/40" : ""}`}>
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div>
-                <CardTitle className="text-base">{quote.client_name} • {quote.event_type || "Event"}</CardTitle>
-                <CardDescription className="text-xs">
-                  {quote.email}
-                  {quote.event_date ? ` • ${new Date(quote.event_date).toLocaleDateString("en-ZA")}` : ""}
-                  {quote.venue ? ` • ${quote.venue}` : ""}
-                </CardDescription>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  checked={selected.has(quote.id)}
+                  onCheckedChange={() => toggleSelect(quote.id)}
+                  aria-label={`Select ${quote.client_name}`}
+                  className="mt-0.5"
+                />
+                <div>
+                  <CardTitle className="text-base">{quote.client_name} • {quote.event_type || "Event"}</CardTitle>
+                  <CardDescription className="text-xs">
+                    {quote.email}
+                    {quote.event_date ? ` • ${new Date(quote.event_date).toLocaleDateString("en-ZA")}` : ""}
+                    {quote.venue ? ` • ${quote.venue}` : ""}
+                  </CardDescription>
+                </div>
               </div>
               <Badge variant="outline" className={statusClass(quote.status)}>
                 {quote.status}
@@ -321,7 +426,9 @@ export default function Admin() {
 
           <TabsContent value="analytics" className="space-y-4">
             <FinancialLog quotes={quotes} />
+            <AdminReporting quotes={quotes} />
             <AnalyticsSnapshot />
+            <AuditLogViewer />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
