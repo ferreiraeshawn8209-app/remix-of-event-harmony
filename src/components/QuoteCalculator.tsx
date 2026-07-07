@@ -318,7 +318,9 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
 
       // Admin: invoke callback (e.g. return to quotes tab) instead of navigating away
       if (effectiveIsAdmin) {
-        await onSaveQuote?.(quoteData, calculations);
+        if (onSaveQuote) {
+          await onSaveQuote(quoteData, calculations);
+        }
       } else {
         navigate("/dashboard");
       }
