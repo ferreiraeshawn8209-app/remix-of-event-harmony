@@ -22,7 +22,7 @@ const statusColors: Record<string, string> = {
 };
 
 export function QuoteRequestsManager() {
-  const { requests, isLoading, updateRequest, deleteRequest } = useQuoteRequests();
+  const { requests, isLoading, deleteRequest } = useQuoteRequests();
   const { activeSpecials } = useSpecials();
   const [acting, setActing] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -30,9 +30,6 @@ export function QuoteRequestsManager() {
   const startQuote = async (r: QuoteRequest) => {
     setActing(r.id);
     try {
-      // Move request to in_progress
-      await updateRequest({ id: r.id, updates: { status: "in_progress" } });
-
       navigate("/admin?tab=new-quote");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
