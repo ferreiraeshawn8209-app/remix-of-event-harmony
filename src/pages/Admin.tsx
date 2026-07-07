@@ -287,7 +287,7 @@ export default function Admin() {
           <TabsContent value="new-quote" className="space-y-4">
             <QuoteCalculator
               isAdmin
-              onSaveQuote={async () => {
+              onSaveQuote={() => {
                 setTab("quotes");
               }}
             />
