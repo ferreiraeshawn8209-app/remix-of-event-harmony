@@ -788,17 +788,11 @@ function Questionnaire({
       return;
     }
     const chosenPkg = packages.find(p => p.id === form.package_id);
-    // Build notes string that includes location details and music preferences
-    // (city/area/province stored here until schema migration adds dedicated columns)
-    const locationParts = [
-      form.area ? `Area: ${form.area}` : "",
-      form.city ? `City: ${form.city}` : "",
-      form.province ? `Province: ${form.province}` : "",
-    ].filter(Boolean).join(" | ");
+    // Build notes string that includes music preferences and special requests
     const musicPart = form.music_preferences ? `Music preferences: ${form.music_preferences}` : "";
     const specialPart = form.special_requests ? `Special requests: ${form.special_requests}` : "";
     const basePart = form.notes || "";
-    const combinedNotes = [locationParts, musicPart, specialPart, basePart]
+    const combinedNotes = [musicPart, specialPart, basePart]
       .filter(Boolean).join("\n");
     await onSubmit({
       client_id: profile.id,
@@ -808,7 +802,9 @@ function Questionnaire({
       event_type: form.event_type,
       venue_name: form.venue_name || null,
       venue_address: form.venue_address || null,
+      area: form.area || null,
       city: form.city || null,
+      province: form.province || null,
       event_date: form.event_date || null,
       start_time: form.start_time || null,
       end_time: form.end_time || null,

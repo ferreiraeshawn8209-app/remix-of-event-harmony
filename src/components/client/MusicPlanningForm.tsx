@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Music, Save, Loader2, Plus, X } from "lucide-react";
 
+const RECOMMENDED_SONG_COUNT = 50;
+const MIN_SONG_COUNT = 35;
+
 interface MusicPlanningFormProps {
   profileId: string;
   clientName: string;
@@ -210,7 +213,7 @@ export function MusicPlanningForm({ profileId, clientName, email, quoteId }: Mus
         {/* Requested songs list */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Song requests ({filledSongs}/50 recommended)</Label>
+            <Label>Song requests ({filledSongs}/{RECOMMENDED_SONG_COUNT} recommended)</Label>
             <Button size="sm" variant="outline" onClick={addSong}>
               <Plus className="w-3.5 h-3.5 mr-1" /> Add song
             </Button>
@@ -232,9 +235,9 @@ export function MusicPlanningForm({ profileId, clientName, email, quoteId }: Mus
               </div>
             ))}
           </div>
-          {filledSongs < 35 && (
+          {filledSongs < MIN_SONG_COUNT && (
             <p className="text-xs text-muted-foreground">
-              We recommend at least 35 songs to give your DJ enough variety for your event.
+              We recommend at least {MIN_SONG_COUNT} songs to give your DJ enough variety for your event.
             </p>
           )}
         </div>

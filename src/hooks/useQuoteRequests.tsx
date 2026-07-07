@@ -16,7 +16,9 @@ export interface QuoteRequest {
   event_date: string | null;
   start_time: string | null;
   end_time: string | null;
+  area: string | null;
   city: string | null;
+  province: string | null;
   is_outdoor: boolean;
   venue_provides_sound: boolean;
   requires_microphones: boolean;

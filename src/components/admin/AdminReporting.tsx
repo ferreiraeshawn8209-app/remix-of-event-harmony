@@ -6,6 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/pricing";
 import { DatabaseQuote } from "@/hooks/useQuotes";
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatShortDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-ZA");
+}
+
+function formatDateTime(dateStr: string) {
+  return new Date(dateStr).toLocaleString("en-ZA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
 interface ReportData {
   conversionRate: number;
   upcomingEvents: { id: string; client: string; date: string; type: string; venue: string }[];
@@ -155,7 +167,7 @@ export function AdminReporting({ quotes }: { quotes: DatabaseQuote[] }) {
                     <span className="text-muted-foreground ml-2">· {ev.type} · {ev.venue}</span>
                   </div>
                   <Badge variant="outline" className="text-xs shrink-0">
-                    {new Date(ev.date).toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" })}
+                    {formatDate(ev.date)}
                   </Badge>
                 </div>
               ))}
@@ -180,7 +192,7 @@ export function AdminReporting({ quotes }: { quotes: DatabaseQuote[] }) {
                   <div className="flex items-center gap-2">
                     {p.eventDate && (
                       <span className="text-xs text-muted-foreground">
-                        Event: {new Date(p.eventDate).toLocaleDateString("en-ZA")}
+                        Event: {formatShortDate(p.eventDate)}
                       </span>
                     )}
                     <Badge variant="outline" className="text-warning border-warning/30">
@@ -227,7 +239,7 @@ export function AdminReporting({ quotes }: { quotes: DatabaseQuote[] }) {
                 <div key={i} className="flex items-center justify-between text-sm px-2 py-1 rounded border border-border/40">
                   <span className="text-muted-foreground">{l.email}</span>
                   <time className="text-xs text-muted-foreground">
-                    {new Date(l.timestamp).toLocaleString("en-ZA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    {formatDateTime(l.timestamp)}
                   </time>
                 </div>
               ))}

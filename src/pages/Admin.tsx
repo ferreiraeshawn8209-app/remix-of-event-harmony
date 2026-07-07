@@ -6,6 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Loader2, LogOut, Plus, BarChart3, FileText, CalendarRange, Bell, Settings, Package2, Radio, Trash2, Archive, Download } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DatabaseQuote, useQuotes } from "@/hooks/useQuotes";
@@ -83,6 +93,7 @@ function QuotePipelineBoard({
   const { items: equipmentCatalog } = useEquipmentCatalog();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const equipmentNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -125,7 +136,6 @@ function QuotePipelineBoard({
 
   const bulkDelete = async () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`Delete ${selected.size} quote(s)? This cannot be undone.`)) return;
     setBulkLoading(true);
     try {
       await supabase.from("quotes").delete().in("id", [...selected]);
@@ -133,6 +143,7 @@ function QuotePipelineBoard({
       setSelected(new Set());
     } finally {
       setBulkLoading(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -165,6 +176,27 @@ function QuotePipelineBoard({
 
   return (
     <div className="space-y-3">
+      {/* Bulk delete confirmation dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selected.size} quote{selected.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The selected quote{selected.size !== 1 ? "s" : ""} will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={bulkDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Bulk action toolbar */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2">
         <div className="flex items-center gap-2">
@@ -190,7 +222,7 @@ function QuotePipelineBoard({
               size="sm"
               variant="outline"
               className="text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={bulkDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={bulkLoading}
             >
               <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete

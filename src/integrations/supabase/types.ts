@@ -763,6 +763,7 @@ export type Database = {
       }
       quote_requests: {
         Row: {
+          area: string | null
           client_id: string
           client_name: string
           contact_no: string | null
@@ -781,6 +782,7 @@ export type Database = {
           notes: string | null
           package_id: string | null
           package_name: string | null
+          province: string | null
           quote_id: string | null
           start_time: string | null
           status: string
@@ -789,6 +791,7 @@ export type Database = {
           venue_name: string | null
         }
         Insert: {
+          area?: string | null
           client_id: string
           client_name: string
           contact_no?: string | null
@@ -807,6 +810,7 @@ export type Database = {
           notes?: string | null
           package_id?: string | null
           package_name?: string | null
+          province?: string | null
           quote_id?: string | null
           start_time?: string | null
           status?: string
@@ -815,6 +819,7 @@ export type Database = {
           venue_name?: string | null
         }
         Update: {
+          area?: string | null
           client_id?: string
           client_name?: string
           contact_no?: string | null
@@ -833,6 +838,7 @@ export type Database = {
           notes?: string | null
           package_id?: string | null
           package_name?: string | null
+          province?: string | null
           quote_id?: string | null
           start_time?: string | null
           status?: string
