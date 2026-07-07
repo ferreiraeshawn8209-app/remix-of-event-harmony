@@ -354,7 +354,6 @@ export type Database = {
       event_plans: {
         Row: {
           additional_notes: string | null
-          artists_to_avoid: string | null
           bouquet_toss_artist: string | null
           bouquet_toss_song: string | null
           cake_cutting_artist: string | null
@@ -371,8 +370,6 @@ export type Database = {
           event_date: string | null
           event_style: string | null
           event_type: string | null
-          father_daughter_artist: string | null
-          father_daughter_song: string | null
           first_dance_artist: string | null
           first_dance_song: string | null
           guest_count: number | null
@@ -380,10 +377,7 @@ export type Database = {
           last_song: string | null
           last_song_artist: string | null
           mc_notes: string | null
-          mother_son_artist: string | null
-          mother_son_song: string | null
           must_play_songs: string | null
-          preferred_genres: string | null
           quote_id: string | null
           schedule_items: Json | null
           special_announcements: string | null
@@ -394,7 +388,6 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
-          artists_to_avoid?: string | null
           bouquet_toss_artist?: string | null
           bouquet_toss_song?: string | null
           cake_cutting_artist?: string | null
@@ -411,8 +404,6 @@ export type Database = {
           event_date?: string | null
           event_style?: string | null
           event_type?: string | null
-          father_daughter_artist?: string | null
-          father_daughter_song?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
           guest_count?: number | null
@@ -420,10 +411,7 @@ export type Database = {
           last_song?: string | null
           last_song_artist?: string | null
           mc_notes?: string | null
-          mother_son_artist?: string | null
-          mother_son_song?: string | null
           must_play_songs?: string | null
-          preferred_genres?: string | null
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
@@ -434,7 +422,6 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
-          artists_to_avoid?: string | null
           bouquet_toss_artist?: string | null
           bouquet_toss_song?: string | null
           cake_cutting_artist?: string | null
@@ -451,8 +438,6 @@ export type Database = {
           event_date?: string | null
           event_style?: string | null
           event_type?: string | null
-          father_daughter_artist?: string | null
-          father_daughter_song?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
           guest_count?: number | null
@@ -460,10 +445,7 @@ export type Database = {
           last_song?: string | null
           last_song_artist?: string | null
           mc_notes?: string | null
-          mother_son_artist?: string | null
-          mother_son_song?: string | null
           must_play_songs?: string | null
-          preferred_genres?: string | null
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
