@@ -30,6 +30,7 @@ import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
 import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
+import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
@@ -242,6 +243,14 @@ export default function ClientPortal() {
               start_time: quotes[0].start_time,
               end_time: quotes[0].end_time,
             } : undefined}
+          />
+
+          {/* Music Planning */}
+          <MusicPlanningForm
+            profileId={profile.id}
+            clientName={profile.full_name || user.email || "Client"}
+            email={user.email || ""}
+            quoteId={quotes[0]?.id || null}
           />
 
           {/* Specials */}
@@ -746,6 +755,9 @@ function Questionnaire({
     event_type: "",
     venue_name: "",
     venue_address: "",
+    area: "",
+    city: "",
+    province: "",
     event_date: "",
     start_time: "",
     end_time: "",
@@ -756,6 +768,8 @@ function Questionnaire({
     needs_mic: false,
     guest_count: "",
     package_id: selectedPackageId && packages.some((p) => p.id === selectedPackageId) ? selectedPackageId : "none",
+    music_preferences: "",
+    special_requests: "",
     notes: "",
     contact_no: profile?.phone || "",
   });
@@ -774,6 +788,18 @@ function Questionnaire({
       return;
     }
     const chosenPkg = packages.find(p => p.id === form.package_id);
+    // Build notes string that includes location details and music preferences
+    // (city/area/province stored here until schema migration adds dedicated columns)
+    const locationParts = [
+      form.area ? `Area: ${form.area}` : "",
+      form.city ? `City: ${form.city}` : "",
+      form.province ? `Province: ${form.province}` : "",
+    ].filter(Boolean).join(" | ");
+    const musicPart = form.music_preferences ? `Music preferences: ${form.music_preferences}` : "";
+    const specialPart = form.special_requests ? `Special requests: ${form.special_requests}` : "";
+    const basePart = form.notes || "";
+    const combinedNotes = [locationParts, musicPart, specialPart, basePart]
+      .filter(Boolean).join("\n");
     await onSubmit({
       client_id: profile.id,
       client_name: profile?.full_name || userEmail,
@@ -782,6 +808,7 @@ function Questionnaire({
       event_type: form.event_type,
       venue_name: form.venue_name || null,
       venue_address: form.venue_address || null,
+      city: form.city || null,
       event_date: form.event_date || null,
       start_time: form.start_time || null,
       end_time: form.end_time || null,
@@ -793,7 +820,7 @@ function Questionnaire({
       guest_count: form.guest_count ? Number(form.guest_count) : null,
       package_id: chosenPkg?.id || null,
       package_name: chosenPkg?.name || null,
-      notes: form.notes || null,
+      notes: combinedNotes || null,
     });
   };
 
@@ -860,6 +887,34 @@ function Questionnaire({
             <div className="space-y-2">
               <Label>Venue address</Label>
               <Input value={form.venue_address} onChange={(e) => update("venue_address", e.target.value)} placeholder="Street, suburb, city" />
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label>Area / Suburb</Label>
+                <Input value={form.area} onChange={(e) => update("area", e.target.value)} placeholder="e.g. Sandton" />
+              </div>
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Input value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="e.g. Johannesburg" />
+              </div>
+              <div className="space-y-2">
+                <Label>Province</Label>
+                <Select value={form.province} onValueChange={(v) => update("province", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select province" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Gauteng">Gauteng</SelectItem>
+                    <SelectItem value="Western Cape">Western Cape</SelectItem>
+                    <SelectItem value="KwaZulu-Natal">KwaZulu-Natal</SelectItem>
+                    <SelectItem value="Eastern Cape">Eastern Cape</SelectItem>
+                    <SelectItem value="Limpopo">Limpopo</SelectItem>
+                    <SelectItem value="Mpumalanga">Mpumalanga</SelectItem>
+                    <SelectItem value="North West">North West</SelectItem>
+                    <SelectItem value="Free State">Free State</SelectItem>
+                    <SelectItem value="Northern Cape">Northern Cape</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-3 gap-3">
@@ -951,12 +1006,32 @@ function Questionnaire({
             </div>
 
             <div className="space-y-2">
+              <Label>Music preferences</Label>
+              <Textarea
+                rows={3}
+                value={form.music_preferences}
+                onChange={(e) => update("music_preferences", e.target.value)}
+                placeholder="e.g. Afrobeats, House, R&B, no explicit lyrics, favourite artists..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Special requests</Label>
+              <Textarea
+                rows={3}
+                value={form.special_requests}
+                onChange={(e) => update("special_requests", e.target.value)}
+                placeholder="e.g. Specific songs for key moments, theme, no genres, etc."
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Anything else we should know?</Label>
               <Textarea
-                rows={4}
+                rows={3}
                 value={form.notes}
                 onChange={(e) => update("notes", e.target.value)}
-                placeholder="Theme, special moments, accessibility, etc."
+                placeholder="Theme, accessibility, dietary notes, etc."
               />
             </div>
 
