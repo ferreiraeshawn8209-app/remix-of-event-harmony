@@ -22,7 +22,7 @@ const statusColors: Record<string, string> = {
 };
 
 export function QuoteRequestsManager() {
-  const { requests, isLoading, updateRequest, deleteRequest } = useQuoteRequests();
+  const { requests, isLoading, deleteRequest } = useQuoteRequests();
   const { activeSpecials } = useSpecials();
   const [acting, setActing] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -30,16 +30,7 @@ export function QuoteRequestsManager() {
   const startQuote = async (r: QuoteRequest) => {
     setActing(r.id);
     try {
-      // Move request to in_progress
-      await updateRequest({ id: r.id, updates: { status: "in_progress" } });
-
-      // Stash request payload so the calculator can prefill (optional convenience)
-      try {
-        sessionStorage.setItem("prefill_quote_request", JSON.stringify(r));
-      } catch { /* ignore */ }
-
-      // Open the admin quote builder with the request payload available for prefill.
-      navigate(`/admin?tab=new-quote&fromRequest=${r.id}`);
+      navigate("/admin?tab=new-quote");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
