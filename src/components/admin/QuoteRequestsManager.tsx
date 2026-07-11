@@ -6,10 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { useQuoteRequests, QuoteRequest } from "@/hooks/useQuoteRequests";
 import { useSpecials } from "@/hooks/useSpecials";
 import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
-import {
-  Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users, Sparkles,
-  ArrowRight, MessageSquare, Phone, Trash2,
-} from "lucide-react";
+import { Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users, Sparkles,
+import { ArrowRight, MessageSquare, Phone, Trash2,} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +27,17 @@ export function QuoteRequestsManager() {
 
   const startQuote = async (r: QuoteRequest) => {
     setActing(r.id);
-    try {
+    try { revert-8-agent-client-quotes-1c3a
+      // Move request to in_progress
+      await updateRequest({ id: r.id, updates: { status: "in_progress" } });
+
+      // Stash request payload so the calculator can prefill (optional convenience)
+      try {
+        sessionStorage.setItem("prefill_quote_request", JSON.stringify(r));
+      } catch { /* ignore */ }
+
+      // Open admin quote builder and include request id for prefill
+      navigate(`/admin?newQuote=1&newQuoteRequest=${r.id}`);
       navigate("/admin?tab=new-quote");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
