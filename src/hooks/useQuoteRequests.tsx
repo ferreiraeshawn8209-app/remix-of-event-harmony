@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useBusinessSettings } from "@/hooks/useBusinessSettings";
 
 export interface QuoteRequest {
   id: string;
@@ -44,6 +45,7 @@ export interface QuoteRequest {
 
 export function useQuoteRequests(clientId?: string | null) {
   const queryClient = useQueryClient();
+  const { get: getSetting } = useBusinessSettings();
 
   const requestsQuery = useQuery({
     queryKey: ["quote_requests", clientId || "admin"],
@@ -58,6 +60,15 @@ export function useQuoteRequests(clientId?: string | null) {
 
   const createRequest = useMutation({
     mutationFn: async (input: Omit<QuoteRequest, "id" | "status" | "quote_id" | "created_at" | "updated_at">) => {
+      const fallbackEmails = getSetting("admin_notification_emails")
+        .split(",")
+        .map((email) => email.trim())
+        .filter(Boolean);
+      const fallbackWhatsAppTo = getSetting("admin_notification_whatsapp_to")
+        .split(",")
+        .map((phone) => phone.trim())
+        .filter(Boolean);
+
       const { data, error } = await supabase
         .from("quote_requests")
         .insert(input as any)
@@ -66,7 +77,7 @@ export function useQuoteRequests(clientId?: string | null) {
       if (error) throw error;
       // Admin in-app notification is created automatically by DB trigger.
       // Trigger AI alarm cadence so the lead is not forgotten.
-      let adminEmailNotified = true;
+      let adminAlertNotified = true;
       if (data?.id) {
         const alarmResult = await supabase.functions.invoke("generate-alarms", {
           body: { category: "followup_request", quote_request_id: data.id },
@@ -75,42 +86,46 @@ export function useQuoteRequests(clientId?: string | null) {
           console.warn("alarm gen (lead) failed", alarmResult.error);
         }
 
-        let emailError: unknown = null;
+        let alertError: unknown = null;
         for (let attempt = 1; attempt <= 2; attempt += 1) {
-          const emailResult = await supabase.functions.invoke("notify-admin-quote-request", {
+          const notifyResult = await supabase.functions.invoke("notify-admin-quote-request", {
             body: {
               requestId: data.id,
               clientName: data.client_name,
               clientEmail: data.email,
+              clientPhone: data.contact_no,
               eventType: data.event_type,
               eventDate: data.event_date,
+              venueName: data.venue_name,
               packageName: data.package_name,
+              fallbackEmails,
+              fallbackWhatsAppTo,
             },
           });
 
-          if (!emailResult.error) {
-            emailError = null;
+          if (!notifyResult.error) {
+            alertError = null;
             break;
           }
 
-          emailError = emailResult.error;
+          alertError = notifyResult.error;
         }
 
-        if (emailError) {
-          adminEmailNotified = false;
-          console.warn("admin quote request email failed", emailError);
+        if (alertError) {
+          adminAlertNotified = false;
+          console.warn("admin quote request alert failed", alertError);
         }
       }
-      return { request: data as QuoteRequest, adminEmailNotified };
+      return { request: data as QuoteRequest, adminAlertNotified };
     },
-    onSuccess: ({ adminEmailNotified }) => {
+    onSuccess: ({ adminAlertNotified }) => {
       queryClient.invalidateQueries({ queryKey: ["quote_requests"] });
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
       toast({ title: "Request Submitted", description: "We'll prepare your quote and let you know when it's ready." });
-      if (!adminEmailNotified) {
+      if (!adminAlertNotified) {
         toast({
-          title: "Admin email alert delayed",
-          description: "Your request was submitted. In-app admin notifications are active while email retries continue.",
+          title: "Admin alert delayed",
+          description: "Your request was submitted. In-app admin notifications are active while outbound email/WhatsApp retries continue.",
           variant: "destructive",
         });
       }

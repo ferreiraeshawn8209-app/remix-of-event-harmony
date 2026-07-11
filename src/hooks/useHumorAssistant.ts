@@ -8,11 +8,12 @@ import type {
   SpeechDraft,
   SpeechRequest,
 } from "@/packages/shared-types/humor";
+import type { CompanionPersonality } from "@/lib/aiPersonality";
 
 const WIDGET_ENABLED_KEY = "bk-humor-widget-enabled";
 const WIDGET_MINIMIZED_KEY = "bk-humor-widget-minimized";
 
-export function useHumorAssistant(context: HumorContext) {
+export function useHumorAssistant(context: HumorContext, personality?: CompanionPersonality) {
   const [suggestions, setSuggestions] = useState<HumorSuggestion[]>([]);
   const [speechDraft, setSpeechDraft] = useState<SpeechDraft | null>(null);
   const [moment, setMoment] = useState<HumorSuggestion | null>(null);
@@ -31,7 +32,7 @@ export function useHumorAssistant(context: HumorContext) {
   }, [widgetEnabled, safeContext]);
 
   const generateHumor = (category: HumorCategory, style: HumorStyle, count = 3) => {
-    setSuggestions(humorEngine.generateHumor(category, style, safeContext, count));
+    setSuggestions(humorEngine.generateHumor(category, style, safeContext, count, personality));
   };
 
   const generateSpeech = (request: SpeechRequest) => {
@@ -71,4 +72,3 @@ export function useHumorAssistant(context: HumorContext) {
     toggleWidgetMinimized,
   };
 }
-

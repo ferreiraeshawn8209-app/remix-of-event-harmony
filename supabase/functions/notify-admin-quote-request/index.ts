@@ -13,6 +13,20 @@ function parseFallbackEmails(raw: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function parseFallbackPhones(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function parseList(input: unknown): string[] {
+  if (Array.isArray(input)) return input.map((item) => String(item || "").trim()).filter(Boolean);
+  if (typeof input === "string") return input.split(",").map((item) => item.trim()).filter(Boolean);
+  return [];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -31,6 +45,8 @@ Deno.serve(async (req) => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     const fromEmail = Deno.env.get("ADMIN_NOTIFY_FROM_EMAIL") || "BeatKulture Entertainment <onboarding@resend.dev>";
     const fallbackEmails = parseFallbackEmails(Deno.env.get("ADMIN_NOTIFICATION_EMAILS"));
+    const whatsappWebhookUrl = Deno.env.get("ADMIN_WHATSAPP_WEBHOOK_URL") || "";
+    const fallbackWhatsAppNumbers = parseFallbackPhones(Deno.env.get("ADMIN_NOTIFICATION_WHATSAPP_TO"));
 
     if (!supabaseUrl || !serviceRoleKey) {
       return new Response(JSON.stringify({ error: "Supabase service configuration missing" }), {
@@ -50,9 +66,13 @@ Deno.serve(async (req) => {
     const requestId = String(payload?.requestId || "");
     const clientName = String(payload?.clientName || "Client");
     const clientEmail = String(payload?.clientEmail || "");
+    const clientPhone = payload?.clientPhone ? String(payload.clientPhone) : "";
     const eventType = String(payload?.eventType || "Event");
     const eventDate = payload?.eventDate ? String(payload.eventDate) : "";
+    const venueName = payload?.venueName ? String(payload.venueName) : "";
     const packageName = payload?.packageName ? String(payload.packageName) : "";
+    const payloadFallbackEmails = parseList(payload?.fallbackEmails).map((item) => item.toLowerCase());
+    const payloadFallbackWhatsAppTo = parseList(payload?.fallbackWhatsAppTo);
 
     if (!requestId) {
       return new Response(JSON.stringify({ error: "requestId is required" }), {
@@ -87,7 +107,7 @@ Deno.serve(async (req) => {
     }
 
     if (recipientEmails.length === 0) {
-      recipientEmails = fallbackEmails;
+      recipientEmails = [...payloadFallbackEmails, ...fallbackEmails];
     }
 
     recipientEmails = [...new Set(recipientEmails)];
@@ -102,6 +122,8 @@ Deno.serve(async (req) => {
       ? `<p><strong>Package:</strong> ${packageName}</p>`
       : `<p><strong>Quote type:</strong> Custom quote request</p>`;
     const eventDateLine = eventDate ? `<p><strong>Event date:</strong> ${eventDate}</p>` : "";
+    const venueLine = venueName ? `<p><strong>Venue:</strong> ${venueName}</p>` : "";
+    const clientPhoneLine = clientPhone ? `<p><strong>Contact:</strong> ${clientPhone}</p>` : "";
     const safeClientEmail = clientEmail || "Not provided";
 
     const subject = `New quote request: ${clientName} (${eventType})`;
@@ -112,8 +134,10 @@ Deno.serve(async (req) => {
         <p><strong>Request ID:</strong> ${requestId}</p>
         <p><strong>Client:</strong> ${clientName}</p>
         <p><strong>Client email:</strong> ${safeClientEmail}</p>
+        ${clientPhoneLine}
         <p><strong>Event type:</strong> ${eventType}</p>
         ${eventDateLine}
+        ${venueLine}
         ${packageLine}
         <p style="margin-top: 16px;">Open the admin portal to review and action this request.</p>
       </div>
@@ -142,7 +166,62 @@ Deno.serve(async (req) => {
     }
 
     const resendPayload = await resendResponse.json();
-    return new Response(JSON.stringify({ sent: recipientEmails.length, recipients: recipientEmails, resend: resendPayload }), {
+
+    let whatsappSent = false;
+    let whatsappResponse: any = null;
+    if (whatsappWebhookUrl) {
+      const plainMessage = [
+        "New BeatKulture quote request",
+        `Request ID: ${requestId}`,
+        `Client: ${clientName}`,
+        `Email: ${safeClientEmail}`,
+        clientPhone ? `Phone: ${clientPhone}` : "",
+        `Event: ${eventType}`,
+        eventDate ? `Date: ${eventDate}` : "",
+        venueName ? `Venue: ${venueName}` : "",
+        packageName ? `Package: ${packageName}` : "Package: Custom quote",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const whatsappRecipients = [...new Set([...payloadFallbackWhatsAppTo, ...fallbackWhatsAppNumbers])];
+
+      const whatsappRes = await fetch(whatsappWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "quote_request",
+          to: whatsappRecipients,
+          message: plainMessage,
+          request: {
+            requestId,
+            clientName,
+            clientEmail: safeClientEmail,
+            clientPhone,
+            eventType,
+            eventDate,
+            venueName,
+            packageName: packageName || null,
+          },
+        }),
+      });
+
+      if (whatsappRes.ok) {
+        whatsappSent = true;
+        whatsappResponse = await whatsappRes.text();
+      } else {
+        const text = await whatsappRes.text();
+        console.error("WhatsApp webhook failed", text);
+      }
+    }
+
+    return new Response(JSON.stringify({
+      sent: recipientEmails.length,
+      recipients: recipientEmails,
+      resend: resendPayload,
+      whatsappSent,
+      whatsappResponse,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

@@ -69,7 +69,7 @@ export interface VoiceEventMap {
 }
 
 export class VoiceEventEmitter {
-  private listeners: Map<keyof VoiceEventMap, Set<Function>> = new Map();
+  private listeners: Map<keyof VoiceEventMap, Set<(data: unknown) => void>> = new Map();
 
   on<K extends keyof VoiceEventMap>(
     event: K,
@@ -78,7 +78,7 @@ export class VoiceEventEmitter {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(callback);
+    this.listeners.get(event)!.add(callback as (data: unknown) => void);
 
     return () => {
       this.listeners.get(event)?.delete(callback);
@@ -91,7 +91,7 @@ export class VoiceEventEmitter {
   ): void {
     this.listeners.get(event)?.forEach((callback) => {
       try {
-        (callback as Function)(data);
+        callback(data);
       } catch (error) {
         console.error(`Error in ${String(event)} listener:`, error);
       }

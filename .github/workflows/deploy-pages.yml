@@ -44,10 +44,22 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ (steps.deployment.outcome == 'failure' && steps.deployment_retry.outputs.page_url) || steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+
+      - name: Retry deployment to GitHub Pages
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        id: deployment_retry
+        uses: actions/deploy-pages@v4
+
+      - name: Fail job when both deployment attempts fail
+        if: ${{ steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure' }}
+        run: |
+          echo "GitHub Pages deployment failed in both attempts."
+          exit 1

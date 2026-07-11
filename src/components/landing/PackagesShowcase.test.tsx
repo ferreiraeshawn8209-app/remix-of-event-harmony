@@ -15,7 +15,7 @@ vi.mock("@/hooks/usePackages", () => ({
   usePackages: () => ({
     isLoading: false,
     packages: [
-      { id: "w1", name: "Wedding Gold", category: "wedding", description: "", price: 1000, includes: [], popular: false, is_active: true, sort_order: 1 },
+      { id: "w1", name: "Wedding Gold", category: "wedding", description: "", price: 1000, includes: ["DJ", "Lighting", "MC"], popular: false, is_active: true, sort_order: 1 },
       { id: "c1", name: "Corporate Prime", category: "corporate", description: "", price: 900, includes: [], popular: false, is_active: true, sort_order: 2 },
       { id: "p1", name: "Party Starter", category: "party", description: "", price: 800, includes: [], popular: false, is_active: true, sort_order: 3 },
       { id: "k1", name: "Kids Celebration", category: "kids", description: "", price: 700, includes: [], popular: false, is_active: true, sort_order: 4 },
@@ -41,5 +41,8 @@ describe("PackagesShowcase", () => {
     expect(screen.getByText("Party Starter")).toBeInTheDocument();
     expect(screen.getByText("Kids Celebration")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Kids Packages" })).toBeInTheDocument();
+    expect(screen.getByText("MC")).toBeInTheDocument();
+    const packageLinks = screen.getAllByRole("link", { name: "Book this package" });
+    expect(packageLinks.some((link) => link.getAttribute("href") === "/auth?tab=signup&packageId=w1")).toBe(true);
   });
 });

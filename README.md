@@ -78,3 +78,28 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 - Configure max upload size with `VITE_MAX_TRACK_UPLOAD_MB` (defaults to `50` MB when unset).
 - If uploads fail with a missing bucket error, create the Supabase storage bucket named `tracks` (legacy `track` is also supported) and verify storage permissions for admin users.
 - Admins can still keep the player usable by adding a direct public `.mp3` URL in the fallback field inside **Tracks Manager** (`Add by URL`) when storage uploads are unavailable.
+
+## Premium AI Companion experience
+
+- The client portal now includes a **Premium AI Companion** panel on dashboard entry, with animated avatar, dynamic suggestions, and event-aware reactions.
+- A configurable **AI personality layer** (assistant/planner/MC/wedding expert/friend) is wired into assistant requests and humor generation policies.
+- Voice playback uses persisted per-user preferences and drives lip-sync style avatar mouth animation.
+- The MC joke system supports wedding/crowd/reception/ice-breaker/family/entertainment/adult-humour categories with appropriateness gating.
+- Rotating animated AI showcase cards present core companion capabilities (timelines, invitations, music, jokes, seating, schedules, speeches, bookings, reminders).
+
+## Quote alert channels (Email + WhatsApp)
+
+- Quote requests always create in-app admin notifications.
+- Email notifications are sent by Supabase edge function `notify-admin-quote-request` (Resend).
+- Optional WhatsApp notifications are sent when `ADMIN_WHATSAPP_WEBHOOK_URL` is configured in edge-function secrets.
+- Admin dashboard fallback recipients can be configured in **Business Settings → Admin Alert Channels**:
+  - `admin_notification_emails` (comma-separated)
+  - `admin_notification_whatsapp_to` (comma-separated international phone numbers)
+
+### Required server-side secrets for alerts
+
+- `RESEND_API_KEY`
+- `ADMIN_NOTIFY_FROM_EMAIL` (optional, defaults to onboarding sender)
+- `ADMIN_NOTIFICATION_EMAILS` (optional env fallback)
+- `ADMIN_WHATSAPP_WEBHOOK_URL` (required for WhatsApp dispatch)
+- `ADMIN_NOTIFICATION_WHATSAPP_TO` (optional env fallback)

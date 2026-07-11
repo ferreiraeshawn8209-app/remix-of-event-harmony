@@ -267,30 +267,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return fallbackCreated;
   };
 
-  const fetchProfile = async (u: User) => {
-    try {
-      const profileData = await ensureProfileExists(u);
-      setProfile(profileData);
+ const fetchProfile = async (u: User) => {
+  try {
+    console.log("FETCH PROFILE START", u.id);
 
-      // Check if user is admin
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", u.id)
-        .eq("role", "admin")
-        .limit(1)
-        .maybeSingle();
+    const profileData = await ensureProfileExists(u);
 
-      if (roleError) {
-        console.error("Error checking admin role:", roleError);
-        return;
-      }
+    console.log("PROFILE RESULT:", profileData);
 
-      setIsAdmin(!!roleData);
-    } catch (error) {
-      console.error("Error in fetchProfile:", error);
+    setProfile(profileData);
+
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", u.id)
+      .eq("role", "admin")
+      .limit(1)
+      .maybeSingle();
+
+    console.log("ROLE RESULT:", roleData);
+    console.log("ROLE ERROR:", roleError);
+
+    if (roleError) {
+      console.error("Error checking admin role:", roleError);
+      setIsAdmin(false);
+      return;
     }
-  };
+
+    setIsAdmin(!!roleData);
+
+    console.log("FETCH PROFILE COMPLETE");
+  } catch (error) {
+    console.error("Error in fetchProfile:", error);
+  }
+};
 
   const refreshProfile = async () => {
     if (user) {
@@ -438,7 +448,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     setUser(null);
     setSession(null);
     setProfile(null);

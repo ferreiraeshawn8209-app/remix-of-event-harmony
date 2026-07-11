@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useBusinessSettings, BusinessSettingKey } from "@/hooks/useBusinessSettings";
 
 /**
@@ -6,7 +7,13 @@ import { useBusinessSettings, BusinessSettingKey } from "@/hooks/useBusinessSett
  */
 export function PageBackground({ pageKey, opacity = 0.25 }: { pageKey: BusinessSettingKey; opacity?: number }) {
   const { get } = useBusinessSettings();
-  const url = get(pageKey) || get("site_background_url");
+  const primary = get(pageKey);
+  const fallback = get("site_background_url") || get("hero_image_url");
+  const sanitizedPrimary = useMemo(() => primary?.trim().replace(/\s/g, "%20") || "", [primary]);
+  const sanitizedFallback = useMemo(() => fallback?.trim().replace(/\s/g, "%20") || "", [fallback]);
+  const [failedPrimary, setFailedPrimary] = useState(false);
+
+  const url = !failedPrimary && sanitizedPrimary ? sanitizedPrimary : sanitizedFallback;
   if (!url) return null;
 
   return (
@@ -17,6 +24,7 @@ export function PageBackground({ pageKey, opacity = 0.25 }: { pageKey: BusinessS
         className="h-full w-full object-cover object-center"
         loading="eager"
         decoding="async"
+        onError={() => setFailedPrimary(true)}
       />
       <div
         className="absolute inset-0"
@@ -24,6 +32,8 @@ export function PageBackground({ pageKey, opacity = 0.25 }: { pageKey: BusinessS
           backgroundColor: `hsl(var(--background) / ${Math.max(0.2, 1 - opacity - 0.3)})`,
         }}
       />
+      <div className="absolute inset-0 premium-grid opacity-70" />
+      <div className="absolute -inset-[24%] bg-[radial-gradient(circle_at_20%_20%,hsl(280_95%_60%_/_0.22),transparent_34%),radial-gradient(circle_at_80%_20%,hsl(40_96%_58%_/_0.18),transparent_36%),radial-gradient(circle_at_55%_80%,hsl(28_98%_58%_/_0.16),transparent_34%)] blur-2xl animate-gradient pointer-events-none" />
     </div>
   );
 }

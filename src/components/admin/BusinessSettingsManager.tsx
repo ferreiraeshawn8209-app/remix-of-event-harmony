@@ -165,6 +165,66 @@ function BankingForm() {
   );
 }
 
+function AdminAlertsForm() {
+  const { settings, setSetting, isLoading } = useBusinessSettings();
+  const [saving, setSaving] = useState(false);
+  const [emailList, setEmailList] = useState("");
+  const [whatsAppList, setWhatsAppList] = useState("");
+
+  useEffect(() => {
+    setEmailList(settings.admin_notification_emails || "");
+    setWhatsAppList(settings.admin_notification_whatsapp_to || "");
+  }, [settings.admin_notification_emails, settings.admin_notification_whatsapp_to]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await Promise.all([
+        setSetting("admin_notification_emails", emailList.trim()),
+        setSetting("admin_notification_whatsapp_to", whatsAppList.trim()),
+      ]);
+      toast({ title: "Alert recipients saved" });
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) return <Loader2 className="w-5 h-5 animate-spin" />;
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Fallback admin emails (comma separated)</Label>
+        <Input
+          value={emailList}
+          onChange={(e) => setEmailList(e.target.value)}
+          placeholder="admin1@beatkulture.com, admin2@beatkulture.com"
+        />
+        <p className="text-xs text-muted-foreground">
+          Used if no admin profile emails are available in the database.
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label>WhatsApp recipient numbers (comma separated)</Label>
+        <Input
+          value={whatsAppList}
+          onChange={(e) => setWhatsAppList(e.target.value)}
+          placeholder="+27655285528,+27710001111"
+        />
+        <p className="text-xs text-muted-foreground">
+          Used when the server-side WhatsApp webhook is configured.
+        </p>
+      </div>
+      <Button onClick={save} disabled={saving}>
+        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+        Save Alert Settings
+      </Button>
+    </div>
+  );
+}
+
 export function BusinessSettingsManager() {
   return (
     <div className="space-y-6">
@@ -179,6 +239,22 @@ export function BusinessSettingsManager() {
         </CardHeader>
         <CardContent>
           <BankingForm />
+        </CardContent>
+      </Card>
+
+      <Card variant="glass">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Save className="w-5 h-5 text-primary" /> Admin Alert Channels
+          </CardTitle>
+          <CardDescription>
+            Configure fallback recipients for quote-request alerts. WhatsApp sending requires
+            <code className="mx-1">ADMIN_WHATSAPP_WEBHOOK_URL</code>
+            on the server.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AdminAlertsForm />
         </CardContent>
       </Card>
 

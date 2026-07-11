@@ -26,7 +26,7 @@ interface Quote {
   eventDate: string;
   eventType: string;
   total: number;
-  status: "pending" | "approved" | "paid" | "completed";
+  status: "pending" | "approved" | "Pid" | "completed";
   createdAt: string;
 }
 

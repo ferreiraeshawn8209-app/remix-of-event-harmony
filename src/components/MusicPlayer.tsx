@@ -114,25 +114,6 @@ export function MusicPlayer({ autoplayTrigger, mixcloudUrl }: MusicPlayerProps) 
     };
   }, [autoplayBlocked, play]);
 
-  // If autoplay is blocked, retry as soon as the user interacts anywhere on the page.
-  useEffect(() => {
-    if (!autoplayBlocked) return;
-
-    const unlockAndPlay = () => {
-      play();
-    };
-
-    window.addEventListener("pointerdown", unlockAndPlay, { once: true });
-    window.addEventListener("keydown", unlockAndPlay, { once: true });
-    window.addEventListener("touchstart", unlockAndPlay, { once: true });
-
-    return () => {
-      window.removeEventListener("pointerdown", unlockAndPlay);
-      window.removeEventListener("keydown", unlockAndPlay);
-      window.removeEventListener("touchstart", unlockAndPlay);
-    };
-  }, [autoplayBlocked, play]);
-
   const pause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;

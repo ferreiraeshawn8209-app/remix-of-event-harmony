@@ -123,7 +123,7 @@ export function extractEventTypeFromResponse(response: string): string | null {
 export function extractDateFromResponse(response: string): string | null {
   // Simple date extraction - could be enhanced with NLP
   const datePatterns = [
-    /(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/,
+    /(\d{1,2})[/-](\d{1,2})[/-](\d{4})/,
     /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i,
     /(\w+)\s+(\d{1,2})/,
   ];
