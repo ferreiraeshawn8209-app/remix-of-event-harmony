@@ -832,6 +832,7 @@ export type Database = {
           client_code: string | null
           client_id: string
           client_name: string
+          client_removed_items: Json
           contact_no: string | null
           created_at: string
           created_by: string | null
@@ -861,6 +862,12 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          package_id: string | null
+          package_name: string | null
+          payment_plan_installments: Json
+          payment_schedule: Json
+          payment_structure: string
+          source_type: string
           start_time: string | null
           status: string | null
           subtotal: number | null
@@ -877,6 +884,7 @@ export type Database = {
           client_code?: string | null
           client_id: string
           client_name: string
+          client_removed_items?: Json
           contact_no?: string | null
           created_at?: string
           created_by?: string | null
@@ -906,6 +914,12 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          package_id?: string | null
+          package_name?: string | null
+          payment_plan_installments?: Json
+          payment_schedule?: Json
+          payment_structure?: string
+          source_type?: string
           start_time?: string | null
           status?: string | null
           subtotal?: number | null
@@ -922,6 +936,7 @@ export type Database = {
           client_code?: string | null
           client_id?: string
           client_name?: string
+          client_removed_items?: Json
           contact_no?: string | null
           created_at?: string
           created_by?: string | null
@@ -951,6 +966,12 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          package_id?: string | null
+          package_name?: string | null
+          payment_plan_installments?: Json
+          payment_schedule?: Json
+          payment_structure?: string
+          source_type?: string
           start_time?: string | null
           status?: string | null
           subtotal?: number | null
@@ -1217,6 +1238,7 @@ export type Database = {
           client_code: string | null
           client_id: string
           client_name: string
+          client_removed_items: Json
           contact_no: string | null
           created_at: string
           created_by: string | null
@@ -1246,6 +1268,12 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          package_id: string | null
+          package_name: string | null
+          payment_plan_installments: Json
+          payment_schedule: Json
+          payment_structure: string
+          source_type: string
           start_time: string | null
           status: string | null
           subtotal: number | null
