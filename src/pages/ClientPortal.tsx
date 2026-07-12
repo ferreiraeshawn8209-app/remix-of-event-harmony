@@ -497,7 +497,8 @@ export default function ClientPortal() {
           })()}
 
 
-          {/* My Requests / Quotes (kept at bottom for access) */}
+          {/* My Requests / Quotes (hub only) */}
+          {!section && (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> My Requests &amp; Quotes
