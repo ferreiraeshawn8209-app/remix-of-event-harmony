@@ -159,6 +159,7 @@ type AdminTab =
   | "media"
   | "notifications"
   | "analytics"
+  | "financials"
   | "settings";
 
 const TAB_SET = new Set<AdminTab>([
@@ -171,6 +172,7 @@ const TAB_SET = new Set<AdminTab>([
   "media",
   "notifications",
   "analytics",
+  "financials",
   "settings",
 ]);
 
