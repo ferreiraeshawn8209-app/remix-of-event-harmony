@@ -17,6 +17,8 @@ export type BusinessSettingKey =
   | "bg_planner"
   | "bg_auth"
   | "bg_song_request"
+  | "bg_client_portal_rotation"
+  | "bg_landing_rotation"
   | "admin_notification_emails"
   | "admin_notification_whatsapp_to"
   | "whatsapp_consultant_1"
