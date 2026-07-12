@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, Upload, Image as ImageIcon, Banknote } from "lucide-react";
 import { useBusinessSettings, uploadSiteImage, BusinessSettingKey } from "@/hooks/useBusinessSettings";
+import { BackgroundRotationManager } from "@/components/admin/BackgroundRotationManager";
 import { toast } from "@/hooks/use-toast";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 
