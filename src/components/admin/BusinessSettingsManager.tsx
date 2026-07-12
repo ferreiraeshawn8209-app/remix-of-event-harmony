@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Upload, Image as ImageIcon, Banknote } from "lucide-react";
+import { Loader2, Save, Upload, Image as ImageIcon, Banknote, Plus, X, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useBusinessSettings, uploadSiteImage, BusinessSettingKey } from "@/hooks/useBusinessSettings";
 import { BackgroundRotationManager } from "@/components/admin/BackgroundRotationManager";
 import { toast } from "@/hooks/use-toast";
@@ -166,25 +167,74 @@ function BankingForm() {
   );
 }
 
+function normalizeWaNumber(raw: string): string | null {
+  // Keep leading + and digits; wa.me/notifiers expect E.164 (e.g. +27655285528).
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const cleaned = trimmed.replace(/[^\d+]/g, "");
+  const digits = cleaned.replace(/\+/g, "");
+  if (digits.length < 7 || digits.length > 15) return null;
+  return cleaned.startsWith("+") ? `+${digits}` : `+${digits}`;
+}
+
+function parseList(csv: string): string[] {
+  return csv
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function AdminAlertsForm() {
   const { settings, setSetting, isLoading } = useBusinessSettings();
   const [saving, setSaving] = useState(false);
   const [emailList, setEmailList] = useState("");
-  const [whatsAppList, setWhatsAppList] = useState("");
+  const [numbers, setNumbers] = useState<string[]>([]);
+  const [newNumber, setNewNumber] = useState("");
+  const [consultant1, setConsultant1] = useState("");
+  const [consultant2, setConsultant2] = useState("");
+  const [groupUrl, setGroupUrl] = useState("");
 
   useEffect(() => {
     setEmailList(settings.admin_notification_emails || "");
-    setWhatsAppList(settings.admin_notification_whatsapp_to || "");
-  }, [settings.admin_notification_emails, settings.admin_notification_whatsapp_to]);
+    setNumbers(parseList(settings.admin_notification_whatsapp_to || ""));
+    setConsultant1(settings.whatsapp_consultant_1 || "");
+    setConsultant2(settings.whatsapp_consultant_2 || "");
+    setGroupUrl(settings.whatsapp_group_url || "");
+  }, [
+    settings.admin_notification_emails,
+    settings.admin_notification_whatsapp_to,
+    settings.whatsapp_consultant_1,
+    settings.whatsapp_consultant_2,
+    settings.whatsapp_group_url,
+  ]);
+
+  const addNumber = () => {
+    const n = normalizeWaNumber(newNumber);
+    if (!n) {
+      toast({ title: "Invalid number", description: "Use international format, e.g. +27655285528", variant: "destructive" });
+      return;
+    }
+    if (numbers.includes(n)) {
+      toast({ title: "Already added", description: n });
+      return;
+    }
+    setNumbers([...numbers, n]);
+    setNewNumber("");
+  };
+
+  const removeNumber = (n: string) => setNumbers(numbers.filter((x) => x !== n));
 
   const save = async () => {
     setSaving(true);
     try {
       await Promise.all([
         setSetting("admin_notification_emails", emailList.trim()),
-        setSetting("admin_notification_whatsapp_to", whatsAppList.trim()),
+        setSetting("admin_notification_whatsapp_to", numbers.join(",")),
+        setSetting("whatsapp_consultant_1", consultant1.trim()),
+        setSetting("whatsapp_consultant_2", consultant2.trim()),
+        setSetting("whatsapp_group_url", groupUrl.trim()),
       ]);
-      toast({ title: "Alert recipients saved" });
+      toast({ title: "WhatsApp recipients saved", description: `${numbers.length} number${numbers.length === 1 ? "" : "s"} on file` });
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
@@ -195,7 +245,7 @@ function AdminAlertsForm() {
   if (isLoading) return <Loader2 className="w-5 h-5 animate-spin" />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="space-y-2">
         <Label>Fallback admin emails (comma separated)</Label>
         <Input
@@ -207,20 +257,72 @@ function AdminAlertsForm() {
           Used if no admin profile emails are available in the database.
         </p>
       </div>
-      <div className="space-y-2">
-        <Label>WhatsApp recipient numbers (comma separated)</Label>
-        <Input
-          value={whatsAppList}
-          onChange={(e) => setWhatsAppList(e.target.value)}
-          placeholder="+27655285528,+27710001111"
-        />
+
+      <div className="space-y-3 rounded-lg border border-primary/20 p-4 bg-background/40">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-primary" />
+          <Label className="text-base">WhatsApp notification recipients</Label>
+        </div>
         <p className="text-xs text-muted-foreground">
-          Used when the server-side WhatsApp webhook is configured.
+          Every number below receives quote requests, client messages, event-plan submissions and
+          portal alerts via the WhatsApp webhook. Add or remove numbers any time.
         </p>
+
+        <div className="flex flex-wrap gap-2 min-h-[2rem]">
+          {numbers.length === 0 && (
+            <span className="text-xs text-muted-foreground italic">No recipients yet — add one below.</span>
+          )}
+          {numbers.map((n) => (
+            <Badge key={n} variant="secondary" className="gap-1 pl-3 pr-1 py-1 text-sm">
+              {n}
+              <button
+                type="button"
+                onClick={() => removeNumber(n)}
+                aria-label={`Remove ${n}`}
+                className="ml-1 rounded-full hover:bg-destructive/20 p-0.5"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <Input
+            value={newNumber}
+            onChange={(e) => setNewNumber(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNumber(); } }}
+            placeholder="+27655285528"
+            inputMode="tel"
+            maxLength={20}
+          />
+          <Button type="button" onClick={addNumber} variant="outline" className="gap-1">
+            <Plus className="w-4 h-4" /> Add
+          </Button>
+        </div>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Consultant 1 (client-facing WhatsApp chat)</Label>
+          <Input value={consultant1} onChange={(e) => setConsultant1(e.target.value)} placeholder="+27655285528" />
+        </div>
+        <div className="space-y-2">
+          <Label>Consultant 2 (optional)</Label>
+          <Input value={consultant2} onChange={(e) => setConsultant2(e.target.value)} placeholder="+27710001111" />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label>WhatsApp group invite link (optional)</Label>
+          <Input value={groupUrl} onChange={(e) => setGroupUrl(e.target.value)} placeholder="https://chat.whatsapp.com/..." />
+          <p className="text-xs text-muted-foreground">
+            If set, both consultants see one shared thread when clients tap the WhatsApp button.
+          </p>
+        </div>
+      </div>
+
       <Button onClick={save} disabled={saving}>
         {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-        Save Alert Settings
+        Save WhatsApp Settings
       </Button>
     </div>
   );
