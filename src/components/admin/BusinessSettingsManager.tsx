@@ -229,7 +229,7 @@ function AdminAlertsForm() {
     try {
       await Promise.all([
         setSetting("admin_notification_emails", emailList.trim()),
-        setSetting("admin_notification_whatsapp_to", numbers.join(",")),
+      setSetting("admin_notification_whatsapp_to", numbers.join(",")),
         setSetting("whatsapp_consultant_1", consultant1.trim()),
         setSetting("whatsapp_consultant_2", consultant2.trim()),
         setSetting("whatsapp_group_url", groupUrl.trim()),
