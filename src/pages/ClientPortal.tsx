@@ -490,8 +490,11 @@ export default function ClientPortal() {
                 <Sparkles className="w-4 h-4 text-primary" /> Competitions
               </h2>
               <CompetitionsBanner />
-            </TabsContent>
-          </Tabs>
+            </div>
+            )}
+              </motion.div>
+            );
+          })()}
 
 
           {/* My Requests / Quotes (kept at bottom for access) */}
