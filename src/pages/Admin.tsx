@@ -506,10 +506,8 @@ export default function Admin() {
     );
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/", { replace: true });
-  };
+
+
 
 
   const quoteStats = useMemo(() => {
