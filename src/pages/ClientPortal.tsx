@@ -278,12 +278,14 @@ export default function ClientPortal() {
                           end_time: quotes[0].end_time,
                         } : undefined}
                       />
-                      <MusicPlanningForm
-                        profileId={profile.id}
-                        clientName={profile.full_name || user.email || "Client"}
-                        email={user.email || ""}
-                        quoteId={quotes[0]?.id || null}
-                      />
+                      <div data-music-planning>
+                        <MusicPlanningForm
+                          profileId={profile.id}
+                          clientName={profile.full_name || user.email || "Client"}
+                          email={user.email || ""}
+                          quoteId={quotes[0]?.id || null}
+                        />
+                      </div>
                     </div>
                   )}
 
