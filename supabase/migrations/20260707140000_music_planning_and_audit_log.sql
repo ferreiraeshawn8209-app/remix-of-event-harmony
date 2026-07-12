@@ -10,7 +10,9 @@ ALTER TABLE public.event_plans
   ADD COLUMN IF NOT EXISTS artists_to_avoid        text;
 
 -- Add city, area, province to quote_requests for richer location data
+-- CRITICAL FIX: Ensure all three location columns exist
 ALTER TABLE public.quote_requests
+  ADD COLUMN IF NOT EXISTS city      text,
   ADD COLUMN IF NOT EXISTS area      text,
   ADD COLUMN IF NOT EXISTS province  text;
 
