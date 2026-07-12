@@ -193,29 +193,26 @@ export default function Auth() {
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: authRedirectUrl,
-      },
+    const { lovable } = await import("@/integrations/lovable/index");
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
 
-    if (error) {
+    if (result.error) {
       setIsLoading(false);
-      const unsupportedProvider =
-        error.message?.toLowerCase().includes("unsupported provider") ||
-        error.message?.toLowerCase().includes("provider is not enabled");
-
       toast({
-        title: unsupportedProvider ? "Google Provider Not Enabled" : "Google Sign-In Failed",
-        description: unsupportedProvider
-          ? "Google auth is disabled in Supabase. Enable Google under Authentication -> Providers, then try again."
-          : error.message,
+        title: "Google Sign-In Failed",
+        description: result.error.message || "Please try again.",
         variant: "destructive",
       });
+      return;
     }
+
+    if (result.redirected) return;
+    // Session set — navigate to intended destination
+    navigate(explicitRedirect || "/client");
   };
+
 
   if (authLoading) {
     return (
