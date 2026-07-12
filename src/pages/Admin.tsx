@@ -409,7 +409,7 @@ export default function Admin() {
   };
 
   useEffect(() => {
-  useEffect(() => {
+
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
     if (tab && TAB_SET.has(tab as AdminTab)) {
