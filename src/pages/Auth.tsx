@@ -210,7 +210,7 @@ export default function Auth() {
 
     if (result.redirected) return;
     // Session set — navigate to intended destination
-    navigate(redirectTo || "/client");
+    navigate(explicitRedirect || "/client");
   };
 
 
