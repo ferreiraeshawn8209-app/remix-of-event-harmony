@@ -18,6 +18,7 @@ import ClientPortal from "./pages/ClientPortal";
 import EventDayPage from "./pages/EventDayPage";
 import BackgroundAudio from "./components/BackgroundAudio";
 import WhatsAppFloatingChat from "./components/WhatsAppFloatingChat";
+import WeddingExpoTicker from "./components/WeddingExpoTicker";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <WhatsAppFloatingChat />
+          <WeddingExpoTicker />
         </BrowserRouter>
         <Analytics />
       </TooltipProvider>
