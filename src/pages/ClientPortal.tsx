@@ -106,6 +106,13 @@ function groupPackageIncludes(includes: string[]) {
 export default function ClientPortal() {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const section = searchParams.get("section");
+  const goSection = (s: string | null) => {
+    if (s) setSearchParams({ section: s });
+    else setSearchParams({});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
   const { get: getSetting } = useBusinessSettings();
