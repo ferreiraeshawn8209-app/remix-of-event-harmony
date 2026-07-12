@@ -262,6 +262,8 @@ export default function ClientPortal() {
                   {section === "ai" && (
                     <div className="space-y-4">
                       <AiConciergeServices />
+                      <RecommendedVenues />
+                      <GuardianAngelsReading />
                       <PremiumAiCompanionPanel
                         userScope={profile?.id || user.id}
                         userName={profile?.full_name || user.email || "there"}
