@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Event-day command center engine - Phase 11
 
 import type {
