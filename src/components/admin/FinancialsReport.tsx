@@ -117,6 +117,68 @@ export function FinancialsReport({ quotes }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  // SARS VAT201 export — field numbers follow the official SARS VAT201 return form.
+  // Output tax (Field 4) = 15% of standard-rated supplies (cash received basis, incl VAT).
+  // Input tax (Field 15) = VAT paid on business purchases (user-entered from tax invoices).
+  // Net VAT payable (Field 20) = Field 4 − Field 15. A negative value is a refund due.
+  function downloadVat201() {
+    const field1 = summary.received; // Standard rate supplies (incl VAT)
+    const field1a = summary.netTurnover; // Consideration excl VAT
+    const field4 = summary.vatPortion; // Output tax
+    const field15 = Number(inputVat || 0); // Input tax
+    const field20 = field4 - field15; // Net VAT payable / (refundable)
+    const money = (n: number) => n.toFixed(2);
+
+    const lines: string[] = [];
+    lines.push("SARS VAT 201 — VAT Return Export");
+    lines.push(`Vendor,BeatKulture Entertainment`);
+    lines.push(`VAT Registration No,${vatRegNo || "NOT REGISTERED"}`);
+    lines.push(`Vendor Code,${vatVendorCode || ""}`);
+    lines.push(`Tax Period From,${from}`);
+    lines.push(`Tax Period To,${to}`);
+    lines.push(`Generated,${new Date().toISOString().slice(0, 19).replace("T", " ")}`);
+    lines.push("");
+    lines.push("Field,Description,Amount (ZAR)");
+    lines.push(`1,Standard rate (excluding capital goods) — Supplies incl VAT,${money(field1)}`);
+    lines.push(`1A,Consideration for Field 1 (excl VAT),${money(field1a)}`);
+    lines.push(`2,Zero rate (excluding goods exported),0.00`);
+    lines.push(`2A,Zero rate — goods exported,0.00`);
+    lines.push(`3,Exempt and non-supplies,0.00`);
+    lines.push(`4,Output tax (Field 1 × 15/115),${money(field4)}`);
+    lines.push(`4A,Adjustments — output tax,0.00`);
+    lines.push(`5,Total output tax (4 + 4A),${money(field4)}`);
+    lines.push("");
+    lines.push(`14,Capital goods and/or services supplied to you,0.00`);
+    lines.push(`14A,Input tax on capital goods,0.00`);
+    lines.push(`15,Other goods and/or services supplied to you (not capital) — Input tax,${money(field15)}`);
+    lines.push(`16,Change in use / export of second-hand goods,0.00`);
+    lines.push(`17,Other adjustments — input tax,0.00`);
+    lines.push(`18,Total input tax (14A + 15 + 16 + 17),${money(field15)}`);
+    lines.push("");
+    lines.push(`20,VAT payable / (refundable) — Field 5 minus Field 18,${money(field20)}`);
+    lines.push("");
+    lines.push("Supporting detail — invoices recognised in period (cash received basis)");
+    lines.push("Date,Client,Code,Event Type,Status,Invoiced (incl VAT),Received (incl VAT),VAT @15%,Excl VAT");
+    rows.forEach((r) => {
+      const vat = r.received - r.received / 1.15;
+      const excl = r.received - vat;
+      lines.push([
+        r.date?.slice(0, 10) || "",
+        `"${r.client.replace(/"/g, '""')}"`,
+        r.code, r.event_type, r.status,
+        money(r.total), money(r.received), money(vat), money(excl),
+      ].join(","));
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `VAT201_${from}_to_${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function printReport() {
     window.print();
   }
