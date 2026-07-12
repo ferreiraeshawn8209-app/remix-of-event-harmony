@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,6 +106,13 @@ function groupPackageIncludes(includes: string[]) {
 export default function ClientPortal() {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const section = searchParams.get("section");
+  const goSection = (s: string | null) => {
+    if (s) setSearchParams({ section: s });
+    else setSearchParams({});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
   const { get: getSetting } = useBusinessSettings();
@@ -217,30 +224,79 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          <Tabs defaultValue="music" className="w-full">
-            <div className="sticky top-2 z-20 -mx-1">
-              <TabsList className="w-full flex overflow-x-auto no-scrollbar gap-1 bg-background/70 backdrop-blur-md border border-border/60 p-1 rounded-xl">
-                <TabsTrigger value="music" className="shrink-0 gap-1"><Music className="w-3.5 h-3.5" />Music</TabsTrigger>
-                <TabsTrigger value="specials" className="shrink-0 gap-1"><Sparkles className="w-3.5 h-3.5" />Specials</TabsTrigger>
-                <TabsTrigger value="quote" className="shrink-0 gap-1"><MessageSquare className="w-3.5 h-3.5" />Quote</TabsTrigger>
-                <TabsTrigger value="packages" className="shrink-0 gap-1"><PartyPopper className="w-3.5 h-3.5" />Packages</TabsTrigger>
-                <TabsTrigger value="ai" className="shrink-0 gap-1"><Wand2 className="w-3.5 h-3.5" />AI &amp; Tools</TabsTrigger>
-                <TabsTrigger value="reviews" className="shrink-0 gap-1"><Users className="w-3.5 h-3.5" />Reviews</TabsTrigger>
-                <TabsTrigger value="competitions" className="shrink-0 gap-1"><Sparkles className="w-3.5 h-3.5" />Competitions</TabsTrigger>
-              </TabsList>
-            </div>
+          {(() => {
+            const HUB_ITEMS = [
+              { key: "music", label: "Music Lounge", desc: "Live mixes, curated for the mood.", Icon: Music, grad: "from-fuchsia-500 via-purple-500 to-indigo-600" },
+              { key: "specials", label: "Current Specials", desc: "Limited-time offers, hand-picked.", Icon: Sparkles, grad: "from-amber-400 via-orange-500 to-pink-600" },
+              { key: "quote", label: "Request a Quote", desc: "Custom-built for your event.", Icon: MessageSquare, grad: "from-orange-500 via-pink-500 to-purple-600" },
+              { key: "packages", label: "Our Packages", desc: "Wedding · Party · Corporate.", Icon: PartyPopper, grad: "from-emerald-400 via-teal-500 to-cyan-600" },
+              { key: "ai", label: "AI & Special Features", desc: "Your smart party companion.", Icon: Wand2, grad: "from-cyan-400 via-sky-500 to-indigo-600" },
+              { key: "reviews", label: "Reviews", desc: "Bark · Google · Facebook.", Icon: Users, grad: "from-yellow-400 via-amber-500 to-orange-600" },
+              { key: "competitions", label: "Competitions", desc: "Win bundles & experiences.", Icon: Sparkles, grad: "from-pink-500 via-rose-500 to-red-600" },
+            ] as const;
 
-            {/* 1 ─ MUSIC */}
-            <TabsContent value="music" className="space-y-3 mt-4">
+            if (!section) {
+              return (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {HUB_ITEMS.map(({ key, label, desc, Icon, grad }, i) => (
+                    <motion.button
+                      key={key}
+                      onClick={() => goSection(key)}
+                      initial={{ opacity: 0, y: 14, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: i * 0.05, duration: 0.4 }}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                      className={`group relative overflow-hidden rounded-2xl p-[2px] bg-gradient-to-br ${grad} shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
+                      aria-label={`Open ${label}`}
+                    >
+                      <div className="relative rounded-[14px] bg-background/85 backdrop-blur-md p-4 h-full flex flex-col items-start gap-2 min-h-[130px]">
+                        <span className={`inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br ${grad} text-white shadow-md group-hover:scale-110 transition-transform`}>
+                          <Icon className="w-5 h-5" />
+                        </span>
+                        <div className="text-left">
+                          <p className="font-display text-sm sm:text-base font-bold leading-tight">{label}</p>
+                          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{desc}</p>
+                        </div>
+                        <span className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              );
+            }
+
+            const current = HUB_ITEMS.find(h => h.key === section);
+            return (
+              <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => goSection(null)} className="gap-1">
+                    <ArrowLeft className="w-4 h-4" /> Menu
+                  </Button>
+                  {current && (
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br ${current.grad} text-white`}>
+                        <current.Icon className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-sm font-semibold">{current.label}</p>
+                    </div>
+                  )}
+                </div>
+
+
+
+            {section === "music" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Music className="w-4 h-4 text-primary" /> Music Lounge
               </h2>
               <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
               <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 2 ─ SPECIALS */}
-            <TabsContent value="specials" className="space-y-3 mt-4">
+            {section === "specials" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" /> Current Specials
               </h2>
@@ -267,10 +323,11 @@ export default function ClientPortal() {
                   ))}
                 </div>
               )}
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 3 ─ CUSTOM QUOTE CTA */}
-            <TabsContent value="quote" className="mt-4">
+            {section === "quote" && (
+            <div className="mt-4">
               <motion.div
                 initial={{ opacity: 0, y: 18, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -308,10 +365,11 @@ export default function ClientPortal() {
                 </button>
                 <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
               </motion.div>
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 4 ─ PACKAGES */}
-            <TabsContent value="packages" className="space-y-4 mt-4">
+            {section === "packages" && (
+            <div className="space-y-4 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
               </h2>
@@ -379,10 +437,11 @@ export default function ClientPortal() {
                     </div>
                   ))
               )}
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 5 ─ AI & TOOLS */}
-            <TabsContent value="ai" className="space-y-4 mt-4">
+            {section === "ai" && (
+            <div className="space-y-4 mt-4">
               <PremiumAiCompanionPanel
                 userScope={profile?.id || user.id}
                 userName={profile?.full_name || user.email || "there"}
@@ -412,28 +471,34 @@ export default function ClientPortal() {
                 email={user.email || ""}
                 quoteId={quotes[0]?.id || null}
               />
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 6 ─ REVIEWS */}
-            <TabsContent value="reviews" className="space-y-3 mt-4">
+            {section === "reviews" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" /> Reviews — Bark.com · Google · Facebook
               </h2>
               <TestimonialsCarousel />
               <YoutubeShowcase />
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 7 ─ COMPETITIONS */}
-            <TabsContent value="competitions" className="space-y-3 mt-4">
+            {section === "competitions" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" /> Competitions
               </h2>
               <CompetitionsBanner />
-            </TabsContent>
-          </Tabs>
+            </div>
+            )}
+              </motion.div>
+            );
+          })()}
 
 
-          {/* My Requests / Quotes (kept at bottom for access) */}
+          {/* My Requests / Quotes (hub only) */}
+          {!section && (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> My Requests &amp; Quotes
@@ -490,6 +555,7 @@ export default function ClientPortal() {
               </div>
             )}
           </section>
+          )}
 
         </main>
       </div>
