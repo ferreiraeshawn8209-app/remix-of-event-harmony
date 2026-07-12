@@ -32,6 +32,7 @@ import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
 import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
 import { AiConciergeServices } from "@/components/client/AiConciergeServices";
+import { DjTipsBanner } from "@/components/DjTipsBanner";
 import PlaylistNudge from "@/components/client/PlaylistNudge";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
