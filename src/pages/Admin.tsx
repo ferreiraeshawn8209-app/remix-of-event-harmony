@@ -583,7 +583,8 @@ export default function Admin() {
                 <PlanManagementDashboard />
               </CardContent>
             </Card>
-          </div>
+          </TabsContent>
+
 
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
