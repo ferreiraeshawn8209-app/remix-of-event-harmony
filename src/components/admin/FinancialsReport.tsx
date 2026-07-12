@@ -28,6 +28,9 @@ export function FinancialsReport({ quotes }: Props) {
   const [from, setFrom] = useState<string>(iso(startOfYear(now)));
   const [to, setTo] = useState<string>(iso(endOfYear(now)));
   const [expenses, setExpenses] = useState<number>(0);
+  const [inputVat, setInputVat] = useState<number>(0);
+  const [vatRegNo, setVatRegNo] = useState<string>("");
+  const [vatVendorCode, setVatVendorCode] = useState<string>("");
 
   function applyPeriod(p: Period) {
     setPeriod(p);
