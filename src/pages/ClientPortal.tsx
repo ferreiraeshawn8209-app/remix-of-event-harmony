@@ -313,7 +313,7 @@ export default function ClientPortal() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
 
                 {/* Quick nav to separate pages */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {SECONDARY_PAGES.map(({ key, label, Icon, grad }) => (
                     <button
                       key={key}
