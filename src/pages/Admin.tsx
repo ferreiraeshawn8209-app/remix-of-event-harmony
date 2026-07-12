@@ -628,10 +628,12 @@ export default function Admin() {
           <TabsContent value="media" className="space-y-4">
             <TracksManager />
             <YoutubeManager />
+            <RecommendedVenuesManager />
             <TestimonialsManager />
             <CompetitionsManager />
             <TermsUploader />
           </TabsContent>
+
 
           <TabsContent value="notifications" className="space-y-4">
             <AlarmsManager />
