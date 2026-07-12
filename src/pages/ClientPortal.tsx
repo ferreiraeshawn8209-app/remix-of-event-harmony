@@ -555,6 +555,7 @@ export default function ClientPortal() {
               </div>
             )}
           </section>
+          )}
 
         </main>
       </div>
