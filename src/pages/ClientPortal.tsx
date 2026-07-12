@@ -227,7 +227,6 @@ export default function ClientPortal() {
           </motion.div>
 
           {(() => {
-            const discount = useActiveDiscount();
             const SECONDARY_PAGES = [
               { key: "ai", label: "AI & Special Features", Icon: Wand2, grad: "from-cyan-400 via-fuchsia-500 to-purple-600" },
               { key: "reviews", label: "Reviews & Stories", Icon: Users, grad: "from-amber-400 via-orange-500 to-pink-600" },
