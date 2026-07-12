@@ -7,7 +7,7 @@ import { PageBackground } from "@/components/PageBackground";
 export default function MeetTheTeam() {
   return (
     <div className="min-h-screen relative">
-      <PageBackground page="landing" />
+      <PageBackground pageKey="bg_landing" />
       <div className="relative z-10 container mx-auto px-4 py-6 max-w-6xl">
         <div className="flex items-center justify-between mb-6">
           <Button asChild variant="ghost" size="sm">
