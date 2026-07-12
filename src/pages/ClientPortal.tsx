@@ -481,10 +481,11 @@ export default function ClientPortal() {
               </h2>
               <TestimonialsCarousel />
               <YoutubeShowcase />
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 7 ─ COMPETITIONS */}
-            <TabsContent value="competitions" className="space-y-3 mt-4">
+            {section === "competitions" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" /> Competitions
               </h2>
