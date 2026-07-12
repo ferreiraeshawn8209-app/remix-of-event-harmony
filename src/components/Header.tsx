@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { useBrandingLogo } from "@/hooks/useBranding";
 
 type NavItem = {
-  id: "home" | "quote" | "admin";
+  id: "home" | "quote" | "admin" | "team";
   label: string;
   to: string;
 };
 
 function getActiveNavId(pathname: string, hash: string): NavItem["id"] {
   if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/team") || pathname.startsWith("/djs")) return "team";
   if (pathname === "/" && hash === "#quote-calculator") return "quote";
   return "home";
 }
