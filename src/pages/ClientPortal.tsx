@@ -25,7 +25,7 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock, Send, QrCode, PartyPopper,
   Calendar, MapPin, User, CreditCard, Image as ImageIcon, Sparkles, ArrowLeft,
-  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut,
+  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut, PlayCircle,
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
