@@ -110,6 +110,7 @@ const SERVICES: Service[] = [
     Icon: Sparkles,
     grad: "from-purple-500 via-fuchsia-500 to-pink-500",
     prompt: "Design 3 unforgettable 'wow moments' for my event — cold-spark first dance, LED reveal, choreographed surprises — with cost and safety notes.",
+  },
   {
     key: "vows",
     label: "Wedding Vows Designer",
