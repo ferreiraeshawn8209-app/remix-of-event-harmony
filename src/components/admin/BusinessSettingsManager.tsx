@@ -338,6 +338,9 @@ export function BusinessSettingsManager() {
           />
         </CardContent>
       </Card>
+
+      <BackgroundRotationManager />
     </div>
   );
 }
+
