@@ -224,18 +224,66 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          <Tabs defaultValue="music" className="w-full">
-            <div className="sticky top-2 z-20 -mx-1">
-              <TabsList className="w-full flex overflow-x-auto no-scrollbar gap-1 bg-background/70 backdrop-blur-md border border-border/60 p-1 rounded-xl">
-                <TabsTrigger value="music" className="shrink-0 gap-1"><Music className="w-3.5 h-3.5" />Music</TabsTrigger>
-                <TabsTrigger value="specials" className="shrink-0 gap-1"><Sparkles className="w-3.5 h-3.5" />Specials</TabsTrigger>
-                <TabsTrigger value="quote" className="shrink-0 gap-1"><MessageSquare className="w-3.5 h-3.5" />Quote</TabsTrigger>
-                <TabsTrigger value="packages" className="shrink-0 gap-1"><PartyPopper className="w-3.5 h-3.5" />Packages</TabsTrigger>
-                <TabsTrigger value="ai" className="shrink-0 gap-1"><Wand2 className="w-3.5 h-3.5" />AI &amp; Tools</TabsTrigger>
-                <TabsTrigger value="reviews" className="shrink-0 gap-1"><Users className="w-3.5 h-3.5" />Reviews</TabsTrigger>
-                <TabsTrigger value="competitions" className="shrink-0 gap-1"><Sparkles className="w-3.5 h-3.5" />Competitions</TabsTrigger>
-              </TabsList>
-            </div>
+          {(() => {
+            const HUB_ITEMS = [
+              { key: "music", label: "Music Lounge", desc: "Live mixes, curated for the mood.", Icon: Music, grad: "from-fuchsia-500 via-purple-500 to-indigo-600" },
+              { key: "specials", label: "Current Specials", desc: "Limited-time offers, hand-picked.", Icon: Sparkles, grad: "from-amber-400 via-orange-500 to-pink-600" },
+              { key: "quote", label: "Request a Quote", desc: "Custom-built for your event.", Icon: MessageSquare, grad: "from-orange-500 via-pink-500 to-purple-600" },
+              { key: "packages", label: "Our Packages", desc: "Wedding · Party · Corporate.", Icon: PartyPopper, grad: "from-emerald-400 via-teal-500 to-cyan-600" },
+              { key: "ai", label: "AI & Special Features", desc: "Your smart party companion.", Icon: Wand2, grad: "from-cyan-400 via-sky-500 to-indigo-600" },
+              { key: "reviews", label: "Reviews", desc: "Bark · Google · Facebook.", Icon: Users, grad: "from-yellow-400 via-amber-500 to-orange-600" },
+              { key: "competitions", label: "Competitions", desc: "Win bundles & experiences.", Icon: Sparkles, grad: "from-pink-500 via-rose-500 to-red-600" },
+            ] as const;
+
+            if (!section) {
+              return (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {HUB_ITEMS.map(({ key, label, desc, Icon, grad }, i) => (
+                    <motion.button
+                      key={key}
+                      onClick={() => goSection(key)}
+                      initial={{ opacity: 0, y: 14, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: i * 0.05, duration: 0.4 }}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                      className={`group relative overflow-hidden rounded-2xl p-[2px] bg-gradient-to-br ${grad} shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
+                      aria-label={`Open ${label}`}
+                    >
+                      <div className="relative rounded-[14px] bg-background/85 backdrop-blur-md p-4 h-full flex flex-col items-start gap-2 min-h-[130px]">
+                        <span className={`inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br ${grad} text-white shadow-md group-hover:scale-110 transition-transform`}>
+                          <Icon className="w-5 h-5" />
+                        </span>
+                        <div className="text-left">
+                          <p className="font-display text-sm sm:text-base font-bold leading-tight">{label}</p>
+                          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{desc}</p>
+                        </div>
+                        <span className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              );
+            }
+
+            const current = HUB_ITEMS.find(h => h.key === section);
+            return (
+              <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => goSection(null)} className="gap-1">
+                    <ArrowLeft className="w-4 h-4" /> Menu
+                  </Button>
+                  {current && (
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br ${current.grad} text-white`}>
+                        <current.Icon className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-sm font-semibold">{current.label}</p>
+                    </div>
+                  )}
+                </div>
+
+
 
             {/* 1 ─ MUSIC */}
             <TabsContent value="music" className="space-y-3 mt-4">
