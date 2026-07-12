@@ -16,6 +16,7 @@ import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
 import EventDayPage from "./pages/EventDayPage";
+import MeetTheTeam from "./pages/MeetTheTeam";
 import BackgroundAudio from "./components/BackgroundAudio";
 import WhatsAppFloatingChat from "./components/WhatsAppFloatingChat";
 import WeddingExpoTicker from "./components/WeddingExpoTicker";
@@ -60,6 +61,8 @@ const App = () => (
             <Route path="/event-day/:eventId" element={<EventDayPage />} />
             <Route path="/client" element={<ClientPortal />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/team" element={<MeetTheTeam />} />
+            <Route path="/djs" element={<MeetTheTeam />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

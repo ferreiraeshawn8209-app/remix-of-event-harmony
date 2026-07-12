@@ -32,6 +32,7 @@ import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
 import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
 import { AiConciergeServices } from "@/components/client/AiConciergeServices";
+import { StaffDirectory } from "@/components/StaffDirectory";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
 import { RecommendedVenues } from "@/components/client/RecommendedVenues";
 import { GuardianAngelsReading } from "@/components/client/GuardianAngelsReading";
@@ -241,13 +242,14 @@ export default function ClientPortal() {
           {(() => {
             const SECONDARY_PAGES = [
               { key: "ai", label: "AI & Special Features", Icon: Wand2, grad: "from-cyan-400 via-fuchsia-500 to-purple-600" },
+              { key: "team", label: "Meet the DJs & Team", Icon: Users, grad: "from-orange-400 via-fuchsia-500 to-purple-600" },
               { key: "faq", label: "Wedding & Event Q&A", Icon: HelpCircle, grad: "from-emerald-400 via-cyan-500 to-blue-600" },
               { key: "media", label: "Video Library & Mixes", Icon: PlayCircle, grad: "from-rose-500 via-red-500 to-amber-500" },
               { key: "reviews", label: "Reviews & Stories", Icon: Users, grad: "from-amber-400 via-orange-500 to-pink-600" },
             ] as const;
 
-            // ── SECONDARY PAGES (AI / Reviews / Media / FAQ) — music player NOT mounted here, so it stops ──
-            if (section === "ai" || section === "reviews" || section === "media" || section === "faq") {
+            // ── SECONDARY PAGES (AI / Team / Reviews / Media / FAQ) — music player NOT mounted here, so it stops ──
+            if (section === "ai" || section === "team" || section === "reviews" || section === "media" || section === "faq") {
               const current = SECONDARY_PAGES.find(p => p.key === section)!;
               return (
                 <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
@@ -324,6 +326,17 @@ export default function ClientPortal() {
                   )}
 
                   {section === "faq" && <WeddingQnA />}
+
+                  {section === "team" && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Meet the <span className="text-primary font-semibold">DJs, coordinators & crew</span> behind BeatKulture. Tap
+                        <span className="text-accent font-semibold"> WhatsApp</span> to chat directly, or
+                        <span className="text-secondary font-semibold"> request a specific DJ</span> for your event.
+                      </p>
+                      <StaffDirectory />
+                    </div>
+                  )}
 
                 </motion.div>
               );
