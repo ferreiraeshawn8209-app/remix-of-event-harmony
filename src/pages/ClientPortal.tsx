@@ -205,55 +205,26 @@ export default function ClientPortal() {
         <Header profile={profile} onSignOut={handleSignOut} />
         <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6 relative z-10">
 
-          {/* Welcome + Slogan */}
+          {/* Welcome */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
             <h1 className="font-display text-2xl md:text-3xl font-bold">
               Welcome, <span className="gradient-text">{profile?.full_name || user.email}</span>
             </h1>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              Pick one of our <span className="text-foreground font-semibold">ready-made packages</span> below —
-              or, if you'd prefer something <span className="text-foreground font-semibold">tailored to your needs</span>,
-              tap the button to request a <span className="text-primary font-semibold">custom quotation</span>.
+              Enjoy the mixes, browse packages, or request a <span className="text-primary font-semibold">custom quotation</span> tailored to your event.
             </p>
           </motion.div>
 
-          {/* AI + Event Planning Tools */}
-          <PremiumAiCompanionPanel
-            userScope={profile?.id || user.id}
-            userName={profile?.full_name || user.email || "there"}
-            quoteCount={quotes.length}
-            requestCount={requests.length}
-            latestQuoteStatus={quotes[0]?.status}
-            eventType={quotes[0]?.event_type || profile?.event_type}
-          />
+          {/* 1 ─ MUSIC PLAYER (autoplays uploaded mixes) */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Music className="w-4 h-4 text-primary" /> Music Lounge
+            </h2>
+            <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
+            <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
+          </section>
 
-          <EventWeatherCard
-            eventDate={quotes[0]?.event_date || profile?.event_date}
-            locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
-          />
-
-          {/* AI + Event Planning Tools */}
-          <PlannerHub
-            scopeKey={profile?.id || user.id}
-            quote={quotes[0] ? {
-              id: quotes[0].id,
-              event_type: quotes[0].event_type,
-              event_date: quotes[0].event_date,
-              venue: quotes[0].venue,
-              start_time: quotes[0].start_time,
-              end_time: quotes[0].end_time,
-            } : undefined}
-          />
-
-          {/* Music Planning */}
-          <MusicPlanningForm
-            profileId={profile.id}
-            clientName={profile.full_name || user.email || "Client"}
-            email={user.email || ""}
-            quoteId={quotes[0]?.id || null}
-          />
-
-          {/* Specials */}
+          {/* 2 ─ SPECIALS BANNER */}
           {activeSpecials.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold flex items-center gap-2">
@@ -281,47 +252,47 @@ export default function ClientPortal() {
             </section>
           )}
 
-          {/* CTA: Request Custom Quote */}
+          {/* 3 ─ REQUEST CUSTOM QUOTE — bright orange & purple attention CTA */}
           <motion.div
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45 }}
           >
-            <Card
-              variant="glow"
-              className="relative overflow-hidden border-primary/50 bg-gradient-to-br from-primary/10 via-background to-accent/10 shadow-[0_0_45px_rgba(255,215,0,0.12)]"
+            <button
+              onClick={() => setView("questionnaire")}
+              className="group relative w-full overflow-hidden rounded-2xl p-[3px] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400/50"
+              style={{
+                background: "linear-gradient(90deg, #ff6a00, #ff2fb3, #a020f0, #ff6a00)",
+                backgroundSize: "300% 100%",
+                animation: "bk-attention-shine 4s linear infinite",
+              }}
+              aria-label="Request a customized quote"
             >
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-primary/20 blur-3xl animate-pulse" />
-                <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-accent/20 blur-3xl animate-pulse [animation-delay:1.1s]" />
-              </div>
-              <CardContent className="relative py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="max-w-2xl">
-                  <Badge className="mb-3 bg-primary/15 text-primary border-primary/30 shadow-sm shadow-primary/20">
-                    Most flexible · Start here
-                  </Badge>
-                  <p className="font-display text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2">
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-lg shadow-primary/20 ring-1 ring-primary/25">
-                      <Sparkles className="w-5 h-5" />
-                    </span>
-                    <span className="bg-gradient-to-r from-primary via-foreground to-accent bg-clip-text text-transparent">
-                      Need a custom quote?
-                    </span>
+              <div className="relative rounded-[14px] px-6 py-5 sm:py-6 flex items-center justify-between gap-4"
+                   style={{ background: "linear-gradient(135deg, #ff7a1a 0%, #ff2fb3 55%, #7a20e0 100%)" }}>
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/20 blur-2xl animate-pulse" />
+                  <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10 blur-2xl animate-pulse [animation-delay:1s]" />
+                </div>
+                <div className="text-left relative">
+                  <p className="text-[11px] uppercase tracking-widest font-bold text-white/90">Start here</p>
+                  <p className="font-display text-xl sm:text-2xl font-extrabold text-white drop-shadow">
+                    Request a Customized Quote
                   </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Tell us about your event — venue, date, times, special effects — and we'll prepare a custom quote built around your plan.
+                  <p className="text-xs sm:text-sm text-white/90 mt-0.5">
+                    Answer a few questions — we build a tailored quote around your event.
                   </p>
                 </div>
-                <Button variant="hero" size="lg" onClick={() => setView("questionnaire")} className="shadow-lg shadow-primary/25">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Request Custom Quotation
-                </Button>
-              </CardContent>
-            </Card>
+                <span className="relative inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white text-orange-600 shadow-lg shrink-0 group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-6 h-6" />
+                </span>
+              </div>
+            </button>
+            <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
           </motion.div>
 
-          {/* Packages — Wedding, Corporate, Private Party */}
+          {/* 4 ─ PACKAGES — Wedding, then Private Party, then Corporate */}
           <section className="space-y-4">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
@@ -329,7 +300,7 @@ export default function ClientPortal() {
             {Object.keys(packagesByCategory).length === 0 ? (
               <p className="text-xs text-muted-foreground">No packages available right now.</p>
             ) : (
-              (["wedding", "corporate", "party", "other"] as const)
+              (["wedding", "party", "corporate", "other"] as const)
                 .filter(cat => packagesByCategory[cat])
                 .map(cat => (
                   <div key={cat} className="space-y-2">
@@ -392,29 +363,58 @@ export default function ClientPortal() {
             )}
           </section>
 
+          {/* 5 ─ AI ASSISTANT & SPECIAL APP FEATURES */}
+          <PremiumAiCompanionPanel
+            userScope={profile?.id || user.id}
+            userName={profile?.full_name || user.email || "there"}
+            quoteCount={quotes.length}
+            requestCount={requests.length}
+            latestQuoteStatus={quotes[0]?.status}
+            eventType={quotes[0]?.event_type || profile?.event_type}
+          />
+
+          <EventWeatherCard
+            eventDate={quotes[0]?.event_date || profile?.event_date}
+            locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
+          />
+
+          <PlannerHub
+            scopeKey={profile?.id || user.id}
+            quote={quotes[0] ? {
+              id: quotes[0].id,
+              event_type: quotes[0].event_type,
+              event_date: quotes[0].event_date,
+              venue: quotes[0].venue,
+              start_time: quotes[0].start_time,
+              end_time: quotes[0].end_time,
+            } : undefined}
+          />
+
+          <MusicPlanningForm
+            profileId={profile.id}
+            clientName={profile.full_name || user.email || "Client"}
+            email={user.email || ""}
+            quoteId={quotes[0]?.id || null}
+          />
+
+          {/* 6 ─ REVIEWS (Bark.com, Google, Facebook) */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Music className="w-4 h-4 text-primary" /> Music Lounge
-            </h2>
-            <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
-            <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
-          </section>
-
-          {/* YouTube Showcase */}
-          <YoutubeShowcase />
-
-          {/* Competitions */}
-          <CompetitionsBanner />
-
-          {/* Testimonials */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" /> Testimonials
+              <Users className="w-4 h-4 text-primary" /> Reviews — Bark.com · Google · Facebook
             </h2>
             <TestimonialsCarousel />
+            <YoutubeShowcase />
           </section>
 
-          {/* My Requests / Quotes */}
+          {/* 7 ─ COMPETITIONS BANNER */}
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" /> Competitions
+            </h2>
+            <CompetitionsBanner />
+          </section>
+
+          {/* My Requests / Quotes (kept at bottom for access) */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> My Requests &amp; Quotes
