@@ -653,6 +653,11 @@ export default function Admin() {
             <AuditLogViewer />
           </TabsContent>
 
+          <TabsContent value="financials" className="space-y-4">
+            <FinancialsReport quotes={quotes} />
+          </TabsContent>
+
+
           <TabsContent value="settings" className="space-y-4">
             <BusinessSettingsManager />
             <AdminAccountsTab />
