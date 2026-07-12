@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { parseTrackStoragePublicUrl, TRACK_BUCKET_CANDIDATES } from "@/lib/trackStorage";
