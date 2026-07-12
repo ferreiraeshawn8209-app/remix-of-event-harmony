@@ -6,35 +6,41 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, LogOut, Plus, BarChart3, FileText, CalendarRange, Bell, Settings, Package2, Radio, Trash2, Archive, Download } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
-import { usePackages } from "@/hooks/usePackages";
-import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
-import { QuoteCalculator } from "@/components/QuoteCalculator";
-import { 
-  Music, 
-  LogOut, 
-  FileText, 
-  Plus, 
+import {
+  Loader2,
+  LogOut,
+  Plus,
+  BarChart3,
+  FileText,
+  CalendarRange,
+  Bell,
+  Settings,
+  Package2,
+  Radio,
+  Trash2,
+  Archive,
+  Download,
+  Music,
   Calendar,
   Clock,
-  Loader2,
   Shield,
   Eye,
   Send,
-  Trash2,
   DollarSign,
   Users,
   Search,
   ChevronRight,
   Receipt,
-  Download,
-  Mail  } from "lucide-react";
+  Mail,
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuotes, DatabaseQuote } from "@/hooks/useQuotes";
+import { usePackages } from "@/hooks/usePackages";
+import { formatCurrency, QuoteData, calculateQuote } from "@/lib/pricing";
+import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { toast } from "@/hooks/use-toast";
 import { AdminAccountsTab } from "@/components/admin/AdminAccountsTab";
 import { EventManager } from "@/components/admin/EventManager";
-import { DatabaseQuote, useQuotes } from "@/hooks/useQuotes";
 import { QuoteRequestsManager } from "@/components/admin/QuoteRequestsManager";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { PackageManager } from "@/components/admin/PackageManager";
@@ -42,7 +48,6 @@ import { EquipmentManager } from "@/components/admin/EquipmentManager";
 import { ExtraFeaturesManager } from "@/components/admin/ExtraFeaturesManager";
 import { SpecialsManager } from "@/components/admin/SpecialsManager";
 import { ServiceSettingsManager } from "@/components/admin/ServiceSettingsManager";
-import { EventManager } from "@/components/admin/EventManager";
 import { CalendarBookings } from "@/components/admin/CalendarBookings";
 import { TracksManager } from "@/components/admin/TracksManager";
 import { YoutubeManager } from "@/components/admin/YoutubeManager";
@@ -50,14 +55,23 @@ import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TermsUploader } from "@/components/admin/TermsUploader";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
-import { AdminAccountsTab } from "@/components/admin/AdminAccountsTab";
-import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge"; revert-8-agent-client-quotes-1c3a
+import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
 import { useSpecials } from "@/hooks/useSpecials";
 import { useBrandingLogo } from "@/hooks/useBranding";
 import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
 import { generateEventDayMonthlyPlan } from "@/lib/paymentPlanCalculator";
+import { AnalyticsSnapshot } from "@/components/admin/AnalyticsSnapshot";
+import { FinancialLog } from "@/components/admin/FinancialLog";
+import { AlarmsManager } from "@/components/admin/AlarmsManager";
+import { PlanManagementDashboard } from "@/components/admin/PlanManagementDashboard";
+import { ApprovalWorkflowTracker } from "@/components/admin/ApprovalWorkflowTracker";
+import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { AdminReporting } from "@/components/admin/AdminReporting";
+import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
+import { CinematicAmbient } from "@/components/CinematicAmbient";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +83,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
