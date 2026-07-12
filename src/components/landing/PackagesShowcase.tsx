@@ -133,6 +133,16 @@ export function PackagesShowcase() {
                   <motion.div key={p.id} whileHover={{ y: -4 }} className="h-full">
                     <Card variant={p.popular ? "glow" : "glass"} className="h-full flex flex-col border-primary/25">
                       <CardContent className="p-5 flex flex-col flex-1">
+                        {p.image_url && (
+                          <div className="mb-3 -mx-5 -mt-5 aspect-[16/9] overflow-hidden rounded-t-lg bg-background/40 border-b border-border/60">
+                            <img
+                              src={p.image_url}
+                              alt={p.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
                         {p.popular && <Badge className="self-start mb-2">Most popular</Badge>}
                         <h4 className="premium-section-title text-lg font-bold">{p.name}</h4>
                         <div className="mt-1 mb-3 rounded-lg border border-primary/20 bg-background/35 p-3">
