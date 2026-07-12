@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgresVersion: "14.1"
   }
   public: {
     Tables: {
@@ -472,6 +472,8 @@ export type Database = {
           event_date: string | null
           event_style: string | null
           event_type: string | null
+          father_daughter_song: string | null
+          father_daughter_artist: string | null
           first_dance_artist: string | null
           first_dance_song: string | null
           guest_count: number | null
@@ -479,7 +481,11 @@ export type Database = {
           last_song: string | null
           last_song_artist: string | null
           mc_notes: string | null
+          mother_son_song: string | null
+          mother_son_artist: string | null
           must_play_songs: string | null
+          preferred_genres: string | null
+          artists_to_avoid: string | null
           quote_id: string | null
           schedule_items: Json | null
           special_announcements: string | null
@@ -506,6 +512,8 @@ export type Database = {
           event_date?: string | null
           event_style?: string | null
           event_type?: string | null
+          father_daughter_song?: string | null
+          father_daughter_artist?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
           guest_count?: number | null
@@ -513,7 +521,11 @@ export type Database = {
           last_song?: string | null
           last_song_artist?: string | null
           mc_notes?: string | null
+          mother_son_song?: string | null
+          mother_son_artist?: string | null
           must_play_songs?: string | null
+          preferred_genres?: string | null
+          artists_to_avoid?: string | null
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
@@ -540,6 +552,8 @@ export type Database = {
           event_date?: string | null
           event_style?: string | null
           event_type?: string | null
+          father_daughter_song?: string | null
+          father_daughter_artist?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
           guest_count?: number | null
@@ -547,7 +561,11 @@ export type Database = {
           last_song?: string | null
           last_song_artist?: string | null
           mc_notes?: string | null
+          mother_son_song?: string | null
+          mother_son_artist?: string | null
           must_play_songs?: string | null
+          preferred_genres?: string | null
+          artists_to_avoid?: string | null
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
@@ -810,36 +828,63 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
           created_at: string
           created_by: string | null
           email: string
+          event_date: string | null
+          event_setting: string | null
+          event_type: string | null
           full_name: string
+          guest_count: number | null
           id: string
           phone: string | null
+          start_time: string | null
+          end_time: string | null
           updated_at: string
           user_id: string
+          venue_address: string | null
+          venue_name: string | null
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           email: string
+          event_date?: string | null
+          event_setting?: string | null
+          event_type?: string | null
           full_name: string
+          guest_count?: number | null
           id?: string
           phone?: string | null
+          start_time?: string | null
+          end_time?: string | null
           updated_at?: string
           user_id: string
+          venue_address?: string | null
+          venue_name?: string | null
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           email?: string
+          event_date?: string | null
+          event_setting?: string | null
+          event_type?: string | null
           full_name?: string
+          guest_count?: number | null
           id?: string
           phone?: string | null
+          start_time?: string | null
+          end_time?: string | null
           updated_at?: string
           user_id?: string
+          venue_address?: string | null
+          venue_name?: string | null
         }
         Relationships: []
       }
@@ -883,6 +928,8 @@ export type Database = {
       }
       quote_requests: {
         Row: {
+          area: string | null
+          city: string | null
           client_id: string
           client_name: string
           contact_no: string | null
@@ -901,14 +948,27 @@ export type Database = {
           notes: string | null
           package_id: string | null
           package_name: string | null
+          province: string | null
           quote_id: string | null
+          requires_cold_spark_machines: boolean
+          requires_fog_machine: boolean
+          requires_laser_effects: boolean
+          requires_lighting: boolean
+          requires_low_fog_machine: boolean
+          requires_microphones: boolean
+          requires_smoke_machine: boolean
           start_time: string | null
           status: string
+          terms_accepted: boolean
+          terms_accepted_at: string | null
           updated_at: string
           venue_address: string | null
           venue_name: string | null
+          venue_provides_sound: boolean
         }
         Insert: {
+          area?: string | null
+          city?: string | null
           client_id: string
           client_name: string
           contact_no?: string | null
@@ -927,14 +987,27 @@ export type Database = {
           notes?: string | null
           package_id?: string | null
           package_name?: string | null
+          province?: string | null
           quote_id?: string | null
+          requires_cold_spark_machines?: boolean
+          requires_fog_machine?: boolean
+          requires_laser_effects?: boolean
+          requires_lighting?: boolean
+          requires_low_fog_machine?: boolean
+          requires_microphones?: boolean
+          requires_smoke_machine?: boolean
           start_time?: string | null
           status?: string
+          terms_accepted: boolean
+          terms_accepted_at?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_name?: string | null
+          venue_provides_sound?: boolean
         }
         Update: {
+          area?: string | null
+          city?: string | null
           client_id?: string
           client_name?: string
           contact_no?: string | null
@@ -953,12 +1026,23 @@ export type Database = {
           notes?: string | null
           package_id?: string | null
           package_name?: string | null
+          province?: string | null
           quote_id?: string | null
+          requires_cold_spark_machines?: boolean
+          requires_fog_machine?: boolean
+          requires_laser_effects?: boolean
+          requires_lighting?: boolean
+          requires_low_fog_machine?: boolean
+          requires_microphones?: boolean
+          requires_smoke_machine?: boolean
           start_time?: string | null
           status?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_name?: string | null
+          venue_provides_sound?: boolean
         }
         Relationships: []
       }
@@ -998,22 +1082,22 @@ export type Database = {
           human_jukebox_hours: number
           id: string
           kids_corner: boolean | null
-          kids_cost: number | null
-          kids_hours: number | null
+          lighting_cost: number | null
+          mc_services: boolean
+          mc_services_cost: number | null
+          notes: string | null
           package_id: string | null
           package_name: string | null
-          payment_plan_installments: Json
-          payment_schedule: Json
-          payment_structure: string
+          quote_date: string | null
+          reference_code: string | null
           source_type: string
-          start_time: string | null
-          status: string | null
-          subtotal: number | null
-          total: number | null
-          travel_cost: number | null
-          travel_distance: number | null
+          special_effects_cost: number | null
+          status: string
+          total_amount: number | null
+          travel_time_cost: number | null
           updated_at: string
-          venue: string | null
+          venue_address: string | null
+          venue_name: string | null
         }
         Insert: {
           balance?: number | null
@@ -1050,22 +1134,22 @@ export type Database = {
           human_jukebox_hours?: number
           id?: string
           kids_corner?: boolean | null
-          kids_cost?: number | null
-          kids_hours?: number | null
+          lighting_cost?: number | null
+          mc_services?: boolean
+          mc_services_cost?: number | null
+          notes?: string | null
           package_id?: string | null
           package_name?: string | null
-          payment_plan_installments?: Json
-          payment_schedule?: Json
-          payment_structure?: string
+          quote_date?: string | null
+          reference_code?: string | null
           source_type?: string
-          start_time?: string | null
-          status?: string | null
-          subtotal?: number | null
-          total?: number | null
-          travel_cost?: number | null
-          travel_distance?: number | null
+          special_effects_cost?: number | null
+          status: string
+          total_amount?: number | null
+          travel_time_cost?: number | null
           updated_at?: string
-          venue?: string | null
+          venue_address?: string | null
+          venue_name?: string | null
         }
         Update: {
           balance?: number | null
@@ -1102,236 +1186,61 @@ export type Database = {
           human_jukebox_hours?: number
           id?: string
           kids_corner?: boolean | null
-          kids_cost?: number | null
-          kids_hours?: number | null
+          lighting_cost?: number | null
+          mc_services?: boolean
+          mc_services_cost?: number | null
+          notes?: string | null
           package_id?: string | null
           package_name?: string | null
-          payment_plan_installments?: Json
-          payment_schedule?: Json
-          payment_structure?: string
+          quote_date?: string | null
+          reference_code?: string | null
           source_type?: string
-          start_time?: string | null
-          status?: string | null
-          subtotal?: number | null
-          total?: number | null
-          travel_cost?: number | null
-          travel_distance?: number | null
-          updated_at?: string
-          venue?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quotes_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      recommended_venues: {
-        Row: {
-          area: string | null
-          city: string | null
-          contact_phone: string | null
-          created_at: string
-          description: string | null
-          event_type: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          link_url: string | null
-          name: string
-          province: string | null
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          area?: string | null
-          city?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          description?: string | null
-          event_type?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          link_url?: string | null
-          name: string
-          province?: string | null
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          area?: string | null
-          city?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          description?: string | null
-          event_type?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          link_url?: string | null
-          name?: string
-          province?: string | null
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      service_settings: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          label: string
-          setting_key: string
-          setting_value: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string
-          id?: string
-          label?: string
-          setting_key: string
-          setting_value?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          label?: string
-          setting_key?: string
-          setting_value?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      song_requests: {
-        Row: {
-          artist: string
-          created_at: string
-          event_id: string
-          guest_name: string | null
-          id: string
-          message: string | null
-          song_title: string
-          status: string
-        }
-        Insert: {
-          artist: string
-          created_at?: string
-          event_id: string
-          guest_name?: string | null
-          id?: string
-          message?: string | null
-          song_title: string
+          special_effects_cost?: number | null
           status?: string
-        }
-        Update: {
-          artist?: string
-          created_at?: string
-          event_id?: string
-          guest_name?: string | null
-          id?: string
-          message?: string | null
-          song_title?: string
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "song_requests_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      specials: {
-        Row: {
-          created_at: string
-          discount_percent: number | null
-          id: string
-          image_url: string
-          is_active: boolean
-          title: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          discount_percent?: number | null
-          id?: string
-          image_url: string
-          is_active?: boolean
-          title?: string | null
+          total_amount?: number | null
+          travel_time_cost?: number | null
           updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          discount_percent?: number | null
-          id?: string
-          image_url?: string
-          is_active?: boolean
-          title?: string | null
-          updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
         }
         Relationships: []
       }
       staff_members: {
         Row: {
           bio: string | null
-          category: string
           created_at: string
-          email: string | null
+          created_by: string | null
+          email: string
+          full_name: string
           id: string
           is_active: boolean
-          is_bookable: boolean
-          name: string
           photo_url: string | null
-          role: string
-          sort_order: number
-          specialties: string[] | null
+          phone: string | null
           updated_at: string
-          whatsapp_number: string | null
-          years_experience: number | null
         }
         Insert: {
           bio?: string | null
-          category?: string
           created_at?: string
-          email?: string | null
+          created_by?: string | null
+          email: string
+          full_name: string
           id?: string
           is_active?: boolean
-          is_bookable?: boolean
-          name: string
           photo_url?: string | null
-          role: string
-          sort_order?: number
-          specialties?: string[] | null
+          phone?: string | null
           updated_at?: string
-          whatsapp_number?: string | null
-          years_experience?: number | null
         }
         Update: {
           bio?: string | null
-          category?: string
           created_at?: string
-          email?: string | null
+          created_by?: string | null
+          email?: string
+          full_name?: string
           id?: string
           is_active?: boolean
-          is_bookable?: boolean
-          name?: string
           photo_url?: string | null
-          role?: string
-          sort_order?: number
-          specialties?: string[] | null
+          phone?: string | null
           updated_at?: string
-          whatsapp_number?: string | null
-          years_experience?: number | null
         }
         Relationships: []
       }
@@ -1488,145 +1397,8 @@ export type Database = {
         }
         Relationships: []
       }
-      youtube_videos: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean
-          sort_order: number
-          title: string
-          updated_at: string
-          youtube_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          sort_order?: number
-          title: string
-          updated_at?: string
-          youtube_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          sort_order?: number
-          title?: string
-          updated_at?: string
-          youtube_id?: string
-        }
-        Relationships: []
-      }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      get_banking_details: {
-        Args: never
-        Returns: {
-          key: string
-          value: string
-        }[]
-      }
-      get_my_profile_id: { Args: never; Returns: string }
-      get_public_business_settings: {
-        Args: never
-        Returns: {
-          key: string
-          value: string
-        }[]
-      }
-      get_service_settings: {
-        Args: never
-        Returns: {
-          setting_key: string
-          setting_value: number
-        }[]
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_admin: { Args: never; Returns: boolean }
-      log_client_portal_visit: {
-        Args: {
-          _client_code: string
-          _email: string
-          _quote_id: string
-          _user_agent?: string
-        }
-        Returns: string
-      }
-      lookup_quote_by_code: {
-        Args: { _code: string; _email: string }
-        Returns: {
-          balance: number | null
-          balance_paid: boolean
-          balance_paid_at: string | null
-          client_code: string | null
-          client_id: string
-          client_name: string
-          client_removed_items: Json
-          contact_no: string | null
-          created_at: string
-          created_by: string | null
-          custom_items: Json | null
-          custom_items_cost: number | null
-          decline_reason: string | null
-          declined_at: string | null
-          deposit: number | null
-          deposit_paid: boolean
-          deposit_paid_at: string | null
-          discount_amount: number | null
-          discount_percent: number | null
-          dj_cost: number | null
-          dj_name: string | null
-          email: string
-          end_time: string | null
-          equipment: Json | null
-          equipment_cost: number | null
-          event_date: string | null
-          event_type: string | null
-          extras: Json
-          extras_cost: number
-          hours: number | null
-          human_jukebox: boolean
-          human_jukebox_hours: number
-          id: string
-          kids_corner: boolean | null
-          kids_cost: number | null
-          kids_hours: number | null
-          package_id: string | null
-          package_name: string | null
-          payment_plan_installments: Json
-          payment_schedule: Json
-          payment_structure: string
-          source_type: string
-          start_time: string | null
-          status: string | null
-          subtotal: number | null
-          total: number | null
-          travel_cost: number | null
-          travel_distance: number | null
-          updated_at: string
-          venue: string | null
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "quotes"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-    }
+    Views: {}
     Enums: {
       app_role: "admin" | "client"
     }
@@ -1735,28 +1507,3 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      app_role: ["admin", "client"],
-    },
-  },
-} as const
