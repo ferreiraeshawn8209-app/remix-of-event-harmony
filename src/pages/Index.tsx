@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { PageBackground } from "@/components/PageBackground";
 import { SpecialsBanner } from "@/components/landing/SpecialsBanner";
+import { DjTipsBanner } from "@/components/DjTipsBanner";
 import { PackagesShowcase } from "@/components/landing/PackagesShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { MusicPlayer } from "@/components/MusicPlayer";
@@ -65,6 +66,11 @@ const Index = () => {
           </Button>
         </nav>
       </header>
+
+      {/* ── 0. DJ TIPS BANNER (top, above hero) ── */}
+      <div className="container mx-auto px-4 pt-2 pb-1 relative z-10">
+        <DjTipsBanner variant="landing" />
+      </div>
 
       {/* ── 1. HERO SECTION ── */}
       <section className="container mx-auto px-4 pt-6 pb-16 relative z-10">
