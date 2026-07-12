@@ -107,19 +107,43 @@ function QuoteListItem({
   onDelete: () => void;
   onStatusChange: (status: string) => void;
   isDeleting: boolean;
-import { AnalyticsSnapshot } from "@/components/admin/AnalyticsSnapshot";
-import { FinancialLog } from "@/components/admin/FinancialLog";
-import { AlarmsManager } from "@/components/admin/AlarmsManager";
-import { PlanManagementDashboard } from "@/components/admin/PlanManagementDashboard";
-import { ApprovalWorkflowTracker } from "@/components/admin/ApprovalWorkflowTracker";
-import { QuoteCalculator } from "@/components/QuoteCalculator";
-import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
-import { AdminReporting } from "@/components/admin/AdminReporting";
-import { toast } from "@/hooks/use-toast";
-import { useEquipmentCatalog } from "@/hooks/useEquipmentCatalog";
-import { formatCurrency } from "@/lib/pricing";
-import { CinematicAmbient } from "@/components/CinematicAmbient";
-import { supabase } from "@/integrations/supabase/client";
+}) {
+  return (
+    <Card variant="glass">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2 flex-wrap">
+          <div>
+            <CardTitle className="text-base">
+              {quote.client_name} • {quote.event_type || "Event"}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {quote.email}
+              {quote.event_date ? ` • ${new Date(quote.event_date).toLocaleDateString("en-ZA")}` : ""}
+            </CardDescription>
+          </div>
+          <Badge variant="outline" className={statusClass(quote.status)}>{quote.status}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid md:grid-cols-3 gap-3 text-sm">
+          <div><p className="text-muted-foreground">Total</p><p className="font-semibold text-primary">{formatCurrency(Number(quote.total))}</p></div>
+          <div><p className="text-muted-foreground">Deposit</p><p className="font-semibold">{formatCurrency(Number(quote.deposit))}</p></div>
+          <div><p className="text-muted-foreground">Balance</p><p className="font-semibold">{formatCurrency(Number(quote.balance))}</p></div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={onView}><Eye className="w-3 h-3 mr-1" /> View</Button>
+          <Button size="sm" variant="outline" onClick={() => onStatusChange("sent")}>Mark sent</Button>
+          <Button size="sm" variant="outline" onClick={() => onStatusChange("accepted")}>Mark accepted</Button>
+          <Button size="sm" variant="outline" onClick={() => onStatusChange("paid")}>Mark paid</Button>
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={isDeleting} onClick={onDelete}>
+            <Trash2 className="w-3 h-3 mr-1" /> Delete
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 type AdminTab =
   | "overview"
