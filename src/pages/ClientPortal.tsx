@@ -285,8 +285,8 @@ export default function ClientPortal() {
 
 
 
-            {/* 1 ─ MUSIC */}
-            <TabsContent value="music" className="space-y-3 mt-4">
+            {section === "music" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Music className="w-4 h-4 text-primary" /> Music Lounge
               </h2>
