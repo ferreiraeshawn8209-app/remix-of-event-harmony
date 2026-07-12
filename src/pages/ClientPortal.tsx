@@ -321,6 +321,9 @@ export default function ClientPortal() {
                       <YoutubeShowcase />
                     </div>
                   )}
+
+                  {section === "faq" && <WeddingQnA />}
+
                 </motion.div>
               );
             }
