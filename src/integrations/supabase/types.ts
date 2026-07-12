@@ -324,6 +324,63 @@ export type Database = {
         }
         Relationships: []
       }
+      dj_booking_requests: {
+        Row: {
+          client_email: string
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          event_date: string | null
+          id: string
+          message: string | null
+          quote_id: string | null
+          staff_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_email: string
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          message?: string | null
+          quote_id?: string | null
+          staff_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          message?: string | null
+          quote_id?: string | null
+          staff_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dj_booking_requests_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dj_booking_requests_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment_catalog: {
         Row: {
           category: string
@@ -1221,6 +1278,60 @@ export type Database = {
           is_active?: boolean
           title?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_members: {
+        Row: {
+          bio: string | null
+          category: string
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          is_bookable: boolean
+          name: string
+          photo_url: string | null
+          role: string
+          sort_order: number
+          specialties: string[] | null
+          updated_at: string
+          whatsapp_number: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_bookable?: boolean
+          name: string
+          photo_url?: string | null
+          role: string
+          sort_order?: number
+          specialties?: string[] | null
+          updated_at?: string
+          whatsapp_number?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_bookable?: boolean
+          name?: string
+          photo_url?: string | null
+          role?: string
+          sort_order?: number
+          specialties?: string[] | null
+          updated_at?: string
+          whatsapp_number?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }
