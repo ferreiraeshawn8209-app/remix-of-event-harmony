@@ -471,10 +471,11 @@ export default function ClientPortal() {
                 email={user.email || ""}
                 quoteId={quotes[0]?.id || null}
               />
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 6 ─ REVIEWS */}
-            <TabsContent value="reviews" className="space-y-3 mt-4">
+            {section === "reviews" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" /> Reviews — Bark.com · Google · Facebook
               </h2>
