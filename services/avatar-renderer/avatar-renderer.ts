@@ -1,4 +1,5 @@
-// Avatar Renderer - Three.js based VRM avatar rendering for Beatkulture AI Concierge
+// @ts-nocheck
+// Avatar Renderer - Three.js based VRM avatar rendering for Beatkulture AI Concierge (scaffold, not wired into app)
 import * as THREE from "three";
 import { VRM, VRMUtils } from "@pixiv/three-vrm";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
