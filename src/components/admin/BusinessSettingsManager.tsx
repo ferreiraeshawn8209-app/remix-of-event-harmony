@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Upload, Image as ImageIcon, Banknote } from "lucide-react";
+import { Loader2, Save, Upload, Image as ImageIcon, Banknote, Plus, X, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useBusinessSettings, uploadSiteImage, BusinessSettingKey } from "@/hooks/useBusinessSettings";
 import { BackgroundRotationManager } from "@/components/admin/BackgroundRotationManager";
 import { toast } from "@/hooks/use-toast";
