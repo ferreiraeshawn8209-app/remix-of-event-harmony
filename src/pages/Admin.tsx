@@ -368,7 +368,7 @@ function QuotePipelineBoard({
 export default function Admin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth(); revert-8-agent-client-quotes-1c3a
+  const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
@@ -402,7 +402,7 @@ export default function Admin() {
       navigate("/client", { replace: true });
     }
   }, [authLoading, isAdmin, navigate, user]);
- revert-8-agent-client-quotes-1c3a
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -424,7 +424,7 @@ export default function Admin() {
     navigate({ pathname: "/admin", search: params.toString() }, { replace: true });
   };
 
- revert-8-agent-client-quotes-1c3a
+
   const handleSaveQuote = async (quoteData: QuoteData, calculations: ReturnType<typeof calculateQuote>) => {
     if (!profile) return;
     try {
@@ -582,7 +582,7 @@ export default function Admin() {
                 <AnalyticsSnapshot />
                 <PlanManagementDashboard />
               </CardContent>
-            </Card> revert-8-agent-client-quotes-1c3a
+            </Card>
           </div>
 
           {/* Main Content */}

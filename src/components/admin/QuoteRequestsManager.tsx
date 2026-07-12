@@ -27,7 +27,7 @@ export function QuoteRequestsManager() {
 
   const startQuote = async (r: QuoteRequest) => {
     setActing(r.id);
-    try { revert-8-agent-client-quotes-1c3a
+    try {
       // Move request to in_progress
       await updateRequest({ id: r.id, updates: { status: "in_progress" } });
 
