@@ -327,6 +327,17 @@ export default function ClientPortal() {
 
                   {section === "faq" && <WeddingQnA />}
 
+                  {section === "team" && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Meet the <span className="text-primary font-semibold">DJs, coordinators & crew</span> behind BeatKulture. Tap
+                        <span className="text-accent font-semibold"> WhatsApp</span> to chat directly, or
+                        <span className="text-secondary font-semibold"> request a specific DJ</span> for your event.
+                      </p>
+                      <StaffDirectory />
+                    </div>
+                  )}
+
                 </motion.div>
               );
             }
