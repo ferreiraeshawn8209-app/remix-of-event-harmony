@@ -54,6 +54,7 @@ import { YoutubeManager } from "@/components/admin/YoutubeManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TermsUploader } from "@/components/admin/TermsUploader";
+import { RecommendedVenuesManager } from "@/components/admin/RecommendedVenuesManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
