@@ -35,6 +35,7 @@ export function Header() {
 
   const navItems: NavItem[] = [
     { id: "home", label: "Home", to: "/" },
+    { id: "team", label: "Meet the DJs", to: "/team" },
     { id: "quote", label: "Get Quote", to: "/#quote-calculator" },
     ...(isAdmin ? ([{ id: "admin", label: "Admin", to: "/admin" }] as NavItem[]) : []),
   ];
