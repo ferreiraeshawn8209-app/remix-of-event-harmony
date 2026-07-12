@@ -33,6 +33,8 @@ import { PlannerHub } from "@/components/planner/PlannerHub";
 import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
 import { AiConciergeServices } from "@/components/client/AiConciergeServices";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
+import { RecommendedVenues } from "@/components/client/RecommendedVenues";
+import { GuardianAngelsReading } from "@/components/client/GuardianAngelsReading";
 import PlaylistNudge from "@/components/client/PlaylistNudge";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
@@ -260,6 +262,8 @@ export default function ClientPortal() {
                   {section === "ai" && (
                     <div className="space-y-4">
                       <AiConciergeServices />
+                      <RecommendedVenues />
+                      <GuardianAngelsReading />
                       <PremiumAiCompanionPanel
                         userScope={profile?.id || user.id}
                         userName={profile?.full_name || user.email || "there"}
