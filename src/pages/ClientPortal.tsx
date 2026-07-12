@@ -117,6 +117,7 @@ export default function ClientPortal() {
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
   const { get: getSetting } = useBusinessSettings();
+  const discount = useActiveDiscount();
 
   const [view, setView] = useState<View>("dashboard");
   const [quotes, setQuotes] = useState<QuoteData[]>([]);
