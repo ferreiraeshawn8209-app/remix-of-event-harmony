@@ -240,12 +240,13 @@ export default function ClientPortal() {
           {(() => {
             const SECONDARY_PAGES = [
               { key: "ai", label: "AI & Special Features", Icon: Wand2, grad: "from-cyan-400 via-fuchsia-500 to-purple-600" },
+              { key: "faq", label: "Wedding & Event Q&A", Icon: HelpCircle, grad: "from-emerald-400 via-cyan-500 to-blue-600" },
               { key: "media", label: "Video Library & Mixes", Icon: PlayCircle, grad: "from-rose-500 via-red-500 to-amber-500" },
               { key: "reviews", label: "Reviews & Stories", Icon: Users, grad: "from-amber-400 via-orange-500 to-pink-600" },
             ] as const;
 
-            // ── SECONDARY PAGES (AI / Reviews / Media) — music player NOT mounted here, so it stops ──
-            if (section === "ai" || section === "reviews" || section === "media") {
+            // ── SECONDARY PAGES (AI / Reviews / Media / FAQ) — music player NOT mounted here, so it stops ──
+            if (section === "ai" || section === "reviews" || section === "media" || section === "faq") {
               const current = SECONDARY_PAGES.find(p => p.key === section)!;
               return (
                 <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
