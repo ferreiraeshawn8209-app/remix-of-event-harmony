@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileSpreadsheet, Receipt, TrendingUp } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Receipt, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/pricing";
 import type { DatabaseQuote } from "@/hooks/useQuotes";
 
@@ -28,6 +28,9 @@ export function FinancialsReport({ quotes }: Props) {
   const [from, setFrom] = useState<string>(iso(startOfYear(now)));
   const [to, setTo] = useState<string>(iso(endOfYear(now)));
   const [expenses, setExpenses] = useState<number>(0);
+  const [inputVat, setInputVat] = useState<number>(0);
+  const [vatRegNo, setVatRegNo] = useState<string>("");
+  const [vatVendorCode, setVatVendorCode] = useState<string>("");
 
   function applyPeriod(p: Period) {
     setPeriod(p);
@@ -110,6 +113,68 @@ export function FinancialsReport({ quotes }: Props) {
     const a = document.createElement("a");
     a.href = url;
     a.download = `financials_${from}_to_${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // SARS VAT201 export — field numbers follow the official SARS VAT201 return form.
+  // Output tax (Field 4) = 15% of standard-rated supplies (cash received basis, incl VAT).
+  // Input tax (Field 15) = VAT paid on business purchases (user-entered from tax invoices).
+  // Net VAT payable (Field 20) = Field 4 − Field 15. A negative value is a refund due.
+  function downloadVat201() {
+    const field1 = summary.received; // Standard rate supplies (incl VAT)
+    const field1a = summary.netTurnover; // Consideration excl VAT
+    const field4 = summary.vatPortion; // Output tax
+    const field15 = Number(inputVat || 0); // Input tax
+    const field20 = field4 - field15; // Net VAT payable / (refundable)
+    const money = (n: number) => n.toFixed(2);
+
+    const lines: string[] = [];
+    lines.push("SARS VAT 201 — VAT Return Export");
+    lines.push(`Vendor,BeatKulture Entertainment`);
+    lines.push(`VAT Registration No,${vatRegNo || "NOT REGISTERED"}`);
+    lines.push(`Vendor Code,${vatVendorCode || ""}`);
+    lines.push(`Tax Period From,${from}`);
+    lines.push(`Tax Period To,${to}`);
+    lines.push(`Generated,${new Date().toISOString().slice(0, 19).replace("T", " ")}`);
+    lines.push("");
+    lines.push("Field,Description,Amount (ZAR)");
+    lines.push(`1,Standard rate (excluding capital goods) — Supplies incl VAT,${money(field1)}`);
+    lines.push(`1A,Consideration for Field 1 (excl VAT),${money(field1a)}`);
+    lines.push(`2,Zero rate (excluding goods exported),0.00`);
+    lines.push(`2A,Zero rate — goods exported,0.00`);
+    lines.push(`3,Exempt and non-supplies,0.00`);
+    lines.push(`4,Output tax (Field 1 × 15/115),${money(field4)}`);
+    lines.push(`4A,Adjustments — output tax,0.00`);
+    lines.push(`5,Total output tax (4 + 4A),${money(field4)}`);
+    lines.push("");
+    lines.push(`14,Capital goods and/or services supplied to you,0.00`);
+    lines.push(`14A,Input tax on capital goods,0.00`);
+    lines.push(`15,Other goods and/or services supplied to you (not capital) — Input tax,${money(field15)}`);
+    lines.push(`16,Change in use / export of second-hand goods,0.00`);
+    lines.push(`17,Other adjustments — input tax,0.00`);
+    lines.push(`18,Total input tax (14A + 15 + 16 + 17),${money(field15)}`);
+    lines.push("");
+    lines.push(`20,VAT payable / (refundable) — Field 5 minus Field 18,${money(field20)}`);
+    lines.push("");
+    lines.push("Supporting detail — invoices recognised in period (cash received basis)");
+    lines.push("Date,Client,Code,Event Type,Status,Invoiced (incl VAT),Received (incl VAT),VAT @15%,Excl VAT");
+    rows.forEach((r) => {
+      const vat = r.received - r.received / 1.15;
+      const excl = r.received - vat;
+      lines.push([
+        r.date?.slice(0, 10) || "",
+        `"${r.client.replace(/"/g, '""')}"`,
+        r.code, r.event_type, r.status,
+        money(r.total), money(r.received), money(vat), money(excl),
+      ].join(","));
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `VAT201_${from}_to_${to}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -215,8 +280,45 @@ export function FinancialsReport({ quotes }: Props) {
           </table>
         </div>
 
+        <Separator />
+
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium">SARS VAT 201 export</p>
+            <p className="text-xs text-muted-foreground">
+              Cash-received basis. Fields map to the official VAT201 return: 1 (standard-rated supplies incl VAT),
+              1A (excl VAT), 4 (output tax), 15 (input tax), 20 (VAT payable / refundable).
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="vat-reg">VAT Registration No</Label>
+              <Input id="vat-reg" value={vatRegNo} onChange={(e) => setVatRegNo(e.target.value)} placeholder="4xxxxxxxxx" />
+            </div>
+            <div>
+              <Label htmlFor="vat-vendor">Vendor Code (optional)</Label>
+              <Input id="vat-vendor" value={vatVendorCode} onChange={(e) => setVatVendorCode(e.target.value)} placeholder="SARS vendor code" />
+            </div>
+            <div>
+              <Label htmlFor="vat-input">Input tax — Field 15 (R)</Label>
+              <Input id="vat-input" type="number" min={0} value={inputVat}
+                onChange={(e) => setInputVat(Number(e.target.value) || 0)}
+                placeholder="VAT paid on purchases" />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Field 1 — Supplies (incl VAT)" value={formatCurrency(summary.received)} />
+            <Stat label="Field 1A — Excl VAT" value={formatCurrency(summary.netTurnover)} />
+            <Stat label="Field 4 — Output tax" value={formatCurrency(summary.vatPortion)} accent />
+            <Stat label="Field 20 — VAT payable" value={formatCurrency(summary.vatPortion - Number(inputVat || 0))} accent />
+          </div>
+          <Button onClick={downloadVat201} className="gap-2">
+            <FileText className="w-4 h-4" /> Export SARS VAT 201 CSV
+          </Button>
+        </div>
+
         <p className="text-xs text-muted-foreground">
-          Note: VAT split shown at 15% for illustration. Only reflect VAT on your VAT 201 if BeatKulture Entertainment is
+          Note: VAT split shown at 15% for illustration. Only submit VAT201 if BeatKulture Entertainment is
           registered for VAT with SARS. For CIPC AFS / SARS ITR14, use "Cash Received" as turnover and add your
           audited expenses.
         </p>
