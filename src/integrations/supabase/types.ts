@@ -50,6 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          model: string | null
+          prompt: string | null
+          quote_id: string | null
+          response: string | null
+          summary: string | null
+          tokens: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          model?: string | null
+          prompt?: string | null
+          quote_id?: string | null
+          response?: string | null
+          summary?: string | null
+          tokens?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          model?: string | null
+          prompt?: string | null
+          quote_id?: string | null
+          response?: string | null
+          summary?: string | null
+          tokens?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       alarms: {
         Row: {
           ai_reasoning: string | null
@@ -582,6 +627,42 @@ export type Database = {
           name?: string
           updated_at?: string
           venue?: string | null
+        }
+        Relationships: []
+      }
+      extra_features: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          price: number
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          price?: number
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          price?: number
+          sort_order?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1179,6 +1260,36 @@ export type Database = {
           rating?: number
           sort_order?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tracks: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
