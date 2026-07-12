@@ -292,6 +292,15 @@ export default function ClientPortal() {
                         <span className="text-accent font-semibold"> Facebook</span> — plus stories from real clients.
                       </p>
                       <TestimonialsCarousel />
+                    </div>
+                  )}
+
+                  {section === "media" && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        See what <span className="text-primary font-semibold">par cans, moving heads, lasers, smoke &amp; low-fog</span> actually
+                        look like in the room — plus original <span className="text-accent font-semibold">BeatKulture mixes</span> produced in-house.
+                      </p>
                       <YoutubeShowcase />
                     </div>
                   )}
