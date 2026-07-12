@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePackages, DbPackage } from "@/hooks/usePackages";
@@ -216,204 +217,221 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
-          {/* 1 ─ MUSIC PLAYER (autoplays uploaded mixes) */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Music className="w-4 h-4 text-primary" /> Music Lounge
-            </h2>
-            <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
-            <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
-          </section>
+          <Tabs defaultValue="music" className="w-full">
+            <div className="sticky top-2 z-20 -mx-1">
+              <TabsList className="w-full flex overflow-x-auto no-scrollbar gap-1 bg-background/70 backdrop-blur-md border border-border/60 p-1 rounded-xl">
+                <TabsTrigger value="music" className="shrink-0 gap-1"><Music className="w-3.5 h-3.5" />Music</TabsTrigger>
+                <TabsTrigger value="specials" className="shrink-0 gap-1"><Sparkles className="w-3.5 h-3.5" />Specials</TabsTrigger>
+                <TabsTrigger value="quote" className="shrink-0 gap-1"><MessageSquare className="w-3.5 h-3.5" />Quote</TabsTrigger>
+                <TabsTrigger value="packages" className="shrink-0 gap-1"><PartyPopper className="w-3.5 h-3.5" />Packages</TabsTrigger>
+                <TabsTrigger value="ai" className="shrink-0 gap-1"><Wand2 className="w-3.5 h-3.5" />AI &amp; Tools</TabsTrigger>
+                <TabsTrigger value="reviews" className="shrink-0 gap-1"><Users className="w-3.5 h-3.5" />Reviews</TabsTrigger>
+                <TabsTrigger value="competitions" className="shrink-0 gap-1"><Sparkles className="w-3.5 h-3.5" />Competitions</TabsTrigger>
+              </TabsList>
+            </div>
 
-          {/* 2 ─ SPECIALS BANNER */}
-          {activeSpecials.length > 0 && (
-            <section className="space-y-3">
+            {/* 1 ─ MUSIC */}
+            <TabsContent value="music" className="space-y-3 mt-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <Music className="w-4 h-4 text-primary" /> Music Lounge
+              </h2>
+              <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
+              <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
+            </TabsContent>
+
+            {/* 2 ─ SPECIALS */}
+            <TabsContent value="specials" className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" /> Current Specials
               </h2>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {activeSpecials.map((s) => (
-                  <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/20">
-                    <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                      <LoopingGifImage
-                        src={s.image_url}
-                        alt={s.title || "Special"}
-                        className="w-full h-full object-contain"
-                        loading="eager"
-                      />
-                    </div>
-                    {s.title && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                        <p className="text-white text-sm font-semibold">{s.title}</p>
+              {activeSpecials.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No specials running right now.</p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {activeSpecials.map((s) => (
+                    <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/20">
+                      <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                        <LoopingGifImage
+                          src={s.image_url}
+                          alt={s.title || "Special"}
+                          className="w-full h-full object-contain"
+                          loading="eager"
+                        />
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* 3 ─ REQUEST CUSTOM QUOTE — bright orange & purple attention CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.98 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45 }}
-          >
-            <button
-              onClick={() => setView("questionnaire")}
-              className="group relative w-full overflow-hidden rounded-2xl p-[3px] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400/50"
-              style={{
-                background: "linear-gradient(90deg, #ff6a00, #ff2fb3, #a020f0, #ff6a00)",
-                backgroundSize: "300% 100%",
-                animation: "bk-attention-shine 4s linear infinite",
-              }}
-              aria-label="Request a customized quote"
-            >
-              <div className="relative rounded-[14px] px-6 py-5 sm:py-6 flex items-center justify-between gap-4"
-                   style={{ background: "linear-gradient(135deg, #ff7a1a 0%, #ff2fb3 55%, #7a20e0 100%)" }}>
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/20 blur-2xl animate-pulse" />
-                  <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10 blur-2xl animate-pulse [animation-delay:1s]" />
-                </div>
-                <div className="text-left relative">
-                  <p className="text-[11px] uppercase tracking-widest font-bold text-white/90">Start here</p>
-                  <p className="font-display text-xl sm:text-2xl font-extrabold text-white drop-shadow">
-                    Request a Customized Quote
-                  </p>
-                  <p className="text-xs sm:text-sm text-white/90 mt-0.5">
-                    Answer a few questions — we build a tailored quote around your event.
-                  </p>
-                </div>
-                <span className="relative inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white text-orange-600 shadow-lg shrink-0 group-hover:scale-110 transition-transform">
-                  <MessageSquare className="w-6 h-6" />
-                </span>
-              </div>
-            </button>
-            <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
-          </motion.div>
-
-          {/* 4 ─ PACKAGES — Wedding, then Private Party, then Corporate */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
-            </h2>
-            {Object.keys(packagesByCategory).length === 0 ? (
-              <p className="text-xs text-muted-foreground">No packages available right now.</p>
-            ) : (
-              (["wedding", "party", "corporate", "other"] as const)
-                .filter(cat => packagesByCategory[cat])
-                .map(cat => (
-                  <div key={cat} className="space-y-2">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-                      {cat === "party" ? "Private Party" : cat.charAt(0).toUpperCase() + cat.slice(1)} Packages
-                    </p>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {packagesByCategory[cat].map(pkg => (
-                        <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
-                          {pkg.image_url && (
-                            <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                              <LoopingGifImage
-                                src={pkg.image_url}
-                                alt={pkg.name}
-                                className="w-full h-full object-contain"
-                                loading="lazy"
-                              />
-                            </div>
-                          )}
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between">
-                              <CardTitle className="text-base">{pkg.name}</CardTitle>
-                              {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
-                            </div>
-                            <CardDescription className="text-xs">{pkg.description}</CardDescription>
-                            <p className="text-primary font-bold text-sm pt-1">{formatCurrency(pkg.price)}</p>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            {(["services", "equipment", "extras"] as const).map((groupKey) => {
-                              const grouped = groupPackageIncludes(pkg.includes || []);
-                              return (
-                                <div key={`${pkg.id}-${groupKey}`} className="rounded-lg border border-border/60 bg-background/28 p-2">
-                                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{groupKey}</p>
-                                  {(grouped[groupKey].length > 0 ? grouped[groupKey] : ["Included in package"]).map((line, idx) => (
-                                    <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1 mb-1 last:mb-0">
-                                      <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {line}
-                                    </p>
-                                  ))}
-                                </div>
-                              );
-                            })}
-                            <Button
-                              variant="hero"
-                              size="sm"
-                              className="w-full"
-                              onClick={() => {
-                                setSelectedPackageId(pkg.id);
-                                localStorage.setItem("bk:selected-package-id", pkg.id);
-                                setView("questionnaire");
-                              }}
-                            >
-                              Select &amp; Confirm
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
+                      {s.title && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                          <p className="text-white text-sm font-semibold">{s.title}</p>
+                        </div>
+                      )}
                     </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* 3 ─ CUSTOM QUOTE CTA */}
+            <TabsContent value="quote" className="mt-4">
+              <motion.div
+                initial={{ opacity: 0, y: 18, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.45 }}
+              >
+                <button
+                  onClick={() => setView("questionnaire")}
+                  className="group relative w-full overflow-hidden rounded-2xl p-[3px] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400/50"
+                  style={{
+                    background: "linear-gradient(90deg, #ff6a00, #ff2fb3, #a020f0, #ff6a00)",
+                    backgroundSize: "300% 100%",
+                    animation: "bk-attention-shine 4s linear infinite",
+                  }}
+                  aria-label="Request a customized quote"
+                >
+                  <div className="relative rounded-[14px] px-6 py-5 sm:py-6 flex items-center justify-between gap-4"
+                       style={{ background: "linear-gradient(135deg, #ff7a1a 0%, #ff2fb3 55%, #7a20e0 100%)" }}>
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/20 blur-2xl animate-pulse" />
+                      <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10 blur-2xl animate-pulse [animation-delay:1s]" />
+                    </div>
+                    <div className="text-left relative">
+                      <p className="text-[11px] uppercase tracking-widest font-bold text-white/90">Start here</p>
+                      <p className="font-display text-xl sm:text-2xl font-extrabold text-white drop-shadow">
+                        Request a Customized Quote
+                      </p>
+                      <p className="text-xs sm:text-sm text-white/90 mt-0.5">
+                        Answer a few questions — we build a tailored quote around your event.
+                      </p>
+                    </div>
+                    <span className="relative inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white text-orange-600 shadow-lg shrink-0 group-hover:scale-110 transition-transform">
+                      <MessageSquare className="w-6 h-6" />
+                    </span>
                   </div>
-                ))
-            )}
-          </section>
+                </button>
+                <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
+              </motion.div>
+            </TabsContent>
 
-          {/* 5 ─ AI ASSISTANT & SPECIAL APP FEATURES */}
-          <PremiumAiCompanionPanel
-            userScope={profile?.id || user.id}
-            userName={profile?.full_name || user.email || "there"}
-            quoteCount={quotes.length}
-            requestCount={requests.length}
-            latestQuoteStatus={quotes[0]?.status}
-            eventType={quotes[0]?.event_type || profile?.event_type}
-          />
+            {/* 4 ─ PACKAGES */}
+            <TabsContent value="packages" className="space-y-4 mt-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
+              </h2>
+              {Object.keys(packagesByCategory).length === 0 ? (
+                <p className="text-xs text-muted-foreground">No packages available right now.</p>
+              ) : (
+                (["wedding", "party", "corporate", "other"] as const)
+                  .filter(cat => packagesByCategory[cat])
+                  .map(cat => (
+                    <div key={cat} className="space-y-2">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+                        {cat === "party" ? "Private Party" : cat.charAt(0).toUpperCase() + cat.slice(1)} Packages
+                      </p>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {packagesByCategory[cat].map(pkg => (
+                          <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
+                            {pkg.image_url && (
+                              <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                                <LoopingGifImage
+                                  src={pkg.image_url}
+                                  alt={pkg.name}
+                                  className="w-full h-full object-contain"
+                                  loading="lazy"
+                                />
+                              </div>
+                            )}
+                            <CardHeader className="pb-2">
+                              <div className="flex items-start justify-between">
+                                <CardTitle className="text-base">{pkg.name}</CardTitle>
+                                {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
+                              </div>
+                              <CardDescription className="text-xs">{pkg.description}</CardDescription>
+                              <p className="text-primary font-bold text-sm pt-1">{formatCurrency(pkg.price)}</p>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {(["services", "equipment", "extras"] as const).map((groupKey) => {
+                                const grouped = groupPackageIncludes(pkg.includes || []);
+                                return (
+                                  <div key={`${pkg.id}-${groupKey}`} className="rounded-lg border border-border/60 bg-background/28 p-2">
+                                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{groupKey}</p>
+                                    {(grouped[groupKey].length > 0 ? grouped[groupKey] : ["Included in package"]).map((line, idx) => (
+                                      <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1 mb-1 last:mb-0">
+                                        <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {line}
+                                      </p>
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                              <Button
+                                variant="hero"
+                                size="sm"
+                                className="w-full"
+                                onClick={() => {
+                                  setSelectedPackageId(pkg.id);
+                                  localStorage.setItem("bk:selected-package-id", pkg.id);
+                                  setView("questionnaire");
+                                }}
+                              >
+                                Select &amp; Confirm
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+              )}
+            </TabsContent>
 
-          <EventWeatherCard
-            eventDate={quotes[0]?.event_date || profile?.event_date}
-            locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
-          />
+            {/* 5 ─ AI & TOOLS */}
+            <TabsContent value="ai" className="space-y-4 mt-4">
+              <PremiumAiCompanionPanel
+                userScope={profile?.id || user.id}
+                userName={profile?.full_name || user.email || "there"}
+                quoteCount={quotes.length}
+                requestCount={requests.length}
+                latestQuoteStatus={quotes[0]?.status}
+                eventType={quotes[0]?.event_type || profile?.event_type}
+              />
+              <EventWeatherCard
+                eventDate={quotes[0]?.event_date || profile?.event_date}
+                locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
+              />
+              <PlannerHub
+                scopeKey={profile?.id || user.id}
+                quote={quotes[0] ? {
+                  id: quotes[0].id,
+                  event_type: quotes[0].event_type,
+                  event_date: quotes[0].event_date,
+                  venue: quotes[0].venue,
+                  start_time: quotes[0].start_time,
+                  end_time: quotes[0].end_time,
+                } : undefined}
+              />
+              <MusicPlanningForm
+                profileId={profile.id}
+                clientName={profile.full_name || user.email || "Client"}
+                email={user.email || ""}
+                quoteId={quotes[0]?.id || null}
+              />
+            </TabsContent>
 
-          <PlannerHub
-            scopeKey={profile?.id || user.id}
-            quote={quotes[0] ? {
-              id: quotes[0].id,
-              event_type: quotes[0].event_type,
-              event_date: quotes[0].event_date,
-              venue: quotes[0].venue,
-              start_time: quotes[0].start_time,
-              end_time: quotes[0].end_time,
-            } : undefined}
-          />
+            {/* 6 ─ REVIEWS */}
+            <TabsContent value="reviews" className="space-y-3 mt-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" /> Reviews — Bark.com · Google · Facebook
+              </h2>
+              <TestimonialsCarousel />
+              <YoutubeShowcase />
+            </TabsContent>
 
-          <MusicPlanningForm
-            profileId={profile.id}
-            clientName={profile.full_name || user.email || "Client"}
-            email={user.email || ""}
-            quoteId={quotes[0]?.id || null}
-          />
+            {/* 7 ─ COMPETITIONS */}
+            <TabsContent value="competitions" className="space-y-3 mt-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" /> Competitions
+              </h2>
+              <CompetitionsBanner />
+            </TabsContent>
+          </Tabs>
 
-          {/* 6 ─ REVIEWS (Bark.com, Google, Facebook) */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" /> Reviews — Bark.com · Google · Facebook
-            </h2>
-            <TestimonialsCarousel />
-            <YoutubeShowcase />
-          </section>
-
-          {/* 7 ─ COMPETITIONS BANNER */}
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" /> Competitions
-            </h2>
-            <CompetitionsBanner />
-          </section>
 
           {/* My Requests / Quotes (kept at bottom for access) */}
           <section className="space-y-3">
