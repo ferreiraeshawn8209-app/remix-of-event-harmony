@@ -1,50 +1,99 @@
-## Landing Page Restructure
+# Plan: Client Onboarding → Quote → Payment → Playlist
 
-New section order on `/` (signed-out and as a teaser for signed-in clients):
+This is a big change so let me lay it out clearly. I'll ship it in one pass but split into focused pieces.
 
-1. **AI Event Coordinator hero** — a chat widget pinned at the top with a friendly persona (working name: **"Kulture"**). Auto-greets the visitor, introduces 4 features (Custom Quotes, Event Planner, QR Song Requests, AI Coordinator) and nudges them to pick a package. Backed by a new `chat-coordinator` edge function using Lovable AI (`google/gemini-3-flash-preview`), system-prompted with current packages, active special, and contact info.
-2. **Upcoming Events / Bookings ticker** — horizontally scrolling strip of upcoming events (date • event type • city) from the `events` table, anonymised (no client names).
-3. **Specials banner** — existing `SpecialsManager` image carousel.
-4. **Packages** — in this exact order, each card admin-editable:
-   1. **Customized Quote** (expanded description + "Build my quote" CTA → `/auth?tab=signup`)
-   2. **Wedding Package**
-   3. **Corporate Package**
-   4. **Party Package**
-   - **Auto-discount**: if an active special with a numeric `discount_percent` exists, each package shows **strikethrough original** → **discounted price** + a small "SPECIAL −X%" pill. AI Coordinator is told about the active discount so it can mention it in chat.
-5. **Testimonials** — new `testimonials` table (name, event type, rating, quote, optional photo, sort_order, is_live). Admin tab to manage; landing renders a 3-up carousel.
-6. **YouTube Showcase** — existing component.
-7. **Mixcloud Rotator** — already random per visit; ensure Prev / Surprise / Next buttons are visible, and add session-level "don't repeat" memory.
-8. **Competitions banner** — moved to bottom, above footer.
+## 1. AI & Special Features — tabbed page
+Replace the vague "AI & Special Features" tile with a real page (`/client?section=ai-features`) that shows a **tab bar** where each tab is one feature, with short description + CTA:
+- Wedding / Event Coordinator (AI chat)
+- Invitation Creator
+- AI Event Planner (existing)
+- Timeline Builder
+- Humor Assistant
+- Virtual Rehearsal
+- Voice Console
+- Avatar Concierge
+Each tab renders the existing component (already in `src/components/planner/…`, `humor/…`, `avatar/…`, etc.), so no new AI logic — just presentation.
 
-`PageBackground pageKey="bg_landing"` already provides the admin-uploaded backdrop — no change.
+## 2. Post-signup event questionnaire (auto-redirect)
+When a user signs up (email OR Google), if they have no `event_intake` row → redirect to **`/client/intake`** before the portal loads.
 
-## Wave 4 — Song Requests + Human Jukebox
+Form fields:
+- Full name (prefilled)
+- Event type (dropdown)
+- Event date, start time, end time
+- Venue name (Google-Places autocomplete-style suggestions)
+- Venue address
+- Guest count (rough)
+- Indoor / outdoor
+- Notes
 
-- **Review gate**: `/request/:eventId` shows the existing 5-star review form first; only a **4★ or 5★** review unlocks the song-request form. Stored in new `client_reviews` table with `posted_to_facebook` / `posted_to_bark` admin checkboxes and a "WhatsApp this review" share button (uses your `+27 65 528 5528`).
-- **Admin notification trigger** on `client_reviews` insert → admin bell + (later) WhatsApp push when Twilio is connected.
-- **Human Jukebox add-on**: new package add-on flag in `service_settings` (`human_jukebox_rate` default `R250.00/hr`). Quote calculator adds a "🎙️ Human Jukebox (R250/hr × hours)" optional line item, discountable=true (counts as DJ service). On the event's song-request page, when the booking has `human_jukebox=true`, the QR page shows a "Human Jukebox active — your request is guaranteed within the next track" badge.
+Venue autocomplete uses OpenStreetMap Nominatim (already used in `src/lib/distanceCalculator.ts`, no API key). On selection we store lat/lng + computed distance from Hatfield Square using the existing `calculateDistanceFromBase()` and apply the R7.50/km rule (first 33km free) via existing pricing utilities.
 
-## Database changes (single migration)
+Saved to a new table `event_intakes` (client_id, all fields above, distance_km, travel_fee_cents).
 
-- `testimonials` table + RLS (public read where is_live, admin write) + GRANTs.
-- `client_reviews` table + RLS (anon insert allowed for the event's QR page, admin read) + GRANTs + notification trigger.
-- `quotes.human_jukebox boolean default false`, `quotes.human_jukebox_hours numeric default 0`.
-- `service_settings` row: `human_jukebox_rate = 250`.
-- `specials.discount_percent numeric null` (nullable so existing image-only specials still work).
+## 3. Quote path — package or custom
+After intake the portal home shows two buttons:
 
-## Edge function
+**A. "Choose a package"** — package grid. On click:
+1. Read the package's included items from `packages` (already in schema).
+2. Auto-build a `quote_requests` row with: package_id, all intake data (date/venue/etc.), guest_count.
+3. Show a **line-item preview** — every item in the package listed with unit price, quantity, subtotal, plus travel fee + any active discount from `useActiveDiscount`.
+4. "Accept & Continue" → shows T&C (from existing `TermsUploader` content) → checkbox + timestamp → creates the `quote` row (status `accepted`) → routes to payment.
 
-- `chat-coordinator` — streams Lovable AI replies, given live package/special context from the DB. Public (no JWT). Surfaces 429/402 errors as toasts client-side.
+**B. "Request custom quote"** — extended questionnaire:
+- Indoor/outdoor
+- Sound: our system / venue system (with short explainer)
+- Microphones (how many, wired/wireless)
+- Lighting? (yes/no + type: uplighting, moving heads, par cans — each with 1-line explanation)
+- Special effects? (yes/no + which: smoke, low-fog, cold spark, lasers — each with explainer + safety note)
+- Additional notes
+On submit → `quote_requests` insert (status `pending`) → admin real-time notification (already wired via `admin_notifications` trigger, but I'll add a toast on admin dashboard).
 
-## Files
+## 4. Payment — Stripe (Lovable-managed)
+Enable **Seamless Stripe Payments** (built-in, no keys). After T&C acceptance user lands on `/client/pay/:quoteId`:
+- Two buttons: **Pay 30% deposit (secures booking)** / **Pay full amount now**
+- Creates Stripe Checkout Session via edge function `create-checkout`
+- Webhook `stripe-webhook` updates `quotes.deposit_paid` / `quotes.full_paid`, inserts `admin_notifications` row, sends admin toast via realtime.
 
-**New**: `supabase/functions/chat-coordinator/index.ts`, `src/components/landing/CoordinatorChat.tsx`, `src/components/landing/UpcomingEventsTicker.tsx`, `src/components/landing/PackagesShowcase.tsx`, `src/components/landing/TestimonialsCarousel.tsx`, `src/components/admin/TestimonialsManager.tsx`, `src/components/admin/ReviewsManager.tsx`, `src/hooks/useTestimonials.tsx`, `src/hooks/useClientReviews.tsx`, `src/lib/activeDiscount.ts`, plus the migration.
+I'll call `payments--recommend_payment_provider` then `payments--enable_stripe_payments` at the start of implementation — the user needs to fill the onboarding form once.
 
-**Edited**: `src/pages/Index.tsx` (new section order), `src/pages/SongRequest.tsx` (review-gate), `src/pages/Admin.tsx` (Testimonials + Reviews tabs), `src/components/QuoteCalculator.tsx` + `src/lib/pricing.ts` (Human Jukebox add-on), `src/components/MixcloudRotator.tsx` (no-repeat memory), `src/hooks/useSpecials.tsx` + `src/components/admin/SpecialsManager.tsx` (discount_percent field), `src/integrations/supabase/types.ts`.
+## 5. Post-payment: Music Planning unlocks
+Existing `MusicPlanningForm.tsx` already handles must-play/do-not-play/wedding-moment songs/timeline/MC notes. I'll:
+- Surface it as a **dedicated highlighted card** on the portal home once `deposit_paid=true`
+- Add cue-moment timing fields (song X at HH:MM) — small extension to existing form
+- Route to `/client?section=playlist` from a new "🎧 Build your playlist" hero card
 
-## Out of scope (deferred)
+## 6. Admin notifications
+DB triggers already exist for `quote_requests`, `quote_messages`, `event_plans`. I'll add:
+- Trigger for `quotes` payment status change
+- A toast on `AdminDashboard` that fires on realtime insert into `admin_notifications` where `type` starts with `payment_`.
 
-- Twilio WhatsApp push (still waiting for connector approval).
-- Auto-post reviews to Facebook / Bark.com — needs OAuth setup; for now reviews land in admin + WhatsApp-share button.
+## Files to add / edit
 
-Shall I proceed?
+**New:**
+- `src/pages/ClientIntake.tsx` (post-signup questionnaire)
+- `src/pages/CheckoutPay.tsx` (Stripe deposit/full choice)
+- `src/pages/CheckoutSuccess.tsx`
+- `src/components/client/AiFeaturesTabs.tsx`
+- `src/components/client/VenueAutocomplete.tsx`
+- `src/components/client/CustomQuoteWizard.tsx`
+- `src/components/client/PackageQuoteBuilder.tsx`
+- `supabase/functions/create-checkout/index.ts`
+- `supabase/functions/stripe-webhook/index.ts`
+
+**Edit:**
+- `src/pages/ClientPortal.tsx` — replace AI tile with route to tabbed page, add intake redirect gate, add payment/playlist gates
+- `src/pages/Auth.tsx` — after signup, redirect to `/client/intake`
+- `src/App.tsx` — new routes
+- DB migration — `event_intakes` table + payment trigger
+
+## Technical notes
+- Venue geocoding uses existing Nominatim helper — no new API keys.
+- Package auto-quote reads `packages.included_items` (JSONB) already in schema; if the field is empty for a package I'll show a "Package details missing — request custom quote instead" fallback rather than crash.
+- Distance charged = `max(0, distance_km - 33) * 7.50` per existing rule.
+- All new tables get GRANT + RLS per project conventions.
+
+## Testing after build
+Playwright script: sign up → intake → pick package → accept T&C → Stripe test checkout → verify webhook flips `deposit_paid` → verify playlist card appears → verify admin notification row created.
+
+Shall I proceed? This will enable Stripe (you'll get a one-time onboarding form to fill).
