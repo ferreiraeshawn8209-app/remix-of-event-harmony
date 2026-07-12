@@ -574,6 +574,7 @@ export default function Admin() {
             <TabsTrigger value="media"><Radio className="w-4 h-4 mr-1" />Media</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-1" />Alerts</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" />Analytics</TabsTrigger>
+            <TabsTrigger value="financials"><Receipt className="w-4 h-4 mr-1" />Financials</TabsTrigger>
             <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-1" />Settings</TabsTrigger>
           </TabsList>
 
