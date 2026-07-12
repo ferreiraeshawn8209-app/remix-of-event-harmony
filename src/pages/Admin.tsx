@@ -58,6 +58,7 @@ import { RecommendedVenuesManager } from "@/components/admin/RecommendedVenuesMa
 import { WeddingExposManager } from "@/components/admin/WeddingExposManager";
 import { StaffManager } from "@/components/admin/StaffManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
+import { FinancialsReport } from "@/components/admin/FinancialsReport";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
 import { useAlarms } from "@/hooks/useAlarms";
@@ -158,6 +159,7 @@ type AdminTab =
   | "media"
   | "notifications"
   | "analytics"
+  | "financials"
   | "settings";
 
 const TAB_SET = new Set<AdminTab>([
@@ -170,6 +172,7 @@ const TAB_SET = new Set<AdminTab>([
   "media",
   "notifications",
   "analytics",
+  "financials",
   "settings",
 ]);
 
@@ -573,6 +576,7 @@ export default function Admin() {
             <TabsTrigger value="media"><Radio className="w-4 h-4 mr-1" />Media</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-1" />Alerts</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" />Analytics</TabsTrigger>
+            <TabsTrigger value="financials"><Receipt className="w-4 h-4 mr-1" />Financials</TabsTrigger>
             <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-1" />Settings</TabsTrigger>
           </TabsList>
 
@@ -650,6 +654,11 @@ export default function Admin() {
             <AnalyticsSnapshot />
             <AuditLogViewer />
           </TabsContent>
+
+          <TabsContent value="financials" className="space-y-4">
+            <FinancialsReport quotes={quotes} />
+          </TabsContent>
+
 
           <TabsContent value="settings" className="space-y-4">
             <BusinessSettingsManager />
