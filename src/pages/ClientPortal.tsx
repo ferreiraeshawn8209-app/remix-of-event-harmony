@@ -365,10 +365,11 @@ export default function ClientPortal() {
                 </button>
                 <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
               </motion.div>
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 4 ─ PACKAGES */}
-            <TabsContent value="packages" className="space-y-4 mt-4">
+            {section === "packages" && (
+            <div className="space-y-4 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
               </h2>
