@@ -32,6 +32,7 @@ import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
 import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
 import { AiConciergeServices } from "@/components/client/AiConciergeServices";
+import PlaylistNudge from "@/components/client/PlaylistNudge";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
@@ -277,12 +278,14 @@ export default function ClientPortal() {
                           end_time: quotes[0].end_time,
                         } : undefined}
                       />
-                      <MusicPlanningForm
-                        profileId={profile.id}
-                        clientName={profile.full_name || user.email || "Client"}
-                        email={user.email || ""}
-                        quoteId={quotes[0]?.id || null}
-                      />
+                      <div data-music-planning>
+                        <MusicPlanningForm
+                          profileId={profile.id}
+                          clientName={profile.full_name || user.email || "Client"}
+                          email={user.email || ""}
+                          quoteId={quotes[0]?.id || null}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -575,6 +578,17 @@ export default function ClientPortal() {
           )}
 
         </main>
+        <PlaylistNudge
+          acceptedQuote={
+            quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)
+              ? {
+                  id: quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)!.id,
+                  event_type: quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)!.event_type,
+                  event_date: quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)!.event_date,
+                }
+              : null
+          }
+        />
       </div>
     );
   }
