@@ -323,10 +323,11 @@ export default function ClientPortal() {
                   ))}
                 </div>
               )}
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 3 ─ CUSTOM QUOTE CTA */}
-            <TabsContent value="quote" className="mt-4">
+            {section === "quote" && (
+            <div className="mt-4">
               <motion.div
                 initial={{ opacity: 0, y: 18, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
