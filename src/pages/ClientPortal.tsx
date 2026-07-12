@@ -25,7 +25,7 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock, Send, QrCode, PartyPopper,
   Calendar, MapPin, User, CreditCard, Image as ImageIcon, Sparkles, ArrowLeft,
-  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut, PlayCircle,
+  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut, PlayCircle, HelpCircle,
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
@@ -35,6 +35,8 @@ import { AiConciergeServices } from "@/components/client/AiConciergeServices";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
 import { RecommendedVenues } from "@/components/client/RecommendedVenues";
 import { GuardianAngelsReading } from "@/components/client/GuardianAngelsReading";
+import { WeddingQnA } from "@/components/client/WeddingQnA";
+import { CoordinatorRequestCard } from "@/components/client/CoordinatorRequestCard";
 import PlaylistNudge from "@/components/client/PlaylistNudge";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
@@ -238,12 +240,13 @@ export default function ClientPortal() {
           {(() => {
             const SECONDARY_PAGES = [
               { key: "ai", label: "AI & Special Features", Icon: Wand2, grad: "from-cyan-400 via-fuchsia-500 to-purple-600" },
+              { key: "faq", label: "Wedding & Event Q&A", Icon: HelpCircle, grad: "from-emerald-400 via-cyan-500 to-blue-600" },
               { key: "media", label: "Video Library & Mixes", Icon: PlayCircle, grad: "from-rose-500 via-red-500 to-amber-500" },
               { key: "reviews", label: "Reviews & Stories", Icon: Users, grad: "from-amber-400 via-orange-500 to-pink-600" },
             ] as const;
 
-            // ── SECONDARY PAGES (AI / Reviews / Media) — music player NOT mounted here, so it stops ──
-            if (section === "ai" || section === "reviews" || section === "media") {
+            // ── SECONDARY PAGES (AI / Reviews / Media / FAQ) — music player NOT mounted here, so it stops ──
+            if (section === "ai" || section === "reviews" || section === "media" || section === "faq") {
               const current = SECONDARY_PAGES.find(p => p.key === section)!;
               return (
                 <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
@@ -318,6 +321,9 @@ export default function ClientPortal() {
                       <YoutubeShowcase />
                     </div>
                   )}
+
+                  {section === "faq" && <WeddingQnA />}
+
                 </motion.div>
               );
             }
@@ -387,6 +393,14 @@ export default function ClientPortal() {
                     )}
                   </section>
                 )}
+
+                {/* 2b — Wedding Coordinator opt-in (under specials, above quote CTA) */}
+                <CoordinatorRequestCard
+                  clientName={profile?.full_name || user.email || "Client"}
+                  email={user.email || ""}
+                  clientCode={quotes[0]?.client_code || null}
+                  quoteId={quotes[0]?.id || null}
+                />
 
                 {/* 3 — Glamorous Quote CTA */}
                 <section>
