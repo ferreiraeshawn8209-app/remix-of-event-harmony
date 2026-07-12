@@ -8,9 +8,8 @@ import { useSpecials } from "@/hooks/useSpecials";
 import { inferAutoDiscountPercent } from "@/lib/autoDiscount";
 import {
   Loader2, Calendar, MapPin, Mic, Lightbulb, Speaker, Wand2, Users, Sparkles,
-  ArrowRight, MessageSquare, Phone, Trash2,
-} from "lucide-react";
-
+  ArrowRight, MessageSquare, Phone, Trash2 } 
+  from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
