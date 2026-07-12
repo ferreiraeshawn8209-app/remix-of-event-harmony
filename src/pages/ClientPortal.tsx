@@ -394,6 +394,14 @@ export default function ClientPortal() {
                   </section>
                 )}
 
+                {/* 2b — Wedding Coordinator opt-in (under specials, above quote CTA) */}
+                <CoordinatorRequestCard
+                  clientName={profile?.full_name || user.email || "Client"}
+                  email={user.email || ""}
+                  clientCode={quotes[0]?.client_code || null}
+                  quoteId={quotes[0]?.id || null}
+                />
+
                 {/* 3 — Glamorous Quote CTA */}
                 <section>
                   <motion.button
