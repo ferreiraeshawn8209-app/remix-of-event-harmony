@@ -30,6 +30,7 @@ import { generateInvoicePdf, generateQuotePdf, sharePdfViaWhatsApp, shareViaEmai
 import { toast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
+import { ClientQuoteTrimmer } from "@/components/client/ClientQuoteTrimmer";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -227,6 +228,13 @@ export default function QuoteDetail() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Client-side item trimmer — remove-only editor with auto-discount */}
+          <div className="mb-8">
+            <ClientQuoteTrimmer quote={quote} />
+          </div>
+
+
 
           {/* Pricing */}
           <Card variant="glow" className="mb-8">
