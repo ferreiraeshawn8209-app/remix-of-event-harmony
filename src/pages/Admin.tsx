@@ -505,9 +505,13 @@ export default function Admin() {
       quote.email.toLowerCase().includes(q) ||
       (quote.venue?.toLowerCase() || "").includes(q)
     );
+  };
+
   const handleSignOut = async () => {
     await signOut();
-    navigate("/", { replace: true });  };
+    navigate("/", { replace: true });
+  };
+
 
   const quoteStats = useMemo(() => {
     const total = quotes.length;
