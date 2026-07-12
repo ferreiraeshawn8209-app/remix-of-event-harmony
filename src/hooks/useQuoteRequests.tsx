@@ -61,7 +61,7 @@ export function useQuoteRequests(clientId?: string | null) {
   });
 
   const createRequest = useMutation({
-    mutationFn: async (input: Omit<QuoteRequest, "id" | "status" | "quote_id" | "created_at" | "updated_at">) => {
+    mutationFn: async (input: Omit<QuoteRequest, "id" | "status" | "quote_id" | "created_at" | "updated_at" | "venue_provides_sound" | "requires_microphones" | "requires_lighting" | "requires_laser_effects" | "requires_smoke_machine" | "requires_fog_machine" | "requires_low_fog_machine" | "requires_cold_spark_machines">) => {
       const fallbackEmails = getSetting("admin_notification_emails")
         .split(",")
         .map((email) => email.trim())
@@ -71,9 +71,18 @@ export function useQuoteRequests(clientId?: string | null) {
         .map((phone) => phone.trim())
         .filter(Boolean);
 
+      // Map form fields to database column names
+      const payload = {
+        ...input,
+        venue_provides_sound: !input.needs_sound,
+        requires_microphones: input.needs_mic,
+        requires_lighting: input.needs_lighting,
+        requires_smoke_machine: input.needs_special_effects,
+      };
+
       const { data, error } = await supabase
         .from("quote_requests")
-        .insert(input as any)
+        .insert(payload as any)
         .select()
         .single();
       if (error) throw error;
