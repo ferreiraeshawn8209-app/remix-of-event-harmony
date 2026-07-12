@@ -219,6 +219,9 @@ export default function ClientPortal() {
         <Header profile={profile} onSignOut={handleSignOut} />
         <main className="container mx-auto px-4 py-6 max-w-5xl space-y-6 relative z-10">
 
+          {/* DJ's rotating tips — always visible at top of portal */}
+          <DjTipsBanner variant="portal" />
+
           {/* Welcome */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
             <h1 className="font-display text-2xl md:text-3xl font-bold">
@@ -228,6 +231,7 @@ export default function ClientPortal() {
               Enjoy the mixes, browse packages, or request a <span className="text-primary font-semibold">custom quotation</span> tailored to your event.
             </p>
           </motion.div>
+
 
           {(() => {
             const SECONDARY_PAGES = [
