@@ -389,8 +389,7 @@ export default function Admin() {
   const [declineDialog, setDeclineDialog] = useState<{ quoteId: string; status: string } | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const logoImg = useBrandingLogo();
-  const { quotes, isLoading: quotesLoading, updateQuoteStatus } = useQuotes();
-  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+
 
   useEffect(() => {
     if (authLoading) return;
