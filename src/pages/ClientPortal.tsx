@@ -437,10 +437,11 @@ export default function ClientPortal() {
                     </div>
                   ))
               )}
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 5 ─ AI & TOOLS */}
-            <TabsContent value="ai" className="space-y-4 mt-4">
+            {section === "ai" && (
+            <div className="space-y-4 mt-4">
               <PremiumAiCompanionPanel
                 userScope={profile?.id || user.id}
                 userName={profile?.full_name || user.email || "there"}
