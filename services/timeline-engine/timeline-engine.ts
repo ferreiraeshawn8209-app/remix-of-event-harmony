@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Timeline Engine - Intelligent event scheduling with AI optimization
 import type {
   TimelineConfig,

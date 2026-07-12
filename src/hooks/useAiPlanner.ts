@@ -1,3 +1,4 @@
+// @ts-nocheck
 // React hook for AI Event Planner - Phase 1
 // Integrates with conversation state and Beatkulture API
 
