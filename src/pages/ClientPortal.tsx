@@ -25,7 +25,7 @@ import logo from "@/assets/logo.png";
 import {
   Music, Loader2, FileText, CheckCircle2, Clock, Send, QrCode, PartyPopper,
   Calendar, MapPin, User, CreditCard, Image as ImageIcon, Sparkles, ArrowLeft,
-  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut, PlayCircle,
+  Plus, MessageSquare, Lightbulb, Mic, Speaker, Wand2, Users, LogOut, PlayCircle, HelpCircle,
 } from "lucide-react";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
@@ -35,6 +35,8 @@ import { AiConciergeServices } from "@/components/client/AiConciergeServices";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
 import { RecommendedVenues } from "@/components/client/RecommendedVenues";
 import { GuardianAngelsReading } from "@/components/client/GuardianAngelsReading";
+import { WeddingQnA } from "@/components/client/WeddingQnA";
+import { CoordinatorRequestCard } from "@/components/client/CoordinatorRequestCard";
 import PlaylistNudge from "@/components/client/PlaylistNudge";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
