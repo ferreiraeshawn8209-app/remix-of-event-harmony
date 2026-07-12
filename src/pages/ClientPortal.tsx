@@ -226,276 +226,280 @@ export default function ClientPortal() {
           </motion.div>
 
           {(() => {
-            const HUB_ITEMS = [
-              { key: "music", label: "Music Lounge", desc: "Live mixes, curated for the mood.", Icon: Music, grad: "from-fuchsia-500 via-purple-500 to-indigo-600" },
-              { key: "specials", label: "Current Specials", desc: "Limited-time offers, hand-picked.", Icon: Sparkles, grad: "from-amber-400 via-orange-500 to-pink-600" },
-              { key: "quote", label: "Request a Quote", desc: "Custom-built for your event.", Icon: MessageSquare, grad: "from-orange-500 via-pink-500 to-purple-600" },
-              { key: "packages", label: "Our Packages", desc: "Wedding · Party · Corporate.", Icon: PartyPopper, grad: "from-emerald-400 via-teal-500 to-cyan-600" },
-              { key: "ai", label: "AI & Special Features", desc: "Your smart party companion.", Icon: Wand2, grad: "from-cyan-400 via-sky-500 to-indigo-600" },
-              { key: "reviews", label: "Reviews", desc: "Bark · Google · Facebook.", Icon: Users, grad: "from-yellow-400 via-amber-500 to-orange-600" },
-              { key: "competitions", label: "Competitions", desc: "Win bundles & experiences.", Icon: Sparkles, grad: "from-pink-500 via-rose-500 to-red-600" },
+            const discount = useActiveDiscount();
+            const SECONDARY_PAGES = [
+              { key: "ai", label: "AI & Special Features", Icon: Wand2, grad: "from-cyan-400 via-fuchsia-500 to-purple-600" },
+              { key: "reviews", label: "Reviews & Stories", Icon: Users, grad: "from-amber-400 via-orange-500 to-pink-600" },
             ] as const;
 
-            if (!section) {
+            // ── SECONDARY PAGES (AI / Reviews) — music player NOT mounted here, so it stops ──
+            if (section === "ai" || section === "reviews") {
+              const current = SECONDARY_PAGES.find(p => p.key === section)!;
               return (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {HUB_ITEMS.map(({ key, label, desc, Icon, grad }, i) => (
-                    <motion.button
-                      key={key}
-                      onClick={() => goSection(key)}
-                      initial={{ opacity: 0, y: 14, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ delay: i * 0.05, duration: 0.4 }}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      className={`group relative overflow-hidden rounded-2xl p-[2px] bg-gradient-to-br ${grad} shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
-                      aria-label={`Open ${label}`}
-                    >
-                      <div className="relative rounded-[14px] bg-background/85 backdrop-blur-md p-4 h-full flex flex-col items-start gap-2 min-h-[130px]">
-                        <span className={`inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br ${grad} text-white shadow-md group-hover:scale-110 transition-transform`}>
-                          <Icon className="w-5 h-5" />
-                        </span>
-                        <div className="text-left">
-                          <p className="font-display text-sm sm:text-base font-bold leading-tight">{label}</p>
-                          <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{desc}</p>
-                        </div>
-                        <span className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </motion.button>
-                  ))}
-                </motion.div>
-              );
-            }
-
-            const current = HUB_ITEMS.find(h => h.key === section);
-            return (
-              <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => goSection(null)} className="gap-1">
-                    <ArrowLeft className="w-4 h-4" /> Menu
-                  </Button>
-                  {current && (
+                <motion.div key={section} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => goSection(null)} className="gap-1">
+                      <ArrowLeft className="w-4 h-4" /> Home
+                    </Button>
                     <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br ${current.grad} text-white`}>
+                      <span className={`inline-flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br ${current.grad} text-white shadow-[0_0_18px_hsl(280_95%_60%/0.55)]`}>
                         <current.Icon className="w-3.5 h-3.5" />
                       </span>
                       <p className="text-sm font-semibold">{current.label}</p>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-
-
-            {section === "music" && (
-            <div className="space-y-3 mt-4">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <Music className="w-4 h-4 text-primary" /> Music Lounge
-              </h2>
-              <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
-              <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
-            </div>
-            )}
-
-            {section === "specials" && (
-            <div className="space-y-3 mt-4">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" /> Current Specials
-              </h2>
-              {activeSpecials.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No specials running right now.</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {activeSpecials.map((s) => (
-                    <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/20">
-                      <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                        <LoopingGifImage
-                          src={s.image_url}
-                          alt={s.title || "Special"}
-                          className="w-full h-full object-contain"
-                          loading="eager"
-                        />
-                      </div>
-                      {s.title && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                          <p className="text-white text-sm font-semibold">{s.title}</p>
-                        </div>
-                      )}
+                  {section === "ai" && (
+                    <div className="space-y-4">
+                      <PremiumAiCompanionPanel
+                        userScope={profile?.id || user.id}
+                        userName={profile?.full_name || user.email || "there"}
+                        quoteCount={quotes.length}
+                        requestCount={requests.length}
+                        latestQuoteStatus={quotes[0]?.status}
+                        eventType={quotes[0]?.event_type || profile?.event_type}
+                      />
+                      <EventWeatherCard
+                        eventDate={quotes[0]?.event_date || profile?.event_date}
+                        locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
+                      />
+                      <PlannerHub
+                        scopeKey={profile?.id || user.id}
+                        quote={quotes[0] ? {
+                          id: quotes[0].id,
+                          event_type: quotes[0].event_type,
+                          event_date: quotes[0].event_date,
+                          venue: quotes[0].venue,
+                          start_time: quotes[0].start_time,
+                          end_time: quotes[0].end_time,
+                        } : undefined}
+                      />
+                      <MusicPlanningForm
+                        profileId={profile.id}
+                        clientName={profile.full_name || user.email || "Client"}
+                        email={user.email || ""}
+                        quoteId={quotes[0]?.id || null}
+                      />
                     </div>
+                  )}
+
+                  {section === "reviews" && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground">
+                        Verified reviews from <span className="text-primary font-semibold">Bark.com</span>,
+                        <span className="text-secondary font-semibold"> Google</span> and
+                        <span className="text-accent font-semibold"> Facebook</span> — plus stories from real clients.
+                      </p>
+                      <TestimonialsCarousel />
+                      <YoutubeShowcase />
+                    </div>
+                  )}
+                </motion.div>
+              );
+            }
+
+            // ── HOME (stacked flow: music → specials → quote → packages → competitions) ──
+            return (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+
+                {/* Quick nav to separate pages */}
+                <div className="grid grid-cols-2 gap-2">
+                  {SECONDARY_PAGES.map(({ key, label, Icon, grad }) => (
+                    <button
+                      key={key}
+                      onClick={() => goSection(key)}
+                      className={`group relative overflow-hidden rounded-xl p-[2px] bg-gradient-to-br ${grad} shadow-[0_0_22px_hsl(280_95%_60%/0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
+                    >
+                      <div className="relative rounded-[10px] bg-background/85 backdrop-blur-md px-3 py-2.5 flex items-center gap-2">
+                        <span className={`inline-flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br ${grad} text-white shadow-md group-hover:scale-110 transition-transform`}>
+                          <Icon className="w-4 h-4" />
+                        </span>
+                        <span className="text-xs sm:text-sm font-semibold text-left leading-tight">{label}</span>
+                      </div>
+                    </button>
                   ))}
                 </div>
-              )}
-            </div>
-            )}
 
-            {section === "quote" && (
-            <div className="mt-4">
-              <motion.div
-                initial={{ opacity: 0, y: 18, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.45 }}
-              >
-                <button
-                  onClick={() => setView("questionnaire")}
-                  className="group relative w-full overflow-hidden rounded-2xl p-[3px] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400/50"
-                  style={{
-                    background: "linear-gradient(90deg, #ff6a00, #ff2fb3, #a020f0, #ff6a00)",
-                    backgroundSize: "300% 100%",
-                    animation: "bk-attention-shine 4s linear infinite",
-                  }}
-                  aria-label="Request a customized quote"
-                >
-                  <div className="relative rounded-[14px] px-6 py-5 sm:py-6 flex items-center justify-between gap-4"
-                       style={{ background: "linear-gradient(135deg, #ff7a1a 0%, #ff2fb3 55%, #7a20e0 100%)" }}>
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/20 blur-2xl animate-pulse" />
-                      <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10 blur-2xl animate-pulse [animation-delay:1s]" />
-                    </div>
-                    <div className="text-left relative">
-                      <p className="text-[11px] uppercase tracking-widest font-bold text-white/90">Start here</p>
-                      <p className="font-display text-xl sm:text-2xl font-extrabold text-white drop-shadow">
-                        Request a Customized Quote
-                      </p>
-                      <p className="text-xs sm:text-sm text-white/90 mt-0.5">
-                        Answer a few questions — we build a tailored quote around your event.
-                      </p>
-                    </div>
-                    <span className="relative inline-flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white text-orange-600 shadow-lg shrink-0 group-hover:scale-110 transition-transform">
-                      <MessageSquare className="w-6 h-6" />
-                    </span>
-                  </div>
-                </button>
-                <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
-              </motion.div>
-            </div>
-            )}
+                {/* 1 — Music Player */}
+                <section className="space-y-2">
+                  <h2 className="text-sm font-semibold flex items-center gap-2">
+                    <Music className="w-4 h-4 text-primary" /> Music Lounge
+                  </h2>
+                  <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
+                </section>
 
-            {section === "packages" && (
-            <div className="space-y-4 mt-4">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <PartyPopper className="w-4 h-4 text-primary" /> Our Packages
-              </h2>
-              {Object.keys(packagesByCategory).length === 0 ? (
-                <p className="text-xs text-muted-foreground">No packages available right now.</p>
-              ) : (
-                (["wedding", "party", "corporate", "other"] as const)
-                  .filter(cat => packagesByCategory[cat])
-                  .map(cat => (
-                    <div key={cat} className="space-y-2">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-                        {cat === "party" ? "Private Party" : cat.charAt(0).toUpperCase() + cat.slice(1)} Packages
+                {/* 2 — Specials Banner (with live discount info) */}
+                {activeSpecials.length > 0 && (
+                  <section className="space-y-2">
+                    <h2 className="text-sm font-semibold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" /> This Month's Specials
+                    </h2>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {activeSpecials.map((s: any) => (
+                        <div key={s.id} className="relative rounded-xl overflow-hidden border border-primary/30 shadow-[0_0_28px_hsl(40_96%_58%/0.22)]">
+                          <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                            <LoopingGifImage src={s.image_url} alt={s.title || "Special"} className="w-full h-full object-contain" loading="eager" />
+                          </div>
+                          {(s.title || s.discount_percent) && (
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-3 flex items-end justify-between gap-2">
+                              <div>
+                                {s.title && <p className="text-white text-sm font-bold leading-tight">{s.title}</p>}
+                                <p className="text-[10px] text-white/80">Running now · applied automatically at checkout</p>
+                              </div>
+                              {s.discount_percent ? (
+                                <Badge className="bg-gradient-to-r from-amber-400 via-orange-500 to-fuchsia-600 text-white border-0 shadow-lg">
+                                  −{s.discount_percent}% OFF
+                                </Badge>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {discount.percent > 0 && (
+                      <p className="text-[11px] text-muted-foreground">
+                        <span className="text-primary font-semibold">{discount.percent}% off</span> is being applied to all package prices below while this special runs.
                       </p>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {packagesByCategory[cat].map(pkg => (
-                          <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
-                            {pkg.image_url && (
-                              <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
-                                <LoopingGifImage
-                                  src={pkg.image_url}
-                                  alt={pkg.name}
-                                  className="w-full h-full object-contain"
-                                  loading="lazy"
-                                />
-                              </div>
-                            )}
-                            <CardHeader className="pb-2">
-                              <div className="flex items-start justify-between">
-                                <CardTitle className="text-base">{pkg.name}</CardTitle>
-                                {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
-                              </div>
-                              <CardDescription className="text-xs">{pkg.description}</CardDescription>
-                              <p className="text-primary font-bold text-sm pt-1">{formatCurrency(pkg.price)}</p>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {(["services", "equipment", "extras"] as const).map((groupKey) => {
-                                const grouped = groupPackageIncludes(pkg.includes || []);
-                                return (
-                                  <div key={`${pkg.id}-${groupKey}`} className="rounded-lg border border-border/60 bg-background/28 p-2">
-                                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{groupKey}</p>
-                                    {(grouped[groupKey].length > 0 ? grouped[groupKey] : ["Included in package"]).map((line, idx) => (
-                                      <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1 mb-1 last:mb-0">
-                                        <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {line}
-                                      </p>
-                                    ))}
-                                  </div>
-                                );
-                              })}
-                              <Button
-                                variant="hero"
-                                size="sm"
-                                className="w-full"
-                                onClick={() => {
-                                  setSelectedPackageId(pkg.id);
-                                  localStorage.setItem("bk:selected-package-id", pkg.id);
-                                  setView("questionnaire");
-                                }}
-                              >
-                                Select &amp; Confirm
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
+                    )}
+                  </section>
+                )}
+
+                {/* 3 — Glamorous Quote CTA */}
+                <section>
+                  <motion.button
+                    onClick={() => setView("questionnaire")}
+                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="group relative w-full overflow-hidden rounded-2xl p-[3px] focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-400/50"
+                    style={{
+                      background: "linear-gradient(90deg, #ffb800, #ff5a1f, #ff2fb3, #a020f0, #ffb800)",
+                      backgroundSize: "300% 100%",
+                      animation: "bk-attention-shine 5s linear infinite",
+                    }}
+                    aria-label="Request a customized quote"
+                  >
+                    <div className="relative rounded-[14px] px-5 py-5 flex items-center justify-between gap-4"
+                         style={{ background: "linear-gradient(135deg, #1a0b2e 0%, #2a0a4a 55%, #1a0033 100%)" }}>
+                      <div className="absolute inset-0 pointer-events-none opacity-70">
+                        <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-fuchsia-500/40 blur-3xl animate-pulse" />
+                        <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-amber-400/40 blur-3xl animate-pulse [animation-delay:1s]" />
                       </div>
+                      <div className="text-left relative">
+                        <p className="text-[10px] uppercase tracking-[0.2em] font-bold bg-gradient-to-r from-amber-300 to-fuchsia-300 bg-clip-text text-transparent">✦ Custom Quote</p>
+                        <p className="font-display text-lg sm:text-2xl font-extrabold text-white drop-shadow">
+                          Request Your Quote
+                        </p>
+                        <p className="text-[11px] sm:text-xs text-white/80 mt-0.5">
+                          Answer a few questions — we craft it around your event.
+                        </p>
+                      </div>
+                      <span className="relative inline-flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 text-purple-950 shadow-[0_0_30px_hsl(40_96%_58%/0.7)] shrink-0 group-hover:scale-110 transition-transform">
+                        <MessageSquare className="w-6 h-6" />
+                      </span>
                     </div>
-                  ))
-              )}
-            </div>
-            )}
+                  </motion.button>
+                  <style>{`@keyframes bk-attention-shine { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }`}</style>
+                </section>
 
-            {section === "ai" && (
-            <div className="space-y-4 mt-4">
-              <PremiumAiCompanionPanel
-                userScope={profile?.id || user.id}
-                userName={profile?.full_name || user.email || "there"}
-                quoteCount={quotes.length}
-                requestCount={requests.length}
-                latestQuoteStatus={quotes[0]?.status}
-                eventType={quotes[0]?.event_type || profile?.event_type}
-              />
-              <EventWeatherCard
-                eventDate={quotes[0]?.event_date || profile?.event_date}
-                locationHint={quotes[0]?.venue || profile?.city || profile?.event_location}
-              />
-              <PlannerHub
-                scopeKey={profile?.id || user.id}
-                quote={quotes[0] ? {
-                  id: quotes[0].id,
-                  event_type: quotes[0].event_type,
-                  event_date: quotes[0].event_date,
-                  venue: quotes[0].venue,
-                  start_time: quotes[0].start_time,
-                  end_time: quotes[0].end_time,
-                } : undefined}
-              />
-              <MusicPlanningForm
-                profileId={profile.id}
-                clientName={profile.full_name || user.email || "Client"}
-                email={user.email || ""}
-                quoteId={quotes[0]?.id || null}
-              />
-            </div>
-            )}
+                {/* 4 — Packages */}
+                <section className="space-y-4">
+                  <h2 className="text-sm font-semibold flex items-center gap-2">
+                    <PartyPopper className="w-4 h-4 text-primary" /> Select a Package
+                  </h2>
+                  {Object.keys(packagesByCategory).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No packages available right now.</p>
+                  ) : (
+                    (["wedding", "party", "corporate", "other"] as const)
+                      .filter(cat => packagesByCategory[cat])
+                      .map(cat => (
+                        <div key={cat} className="space-y-2">
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+                            {cat === "party" ? "Private Party" : cat.charAt(0).toUpperCase() + cat.slice(1)} Packages
+                          </p>
+                          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {packagesByCategory[cat].map(pkg => {
+                              const original = Number(pkg.price);
+                              const discounted = discount.percent > 0 ? applyDiscount(original, discount.percent) : original;
+                              return (
+                              <Card key={pkg.id} variant="glass" className={pkg.popular ? "border-primary/30 overflow-hidden" : "overflow-hidden"}>
+                                {pkg.image_url && (
+                                  <div className="w-full aspect-[16/9] bg-muted/40 flex items-center justify-center">
+                                    <LoopingGifImage src={pkg.image_url} alt={pkg.name} className="w-full h-full object-contain" loading="lazy" />
+                                  </div>
+                                )}
+                                <CardHeader className="pb-2">
+                                  <div className="flex items-start justify-between">
+                                    <CardTitle className="text-base">{pkg.name}</CardTitle>
+                                    {pkg.popular && <Badge className="bg-primary text-primary-foreground text-[10px]">Popular</Badge>}
+                                  </div>
+                                  <CardDescription className="text-xs">{pkg.description}</CardDescription>
+                                  {discount.percent > 0 ? (
+                                    <div className="pt-1 space-y-0.5">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground line-through">{formatCurrency(original)}</span>
+                                        <Badge className="bg-gradient-to-r from-amber-400 to-fuchsia-600 text-white border-0 text-[9px] px-1.5 py-0">−{discount.percent}%</Badge>
+                                      </div>
+                                      <p className="font-bold text-sm bg-gradient-to-r from-amber-300 via-orange-400 to-fuchsia-500 bg-clip-text text-transparent">
+                                        {formatCurrency(discounted)}
+                                      </p>
+                                      {discount.title && (
+                                        <p className="text-[10px] text-muted-foreground">Special: {discount.title}</p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-primary font-bold text-sm pt-1">{formatCurrency(original)}</p>
+                                  )}
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  {(["services", "equipment", "extras"] as const).map((groupKey) => {
+                                    const grouped = groupPackageIncludes(pkg.includes || []);
+                                    return (
+                                      <div key={`${pkg.id}-${groupKey}`} className="rounded-lg border border-border/60 bg-background/28 p-2">
+                                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{groupKey}</p>
+                                        {(grouped[groupKey].length > 0 ? grouped[groupKey] : ["Included in package"]).map((line, idx) => (
+                                          <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1 mb-1 last:mb-0">
+                                            <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" /> {line}
+                                          </p>
+                                        ))}
+                                      </div>
+                                    );
+                                  })}
+                                  <Button
+                                    variant="hero"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => {
+                                      setSelectedPackageId(pkg.id);
+                                      localStorage.setItem("bk:selected-package-id", pkg.id);
+                                      setView("questionnaire");
+                                    }}
+                                  >
+                                    Select &amp; Confirm
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </section>
 
-            {section === "reviews" && (
-            <div className="space-y-3 mt-4">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary" /> Reviews — Bark.com · Google · Facebook
-              </h2>
-              <TestimonialsCarousel />
-              <YoutubeShowcase />
-            </div>
-            )}
+                {/* 5 — Competitions (bottom) */}
+                <section className="space-y-2">
+                  <h2 className="text-sm font-semibold flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" /> Competitions
+                  </h2>
+                  <CompetitionsBanner />
+                </section>
 
-            {section === "competitions" && (
-            <div className="space-y-3 mt-4">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" /> Competitions
-              </h2>
-              <CompetitionsBanner />
-            </div>
-            )}
               </motion.div>
             );
           })()}
+
 
 
           {/* My Requests / Quotes (hub only) */}
