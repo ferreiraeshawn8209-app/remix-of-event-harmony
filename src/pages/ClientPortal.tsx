@@ -292,10 +292,11 @@ export default function ClientPortal() {
               </h2>
               <MusicPlayer autoplayTrigger={profile?.id || user.id} mixcloudUrl={getSetting("mixcloud_url")} />
               <MixcloudRotator backupUrl={getSetting("mixcloud_url")} />
-            </TabsContent>
+            </div>
+            )}
 
-            {/* 2 ─ SPECIALS */}
-            <TabsContent value="specials" className="space-y-3 mt-4">
+            {section === "specials" && (
+            <div className="space-y-3 mt-4">
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" /> Current Specials
               </h2>
