@@ -41,6 +41,7 @@ import { LoopingGifImage } from "@/components/ui/LoopingGifImage";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { CinematicAmbient } from "@/components/CinematicAmbient";
+import { useActiveDiscount, applyDiscount } from "@/lib/activeDiscount";
 
 type View = "dashboard" | "questionnaire" | "quote";
 
