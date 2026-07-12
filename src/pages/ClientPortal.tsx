@@ -42,6 +42,7 @@ import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
+import { WeddingExposBanner } from "@/components/WeddingExposBanner";
 import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { PageBackground } from "@/components/PageBackground";
 import { LoopingGifImage } from "@/components/ui/LoopingGifImage";
@@ -526,7 +527,12 @@ export default function ClientPortal() {
                   )}
                 </section>
 
-                {/* 5 — Competitions (bottom) */}
+                {/* 5 — Wedding Expos */}
+                <section className="space-y-2">
+                  <WeddingExposBanner compact />
+                </section>
+
+                {/* 6 — Competitions (bottom) */}
                 <section className="space-y-2">
                   <h2 className="text-sm font-semibold flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-primary" /> Competitions

@@ -1203,6 +1203,69 @@ export type Database = {
         }
         Relationships: []
       }
+      wedding_expos: {
+        Row: {
+          city: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          province: string | null
+          sort_order: number
+          start_date: string | null
+          start_time: string | null
+          tagline: string | null
+          ticket_url: string | null
+          updated_at: string
+          venue: string | null
+          website_url: string | null
+        }
+        Insert: {
+          city?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          province?: string | null
+          sort_order?: number
+          start_date?: string | null
+          start_time?: string | null
+          tagline?: string | null
+          ticket_url?: string | null
+          updated_at?: string
+          venue?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          city?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          province?: string | null
+          sort_order?: number
+          start_date?: string | null
+          start_time?: string | null
+          tagline?: string | null
+          ticket_url?: string | null
+          updated_at?: string
+          venue?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       youtube_videos: {
         Row: {
           created_at: string

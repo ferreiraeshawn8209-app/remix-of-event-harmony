@@ -55,6 +55,7 @@ import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { CompetitionsManager } from "@/components/admin/CompetitionsManager";
 import { TermsUploader } from "@/components/admin/TermsUploader";
 import { RecommendedVenuesManager } from "@/components/admin/RecommendedVenuesManager";
+import { WeddingExposManager } from "@/components/admin/WeddingExposManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
@@ -629,6 +630,7 @@ export default function Admin() {
             <TracksManager />
             <YoutubeManager />
             <RecommendedVenuesManager />
+            <WeddingExposManager />
             <TestimonialsManager />
             <CompetitionsManager />
             <TermsUploader />

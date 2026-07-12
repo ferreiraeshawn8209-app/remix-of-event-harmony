@@ -11,6 +11,7 @@ import { PackagesShowcase } from "@/components/landing/PackagesShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { CompetitionsBanner } from "@/components/CompetitionsBanner";
+import { WeddingExposBanner } from "@/components/WeddingExposBanner";
 import { useBrandingLogo } from "@/hooks/useBranding";
 import { CinematicOverlay } from "@/components/beatkulture/CinematicOverlay";
 import { useBusinessSettings } from "@/hooks/useBusinessSettings";
@@ -142,6 +143,11 @@ const Index = () => {
       {/* ── 4. COMPETITION BANNER ── */}
       <section className="container mx-auto px-4 py-8">
         <CompetitionsBanner />
+      </section>
+
+      {/* ── 4b. WEDDING EXPOS ── */}
+      <section className="container mx-auto px-4 py-8">
+        <WeddingExposBanner />
       </section>
 
       {/* ── 5. EMBEDDED MUSIC PLAYER ── */}
