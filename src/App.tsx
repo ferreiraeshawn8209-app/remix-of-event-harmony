@@ -17,6 +17,7 @@ import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
 import EventDayPage from "./pages/EventDayPage";
 import BackgroundAudio from "./components/BackgroundAudio";
+import WhatsAppFloatingChat from "./components/WhatsAppFloatingChat";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
@@ -60,6 +61,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <WhatsAppFloatingChat />
         </BrowserRouter>
         <Analytics />
       </TooltipProvider>

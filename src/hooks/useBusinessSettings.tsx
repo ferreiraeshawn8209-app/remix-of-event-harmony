@@ -18,7 +18,12 @@ export type BusinessSettingKey =
   | "bg_auth"
   | "bg_song_request"
   | "admin_notification_emails"
-  | "admin_notification_whatsapp_to";
+  | "admin_notification_whatsapp_to"
+  | "whatsapp_consultant_1"
+  | "whatsapp_consultant_2"
+  | "whatsapp_group_url"
+  | "whatsapp_intro_message"
+  | "business_whatsapp";
 
 export function useBusinessSettings() {
   const qc = useQueryClient();
