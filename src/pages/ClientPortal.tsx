@@ -31,6 +31,7 @@ import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { PlannerHub } from "@/components/planner/PlannerHub";
 import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionPanel";
+import { AiConciergeServices } from "@/components/client/AiConciergeServices";
 import { EventWeatherCard } from "@/components/client/EventWeatherCard";
 import { MusicPlanningForm } from "@/components/client/MusicPlanningForm";
 import { YoutubeShowcase } from "@/components/YoutubeShowcase";
