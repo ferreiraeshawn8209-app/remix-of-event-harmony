@@ -230,11 +230,10 @@ export default function QuoteDetail() {
           </div>
 
           {/* Client-side item trimmer — remove-only editor with auto-discount */}
-          {!isAdminUser && (
-            <div className="mb-8">
-              <ClientQuoteTrimmer quote={quote} />
-            </div>
-          )}
+          <div className="mb-8">
+            <ClientQuoteTrimmer quote={quote} />
+          </div>
+
 
 
           {/* Pricing */}
