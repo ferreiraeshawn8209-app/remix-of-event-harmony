@@ -991,6 +991,57 @@ export type Database = {
           },
         ]
       }
+      recommended_venues: {
+        Row: {
+          area: string | null
+          city: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          event_type: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_url: string | null
+          name: string
+          province: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          city?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string | null
+          name: string
+          province?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          city?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string | null
+          name?: string
+          province?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_settings: {
         Row: {
           created_at: string
