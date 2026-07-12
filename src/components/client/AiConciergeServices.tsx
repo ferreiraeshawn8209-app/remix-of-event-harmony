@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   Flower2, Cake, Camera, MapPin, Mail, Car, Mic2, Sparkles,
-  PartyPopper, Gift, Utensils, Palette, ArrowRight,
+  PartyPopper, Gift, Utensils, Palette, ArrowRight, HeartHandshake,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -110,6 +110,13 @@ const SERVICES: Service[] = [
     Icon: Sparkles,
     grad: "from-purple-500 via-fuchsia-500 to-pink-500",
     prompt: "Design 3 unforgettable 'wow moments' for my event — cold-spark first dance, LED reveal, choreographed surprises — with cost and safety notes.",
+  {
+    key: "vows",
+    label: "Wedding Vows Designer",
+    tagline: "Personalized vows with religious & cultural guidance",
+    Icon: HeartHandshake,
+    grad: "from-rose-400 via-fuchsia-500 to-purple-600",
+    prompt: "Help me write personalized wedding vows. Ask me about our story, my partner's name, our shared values, religious or spiritual tradition (Christian, Catholic, Jewish, Muslim, Hindu, secular, etc.), and the tone I want (romantic, heartfelt, humorous, poetic). Then draft 2-3 vow options. For each religious/traditional phrase you suggest, explain WHY that wording is meaningful in that tradition (e.g. 'covenant' in Christian vows, 'I take you as my witness before God' in Catholic vows, 'until death parts us' historical meaning) so I can choose what feels right. Include guidance on structure: opening declaration, promises, closing commitment.",
   },
 ];
 
