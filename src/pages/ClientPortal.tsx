@@ -578,6 +578,17 @@ export default function ClientPortal() {
           )}
 
         </main>
+        <PlaylistNudge
+          acceptedQuote={
+            quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)
+              ? {
+                  id: quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)!.id,
+                  event_type: quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)!.event_type,
+                  event_date: quotes.find((q) => q.status === "accepted" || q.status === "paid" || q.deposit_paid)!.event_date,
+                }
+              : null
+          }
+        />
       </div>
     );
   }
