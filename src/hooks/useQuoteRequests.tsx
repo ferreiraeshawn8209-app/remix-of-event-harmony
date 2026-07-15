@@ -16,18 +16,7 @@ export interface QuoteRequest {
   event_date: string | null;
   start_time: string | null;
   end_time: string | null;
-  city: string | null;
-  area: string | null;
-  province: string | null;
   is_outdoor: boolean;
-  venue_provides_sound: boolean;
-  requires_microphones: boolean;
-  requires_lighting: boolean;
-  requires_laser_effects: boolean;
-  requires_smoke_machine: boolean;
-  requires_fog_machine: boolean;
-  requires_low_fog_machine: boolean;
-  requires_cold_spark_machines: boolean;
   needs_sound: boolean;
   needs_lighting: boolean;
   needs_special_effects: boolean;
@@ -36,14 +25,12 @@ export interface QuoteRequest {
   package_id: string | null;
   package_name: string | null;
   notes: string | null;
-  payment_preference?: "deposit" | "monthly_installments";
-  terms_accepted: boolean;
-  terms_accepted_at: string | null;
   status: string; // pending | in_progress | quoted | declined
   quote_id: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 export function useQuoteRequests(clientId?: string | null) {
   const queryClient = useQueryClient();
