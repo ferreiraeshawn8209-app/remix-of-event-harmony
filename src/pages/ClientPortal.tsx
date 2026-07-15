@@ -966,7 +966,7 @@ function Questionnaire({
       event_type: form.event_type,
       venue_name: form.venue_name || null,
       venue_address: form.venue_address || null,
-      city: form.city || null,
+      
       event_date: form.event_date || null,
       start_time: form.start_time || null,
       end_time: form.end_time || null,
