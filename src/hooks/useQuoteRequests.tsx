@@ -31,6 +31,8 @@ export interface QuoteRequest {
   updated_at: string;
 }
 
+type CreateQuoteRequestInput = Omit<QuoteRequest, "id" | "status" | "quote_id" | "created_at" | "updated_at">;
+
 
 export function useQuoteRequests(clientId?: string | null) {
   const queryClient = useQueryClient();
@@ -48,7 +50,7 @@ export function useQuoteRequests(clientId?: string | null) {
   });
 
   const createRequest = useMutation({
-    mutationFn: async (input: Omit<QuoteRequest, "id" | "status" | "quote_id" | "created_at" | "updated_at" | "venue_provides_sound" | "requires_microphones" | "requires_lighting" | "requires_laser_effects" | "requires_smoke_machine" | "requires_fog_machine" | "requires_low_fog_machine" | "requires_cold_spark_machines">) => {
+    mutationFn: async (input: CreateQuoteRequestInput) => {
       const fallbackEmails = getSetting("admin_notification_emails")
         .split(",")
         .map((email) => email.trim())
@@ -58,13 +60,28 @@ export function useQuoteRequests(clientId?: string | null) {
         .map((phone) => phone.trim())
         .filter(Boolean);
 
-      // Map form fields to database column names
+      // Only send columns that exist in the live quote_requests table.
+      // This prevents stale form-only fields like city/area/province from reaching PostgREST.
       const payload = {
-        ...input,
-        venue_provides_sound: !input.needs_sound,
-        requires_microphones: input.needs_mic,
-        requires_lighting: input.needs_lighting,
-        requires_smoke_machine: input.needs_special_effects,
+        client_id: input.client_id,
+        client_name: input.client_name,
+        email: input.email,
+        contact_no: input.contact_no,
+        event_type: input.event_type,
+        venue_name: input.venue_name,
+        venue_address: input.venue_address,
+        event_date: input.event_date,
+        start_time: input.start_time,
+        end_time: input.end_time,
+        is_outdoor: input.is_outdoor,
+        needs_sound: input.needs_sound,
+        needs_lighting: input.needs_lighting,
+        needs_special_effects: input.needs_special_effects,
+        needs_mic: input.needs_mic,
+        guest_count: input.guest_count,
+        package_id: input.package_id,
+        package_name: input.package_name,
+        notes: input.notes,
       };
 
       const { data, error } = await supabase
