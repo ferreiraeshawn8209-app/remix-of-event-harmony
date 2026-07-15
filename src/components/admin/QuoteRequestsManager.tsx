@@ -112,9 +112,6 @@ export function QuoteRequestsManager() {
               <div className="space-y-1.5 text-muted-foreground">
                 <div className="flex items-center gap-2"><Calendar className="w-3 h-3" /> {r.event_date || "Date TBD"} {r.start_time ? `• ${r.start_time.slice(0,5)}` : ""}{r.end_time ? `–${r.end_time.slice(0,5)}` : ""}</div>
                 <div className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {r.venue_name || "Venue TBD"}{r.venue_address ? ` — ${r.venue_address}` : ""}</div>
-                {r.city && (
-                  <div className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {r.city}</div>
-                )}
                 {r.guest_count != null && (
                   <div className="flex items-center gap-2"><Users className="w-3 h-3" /> ~{r.guest_count} guests</div>
                 )}
@@ -125,27 +122,17 @@ export function QuoteRequestsManager() {
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Requirements</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {!r.venue_provides_sound && <Badge variant="outline" className="text-[10px] gap-1"><Speaker className="w-3 h-3" /> Sound setup</Badge>}
-                  {r.requires_microphones && <Badge variant="outline" className="text-[10px] gap-1"><Mic className="w-3 h-3" /> Microphones</Badge>}
-                  {r.requires_lighting && <Badge variant="outline" className="text-[10px] gap-1"><Lightbulb className="w-3 h-3" /> Lighting</Badge>}
-                  {r.requires_laser_effects && <Badge variant="outline" className="text-[10px] gap-1"><Wand2 className="w-3 h-3" /> Lasers</Badge>}
-                  {r.requires_smoke_machine && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Smoke</Badge>}
-                  {r.requires_fog_machine && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Fog</Badge>}
-                  {r.requires_low_fog_machine && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Low fog</Badge>}
-                  {r.requires_cold_spark_machines && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Cold sparks</Badge>}
-                  {r.venue_provides_sound && (
+                  {r.needs_sound && <Badge variant="outline" className="text-[10px] gap-1"><Speaker className="w-3 h-3" /> Sound setup</Badge>}
+                  {r.needs_mic && <Badge variant="outline" className="text-[10px] gap-1"><Mic className="w-3 h-3" /> Microphones</Badge>}
+                  {r.needs_lighting && <Badge variant="outline" className="text-[10px] gap-1"><Lightbulb className="w-3 h-3" /> Lighting</Badge>}
+                  {r.needs_special_effects && <Badge variant="outline" className="text-[10px] gap-1"><Sparkles className="w-3 h-3" /> Special effects</Badge>}
+                  {!r.needs_sound && (
                     <Badge variant="outline" className="text-[10px]">Venue sound provided</Badge>
                   )}
-                  {r.venue_provides_sound &&
-                    !r.requires_microphones &&
-                    !r.requires_lighting &&
-                    !r.requires_laser_effects &&
-                    !r.requires_smoke_machine &&
-                    !r.requires_fog_machine &&
-                    !r.requires_low_fog_machine &&
-                    !r.requires_cold_spark_machines && (
+                  {!r.needs_sound && !r.needs_mic && !r.needs_lighting && !r.needs_special_effects && (
                     <span className="text-xs text-muted-foreground">None specified</span>
                   )}
+
                 </div>
               </div>
             </div>
