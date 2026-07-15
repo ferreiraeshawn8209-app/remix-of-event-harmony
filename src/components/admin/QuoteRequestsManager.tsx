@@ -99,9 +99,8 @@ export function QuoteRequestsManager() {
                     Auto discount to apply: {autoDiscount}%
                   </Badge>
                 )}
-                <Badge variant="outline" className="mt-2 ml-2 text-[10px]">
-                  Payment preference: {r.payment_preference === "monthly_installments" ? "Monthly installments" : "Deposit + balance"}
-                </Badge>
+
+
               </div>
               <Badge variant="outline" className={statusColors[r.status] || ""}>
                 {r.status.replace("_", " ")}
