@@ -420,7 +420,68 @@ export default function Admin() {
     if (tab && TAB_SET.has(tab as AdminTab)) {
       setActiveTab(tab as AdminTab);
     }
+
+    // If admin arrived from "Build Quote" on a client request, hydrate prefill
+    const requestId = params.get("newQuoteRequest");
+    if (requestId) {
+      try {
+        const raw = sessionStorage.getItem("prefill_quote_request");
+        if (raw) {
+          const r = JSON.parse(raw);
+          const notesParts: string[] = [];
+          if (r.guest_count) notesParts.push(`Guests: ~${r.guest_count}`);
+          notesParts.push(`Venue type: ${r.is_outdoor ? "Outdoor" : "Indoor"}`);
+          const reqs: string[] = [];
+          if (r.needs_sound) reqs.push("Sound");
+          if (r.needs_mic) reqs.push("Microphones");
+          if (r.needs_lighting) reqs.push("Lighting");
+          if (r.needs_special_effects) reqs.push("Special effects");
+          if (reqs.length) notesParts.push(`Requested: ${reqs.join(", ")}`);
+          if (r.notes) notesParts.push(`Client notes: ${r.notes}`);
+
+          setRequestPrefill({
+            clientName: r.client_name || "",
+            contactNo: r.contact_no || "",
+            email: r.email || "",
+            venue: [r.venue_name, r.venue_address].filter(Boolean).join(" — "),
+            eventDate: r.event_date || "",
+            startTime: (r.start_time || "18:00").slice(0, 5),
+            endTime: (r.end_time || "00:00").slice(0, 5),
+            eventType: r.event_type || "",
+            djName: "",
+            equipment: {},
+            customItems: [{ name: "Client requirements", price: 0, qty: 1 }].filter(() => notesParts.length > 0 && false),
+            extras: [],
+            kidsCorner: false,
+            kidsHours: 0,
+            humanJukebox: false,
+            humanJukeboxHours: 0,
+            travelDistance: 0,
+            discountPercent: 0,
+          } as QuoteData);
+
+          setPendingRequestMeta({
+            requestId,
+            clientId: r.client_id,
+            sourceType: r.package_id ? "package" : "custom",
+            packageId: r.package_id || null,
+            packageName: r.package_name || null,
+            paymentPreference: "deposit",
+          });
+
+          // Show a toast so admin sees prefill loaded (notes shown in a toast)
+          if (notesParts.length) {
+            toast({ title: "Quote request loaded", description: notesParts.join(" • ") });
+          }
+
+          setActiveTab("new-quote");
+        }
+      } catch (e) {
+        console.warn("Could not load quote request prefill", e);
+      }
+    }
   }, [location.search]);
+
 
   const setTab = (tab: AdminTab) => {
     setActiveTab(tab);
