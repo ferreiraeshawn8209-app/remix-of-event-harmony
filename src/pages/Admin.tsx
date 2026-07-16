@@ -450,7 +450,7 @@ export default function Admin() {
             eventType: r.event_type || "",
             djName: "",
             equipment: {},
-            customItems: [{ name: "Client requirements", price: 0, qty: 1 }].filter(() => notesParts.length > 0 && false),
+            customItems: [],
             extras: [],
             kidsCorner: false,
             kidsHours: 0,
