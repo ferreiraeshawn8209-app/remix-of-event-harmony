@@ -534,7 +534,6 @@ export default function Admin() {
         } else {
           quotePatch.payment_plan_installments = [];
         }
-
         await Promise.all([
           supabase.from("quotes").update(quotePatch as any).eq("id", (createdQuote as any).id),
           supabase.from("quote_requests").update({
@@ -542,11 +541,23 @@ export default function Admin() {
             quote_id: (createdQuote as any).id,
           } as any).eq("id", pendingRequestMeta.requestId),
         ]);
+
+        // Push quote to client immediately (visible in their dashboard as "sent")
+        await updateQuoteStatus((createdQuote as any).id, "sent");
+
         setPendingRequestMeta(null);
         setRequestPrefill(undefined);
-        setPendingRequestMeta(null);
         sessionStorage.removeItem("prefill_quote_request");
+        toast({ title: "Quote sent to client", description: "The client can now review and trim items in their dashboard." });
       }
+
+      setActiveTab("quotes");
+      // Clear the newQuoteRequest param from the URL
+      navigate("/admin?tab=quotes", { replace: true });
+    } catch (error) {
+      console.error("Error creating quote:", error);
+    }
+  };
 
       setActiveTab("quotes");
     } catch (error) {
