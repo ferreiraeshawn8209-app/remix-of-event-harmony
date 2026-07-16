@@ -559,11 +559,7 @@ export default function Admin() {
     }
   };
 
-      setActiveTab("quotes");
-    } catch (error) {
-      console.error("Error creating quote:", error);
-    }
-  };
+
 
   const isArchivedStatus = (s?: string | null) => s === "declined" || s === "rejected";
 
