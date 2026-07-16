@@ -33,19 +33,19 @@ export function QuoteRequestsManager() {
       // Move request to in_progress
       await updateRequest({ id: r.id, updates: { status: "in_progress" } });
 
-      // Stash request payload so the calculator can prefill (optional convenience)
+      // Stash request payload so the calculator can prefill
       try {
         sessionStorage.setItem("prefill_quote_request", JSON.stringify(r));
       } catch { /* ignore */ }
 
-      // Open admin quote builder and include request id for prefill
-      navigate(`/admin?newQuote=1&newQuoteRequest=${r.id}`);
-      navigate("/admin?tab=new-quote");
+      // Open admin quote builder with request id so Admin.tsx picks up prefill
+      navigate(`/admin?tab=new-quote&newQuoteRequest=${r.id}`);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
     setActing(null);
   };
+
 
   const decline = async (r: QuoteRequest) => {
     setActing(r.id);

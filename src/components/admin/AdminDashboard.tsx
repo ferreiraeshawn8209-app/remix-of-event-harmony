@@ -254,14 +254,12 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="new-quote">
-            <QuoteCalculator 
-              isAdmin={true} 
-              onSaveQuote={(data, calc) => {
-                console.log("Quote saved:", data, calc);
-                setActiveTab("quotes");
-              }}
+            <QuoteCalculator
+              isAdmin={true}
+              onSaveQuote={undefined as any}
             />
           </TabsContent>
+
 
           <TabsContent value="qr-codes">
             <Card variant="glass">
