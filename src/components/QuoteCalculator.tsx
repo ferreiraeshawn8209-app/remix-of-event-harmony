@@ -261,13 +261,22 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
   };
 
   const handleSubmit = async () => {
-    // Non-admin with callback: delegate entirely to the callback (e.g. QuoteEdit handles its own save)
-    if (!effectiveIsAdmin && onSaveQuote) {
+    // If a save callback is provided, delegate to it (parent handles persistence)
+    if (onSaveQuote) {
+      // Validate required fields for admin builder
+      if (effectiveIsAdmin && (!quoteData.clientName.trim() || !quoteData.email.trim())) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in at least the client's name and email.",
+          variant: "destructive",
+        });
+        return;
+      }
       await onSaveQuote(quoteData, calculations);
       return;
     }
 
-    // Otherwise, save to database
+    // Otherwise, save to database directly (client self-serve path)
     if (!user || !profile) {
       toast({
         title: "Sign In Required",
@@ -316,18 +325,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         discountPercent: 0,
       });
 
-      // Admin: invoke callback (e.g. return to quotes tab) instead of navigating away
-      if (effectiveIsAdmin) {
-        if (onSaveQuote) {
-          await onSaveQuote(quoteData, calculations);
-        }
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error saving quote:", error);
     }
   };
+
 
   return (
     <section className="py-20 bg-card">
