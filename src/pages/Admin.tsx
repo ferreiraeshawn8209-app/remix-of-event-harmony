@@ -678,13 +678,36 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="new-quote" className="space-y-4">
+            {pendingRequestMeta && (
+              <Card variant="glass" className="border-primary/40">
+                <CardContent className="py-3 text-sm flex items-center justify-between gap-2 flex-wrap">
+                  <span>
+                    Building quote from client request
+                    {requestPrefill?.clientName ? ` — ${requestPrefill.clientName}` : ""}. Save to push it to their dashboard.
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setPendingRequestMeta(null);
+                      setRequestPrefill(undefined);
+                      sessionStorage.removeItem("prefill_quote_request");
+                      navigate("/admin?tab=requests", { replace: true });
+                    }}
+                  >
+                    Cancel prefill
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
             <QuoteCalculator
+              key={pendingRequestMeta?.requestId || "blank"}
               isAdmin
-              onSaveQuote={() => {
-                setTab("quotes");
-              }}
+              initialData={requestPrefill}
+              onSaveQuote={handleSaveQuote}
             />
           </TabsContent>
+
 
           <TabsContent value="bookings" className="space-y-4">
             <CalendarBookings quotes={quotes} />
