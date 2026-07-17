@@ -61,6 +61,7 @@ const App = () => (
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             <Route path="/event-day/:eventId" element={<EventDayPage />} />
             <Route path="/client" element={<ClientPortal />} />
+            <Route path="/client/event-hub" element={<EventHub />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/team" element={<MeetTheTeam />} />
             <Route path="/djs" element={<MeetTheTeam />} />
