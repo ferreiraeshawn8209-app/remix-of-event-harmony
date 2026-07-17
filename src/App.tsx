@@ -15,6 +15,7 @@ import EventPlanner from "./pages/EventPlanner";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
+import EventHub from "./pages/EventHub";
 import EventDayPage from "./pages/EventDayPage";
 import MeetTheTeam from "./pages/MeetTheTeam";
 import BackgroundAudio from "./components/BackgroundAudio";
