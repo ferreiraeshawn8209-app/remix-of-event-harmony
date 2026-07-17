@@ -15,6 +15,7 @@ import EventPlanner from "./pages/EventPlanner";
 import SongRequest from "./pages/SongRequest";
 import DJQueue from "./pages/DJQueue";
 import ClientPortal from "./pages/ClientPortal";
+import EventHub from "./pages/EventHub";
 import EventDayPage from "./pages/EventDayPage";
 import MeetTheTeam from "./pages/MeetTheTeam";
 import BackgroundAudio from "./components/BackgroundAudio";
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/dj-queue/:eventId" element={<DJQueue />} />
             <Route path="/event-day/:eventId" element={<EventDayPage />} />
             <Route path="/client" element={<ClientPortal />} />
+            <Route path="/client/event-hub" element={<EventHub />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/team" element={<MeetTheTeam />} />
             <Route path="/djs" element={<MeetTheTeam />} />
