@@ -238,6 +238,35 @@ export default function ClientPortal() {
             </p>
           </motion.div>
 
+          {/* My Event Hub — dedicated page with quotes + music + colour scheme */}
+          <Link to="/client/event-hub" className="block group">
+            <Card
+              variant="glow"
+              className="border-primary/40 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 shadow-[0_0_30px_hsl(var(--primary)/0.35)] overflow-hidden"
+            >
+              <CardContent className="py-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-300 via-fuchsia-500 to-purple-600 text-white shadow-lg shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-primary font-semibold">My Event Hub</p>
+                    <p className="font-display text-base sm:text-lg font-bold truncate">
+                      Quotes, songs & colour scheme — all in one place
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      Trim your quote, save your playlist, set your vibe.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-primary text-sm font-semibold shrink-0 group-hover:translate-x-1 transition-transform hidden sm:inline">
+                  Open →
+                </span>
+              </CardContent>
+            </Card>
+          </Link>
+
+
 
           {(() => {
             const SECONDARY_PAGES = [
