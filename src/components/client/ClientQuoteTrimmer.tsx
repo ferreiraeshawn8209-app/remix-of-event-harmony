@@ -199,6 +199,105 @@ export function ClientQuoteTrimmer({ quote, onUpdated }: Props) {
     }
   };
 
+  const restoreItem = async (r: any, index: number) => {
+    setSaving(true);
+    try {
+      const equipment = { ...(quote.equipment || {}) } as Record<string, number>;
+      let custom_items = [...(quote.custom_items || [])];
+      let extras = [...(quote.extras || [])];
+      let kids_corner = !!quote.kids_corner;
+      let kids_hours = Number(quote.kids_hours || 0);
+      let human_jukebox = !!(quote as any).human_jukebox;
+      let human_jukebox_hours = Number((quote as any).human_jukebox_hours || 0);
+
+      const kind = r.item_kind;
+      if (kind === "equipment") {
+        // Restore the original quantity — look up the key via the catalog
+        const cat = catalogItems.find((c) => c.name === r.name);
+        const key = cat?.item_key;
+        if (key) equipment[key] = Number(r.qty) || 1;
+      } else if (kind === "custom") {
+        custom_items.push({ name: r.name, price: Number(r.price), qty: Number(r.qty) });
+      } else if (kind === "extra") {
+        extras.push({ name: r.name, price: Number(r.price), qty: Number(r.qty) });
+      } else if (kind === "kids") {
+        kids_corner = true;
+        // Recover hours from the original label "Kids Corner (Xh)"
+        const m = /\((\d+(?:\.\d+)?)h\)/.exec(r.name);
+        kids_hours = m ? Number(m[1]) : 1;
+      } else if (kind === "human_jukebox") {
+        human_jukebox = true;
+        const m = /\((\d+(?:\.\d+)?)h\)/.exec(r.name);
+        human_jukebox_hours = m ? Number(m[1]) : 1;
+      }
+
+      // Recalculate
+      const djCost = Number(quote.dj_cost || 0);
+      let equipment_cost = 0;
+      Object.entries(equipment).forEach(([key, qty]) => {
+        const item = catalogItems.find((c) => c.item_key === key);
+        equipment_cost += Number(item?.price || 0) * (Number(qty) || 0);
+      });
+      const custom_items_cost = custom_items.reduce((s, i) => s + Number(i.price) * Number(i.qty), 0);
+      const extras_cost = extras.reduce((s, i) => s + Number(i.price) * Number(i.qty), 0);
+      const kids_cost = kids_corner ? kids_hours * KIDS_CORNER_HOURLY_RATE : 0;
+      const hjCost = human_jukebox ? human_jukebox_hours * 250 : 0;
+
+      const subtotal = djCost + equipment_cost + custom_items_cost + kids_cost + hjCost;
+      const chosenPct = Number(quote.discount_percent || 0);
+      const discount_amount = subtotal * (chosenPct / 100);
+      const travel_cost = Number(quote.travel_cost || 0);
+      const total = subtotal + travel_cost + extras_cost - discount_amount;
+      const deposit = total * (DEPOSIT_PERCENT / 100);
+      const balance = total - deposit;
+
+      const client_removed_items = ((quote as any).client_removed_items || []).filter(
+        (_: any, i: number) => i !== index,
+      );
+
+      const patch: any = {
+        equipment,
+        custom_items,
+        extras,
+        kids_corner,
+        kids_hours,
+        equipment_cost,
+        custom_items_cost,
+        extras_cost,
+        kids_cost,
+        subtotal,
+        discount_amount,
+        total,
+        deposit,
+        balance,
+        client_removed_items,
+      };
+      if (kind === "human_jukebox") {
+        patch.human_jukebox = true;
+        patch.human_jukebox_hours = human_jukebox_hours;
+        patch.human_jukebox_cost = hjCost;
+      }
+
+      const { error } = await supabase.from("quotes").update(patch).eq("id", quote.id);
+      if (error) throw error;
+
+      await supabase.from("quote_messages").insert({
+        quote_id: quote.id,
+        sender_role: "client",
+        sender_name: quote.client_name,
+        message: `Added back to quote: ${r.name} (${formatCurrency(Number(r.price) * Number(r.qty))})`,
+      });
+
+      toast({ title: "Item restored", description: `${r.name} is back on your quote.` });
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      onUpdated?.();
+    } catch (e: any) {
+      toast({ title: "Could not restore item", description: e.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (locked) {
     return (
       <Card variant="glass" className="border-primary/30">
