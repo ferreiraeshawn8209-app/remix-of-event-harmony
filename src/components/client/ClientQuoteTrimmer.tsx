@@ -274,13 +274,28 @@ export function ClientQuoteTrimmer({ quote, onUpdated }: Props) {
         {((quote as any).client_removed_items?.length ?? 0) > 0 && (
           <div className="pt-2">
             <p className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
-              <Undo2 className="w-3 h-3" /> Previously removed by you
+              <Undo2 className="w-3 h-3" /> Removed by you — tap to add back up to the original quote
             </p>
             <div className="space-y-1">
               {(quote as any).client_removed_items.map((r: any, i: number) => (
-                <div key={i} className="flex justify-between text-[11px] text-muted-foreground">
-                  <span className="truncate">{r.name} — <span className="italic">{r.reason}</span></span>
-                  <span className="line-through">{formatCurrency(Number(r.price) * Number(r.qty))}</span>
+                <div key={i} className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="truncate text-muted-foreground">
+                    {r.name} <span className="italic">— {r.reason}</span>
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="line-through text-muted-foreground">
+                      {formatCurrency(Number(r.price) * Number(r.qty))}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                      disabled={saving}
+                      onClick={() => restoreItem(r, i)}
+                    >
+                      <Undo2 className="w-3 h-3 mr-1" /> Add back
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
