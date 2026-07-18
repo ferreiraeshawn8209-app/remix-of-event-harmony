@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PageBackground } from "@/components/PageBackground";
 import { SpecialsBanner } from "@/components/landing/SpecialsBanner";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
+import { PrideFriendlyBadge } from "@/components/PrideFriendlyBadge";
 import { PackagesShowcase } from "@/components/landing/PackagesShowcase";
 import { MixcloudRotator } from "@/components/MixcloudRotator";
 import { MusicPlayer } from "@/components/MusicPlayer";
