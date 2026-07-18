@@ -34,6 +34,7 @@ import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionP
 import { AiConciergeServices } from "@/components/client/AiConciergeServices";
 import { StaffDirectory } from "@/components/StaffDirectory";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
+import { PrideFriendlyBadge } from "@/components/PrideFriendlyBadge";
 import { RecommendedVenues } from "@/components/client/RecommendedVenues";
 import { GuardianAngelsReading } from "@/components/client/GuardianAngelsReading";
 import { WeddingQnA } from "@/components/client/WeddingQnA";
