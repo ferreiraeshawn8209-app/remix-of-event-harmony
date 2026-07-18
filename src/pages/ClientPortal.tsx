@@ -34,6 +34,7 @@ import { PremiumAiCompanionPanel } from "@/components/client/PremiumAiCompanionP
 import { AiConciergeServices } from "@/components/client/AiConciergeServices";
 import { StaffDirectory } from "@/components/StaffDirectory";
 import { DjTipsBanner } from "@/components/DjTipsBanner";
+import { PrideFriendlyBadge } from "@/components/PrideFriendlyBadge";
 import { RecommendedVenues } from "@/components/client/RecommendedVenues";
 import { GuardianAngelsReading } from "@/components/client/GuardianAngelsReading";
 import { WeddingQnA } from "@/components/client/WeddingQnA";
@@ -227,6 +228,11 @@ export default function ClientPortal() {
 
           {/* DJ's rotating tips — always visible at top of portal */}
           <DjTipsBanner variant="portal" />
+
+          {/* Inclusivity — everyone belongs on the BeatKulture dance floor */}
+          <div className="flex justify-center">
+            <PrideFriendlyBadge />
+          </div>
 
           {/* Welcome */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
