@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import djAvatar from "@/assets/dj-avatar.png";
+import djCharacter from "@/assets/dj-character.png.asset.json";
+const djAvatar = djCharacter.url;
 
 /**
  * DjTipsBanner
