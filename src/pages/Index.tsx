@@ -87,6 +87,11 @@ const Index = () => {
             <span className="text-xs sm:text-sm font-medium text-primary">26+ Years Experience · 500+ Events Delivered</span>
           </div>
 
+          <div className="flex justify-center mb-6">
+            <PrideFriendlyBadge />
+          </div>
+
+
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
             <span className="text-foreground">South Africa's</span>{" "}
             <span className="gradient-text">Premier DJ &</span>
