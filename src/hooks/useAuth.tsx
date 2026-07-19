@@ -449,11 +449,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut({ scope: "local" });
+    // Clear local state IMMEDIATELY so the UI can react (prevents "stuck logging out")
     setUser(null);
     setSession(null);
     setProfile(null);
     setIsAdmin(false);
+    lastNotifiedAccessTokenRef.current = null;
+    pendingAuthEventRef.current = null;
+
+    // Nuke any Supabase auth tokens up-front — signOut() can hang if the
+    // refresh token is already invalid, leaving the user stuck on the page.
+    try {
+      const keys = Object.keys(localStorage);
+      for (const key of keys) {
+        if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // Fire-and-forget: don't await, so a slow/failed network call can't block logout.
+    try {
+      void supabase.auth.signOut({ scope: "local" });
+    } catch {
+      // ignore
+    }
+
+    // Clear cached authenticated data & hard-redirect home so no stale route lingers.
+    try {
+      const { QueryClient } = await import("@tanstack/react-query");
+      // Best-effort: the app's QueryClient is scoped in App.tsx; a full reload guarantees a clean slate.
+    } catch {
+      // ignore
+    }
+    if (typeof window !== "undefined") {
+      window.location.replace("/");
+    }
   };
 
   return (
