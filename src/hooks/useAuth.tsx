@@ -477,13 +477,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignore
     }
 
-    // Clear cached authenticated data & hard-redirect home so no stale route lingers.
-    try {
-      const { QueryClient } = await import("@tanstack/react-query");
-      // Best-effort: the app's QueryClient is scoped in App.tsx; a full reload guarantees a clean slate.
-    } catch {
-      // ignore
-    }
+    // Hard-redirect home so no stale authenticated route/cache lingers.
     if (typeof window !== "undefined") {
       window.location.replace("/");
     }
