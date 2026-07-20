@@ -1117,11 +1117,11 @@ function Questionnaire({
               </div>
               <div className="space-y-2">
                 <Label>Start time</Label>
-                <Input type="time" value={form.start_time} onChange={(e) => update("start_time", e.target.value)} />
+                <Input type="time" step={60} value={form.start_time} onChange={(e) => update("start_time", e.target.value)} className="w-full min-w-[9rem] text-base px-3 py-2 h-11" />
               </div>
               <div className="space-y-2">
                 <Label>End time</Label>
-                <Input type="time" value={form.end_time} onChange={(e) => update("end_time", e.target.value)} />
+                <Input type="time" step={60} value={form.end_time} onChange={(e) => update("end_time", e.target.value)} className="w-full min-w-[9rem] text-base px-3 py-2 h-11" />
               </div>
             </div>
 
