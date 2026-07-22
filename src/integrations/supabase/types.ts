@@ -456,6 +456,7 @@ export type Database = {
       event_plans: {
         Row: {
           additional_notes: string | null
+          artists_to_avoid: string | null
           bouquet_toss_artist: string | null
           bouquet_toss_song: string | null
           cake_cutting_artist: string | null
@@ -472,6 +473,8 @@ export type Database = {
           event_date: string | null
           event_style: string | null
           event_type: string | null
+          father_daughter_artist: string | null
+          father_daughter_song: string | null
           first_dance_artist: string | null
           first_dance_song: string | null
           guest_count: number | null
@@ -479,7 +482,10 @@ export type Database = {
           last_song: string | null
           last_song_artist: string | null
           mc_notes: string | null
+          mother_son_artist: string | null
+          mother_son_song: string | null
           must_play_songs: string | null
+          preferred_genres: string | null
           quote_id: string | null
           schedule_items: Json | null
           special_announcements: string | null
@@ -490,6 +496,7 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
+          artists_to_avoid?: string | null
           bouquet_toss_artist?: string | null
           bouquet_toss_song?: string | null
           cake_cutting_artist?: string | null
@@ -506,6 +513,8 @@ export type Database = {
           event_date?: string | null
           event_style?: string | null
           event_type?: string | null
+          father_daughter_artist?: string | null
+          father_daughter_song?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
           guest_count?: number | null
@@ -513,7 +522,10 @@ export type Database = {
           last_song?: string | null
           last_song_artist?: string | null
           mc_notes?: string | null
+          mother_son_artist?: string | null
+          mother_son_song?: string | null
           must_play_songs?: string | null
+          preferred_genres?: string | null
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
@@ -524,6 +536,7 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
+          artists_to_avoid?: string | null
           bouquet_toss_artist?: string | null
           bouquet_toss_song?: string | null
           cake_cutting_artist?: string | null
@@ -540,6 +553,8 @@ export type Database = {
           event_date?: string | null
           event_style?: string | null
           event_type?: string | null
+          father_daughter_artist?: string | null
+          father_daughter_song?: string | null
           first_dance_artist?: string | null
           first_dance_song?: string | null
           guest_count?: number | null
@@ -547,7 +562,10 @@ export type Database = {
           last_song?: string | null
           last_song_artist?: string | null
           mc_notes?: string | null
+          mother_son_artist?: string | null
+          mother_son_song?: string | null
           must_play_songs?: string | null
+          preferred_genres?: string | null
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
@@ -810,36 +828,63 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
           created_at: string
           created_by: string | null
           email: string
+          end_time: string | null
+          event_date: string | null
+          event_setting: string | null
+          event_type: string | null
           full_name: string
+          guest_count: number | null
           id: string
           phone: string | null
+          start_time: string | null
           updated_at: string
           user_id: string
+          venue_address: string | null
+          venue_name: string | null
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           email: string
+          end_time?: string | null
+          event_date?: string | null
+          event_setting?: string | null
+          event_type?: string | null
           full_name: string
+          guest_count?: number | null
           id?: string
           phone?: string | null
+          start_time?: string | null
           updated_at?: string
           user_id: string
+          venue_address?: string | null
+          venue_name?: string | null
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           email?: string
+          end_time?: string | null
+          event_date?: string | null
+          event_setting?: string | null
+          event_type?: string | null
           full_name?: string
+          guest_count?: number | null
           id?: string
           phone?: string | null
+          start_time?: string | null
           updated_at?: string
           user_id?: string
+          venue_address?: string | null
+          venue_name?: string | null
         }
         Relationships: []
       }
