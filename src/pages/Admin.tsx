@@ -233,11 +233,23 @@ function QuotePipelineBoard({
   };
 
   const bulkArchive = async () => {
-    if (selected.size === 0) return;
+    if (selected.size === 0 || !onArchive) return;
     setBulkLoading(true);
     try {
-      await Promise.all([...selected].map((id) => onSetStatus(id, "declined")));
+      await Promise.all([...selected].map((id) => onArchive(id)));
       toast({ title: "Bulk archive", description: `${selected.size} quote(s) archived.` });
+      setSelected(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkRestore = async () => {
+    if (selected.size === 0 || !onRestore) return;
+    setBulkLoading(true);
+    try {
+      await Promise.all([...selected].map((id) => onRestore(id)));
+      toast({ title: "Restored", description: `${selected.size} quote(s) restored.` });
       setSelected(new Set());
     } finally {
       setBulkLoading(false);
