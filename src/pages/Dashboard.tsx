@@ -152,8 +152,8 @@ export default function Dashboard() {
   }
 
   // Group quotes by status
-  const activeQuotes = quotes.filter(q => q.status !== "declined" && q.status !== "rejected");
-  const archivedQuotes = quotes.filter(q => q.status === "declined" || q.status === "rejected");
+  const activeQuotes = quotes.filter(q => !q.archived);
+  const archivedQuotes = quotes.filter(q => q.archived);
 
   return (
     <div className="cinematic-shell min-h-screen">
