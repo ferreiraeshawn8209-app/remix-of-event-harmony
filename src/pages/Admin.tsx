@@ -313,9 +313,19 @@ function QuotePipelineBoard({
         {selected.size > 0 && (
           <>
             <Separator orientation="vertical" className="h-4" />
-            <Button size="sm" variant="outline" onClick={bulkArchive} disabled={bulkLoading}>
-              <Archive className="w-3.5 h-3.5 mr-1" /> Archive
-            </Button>
+            {showArchived ? (
+              onRestore && (
+                <Button size="sm" variant="outline" onClick={bulkRestore} disabled={bulkLoading}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Restore
+                </Button>
+              )
+            ) : (
+              onArchive && (
+                <Button size="sm" variant="outline" onClick={bulkArchive} disabled={bulkLoading}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Archive
+                </Button>
+              )
+            )}
             <Button size="sm" variant="outline" onClick={bulkExport} disabled={bulkLoading}>
               <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
             </Button>
