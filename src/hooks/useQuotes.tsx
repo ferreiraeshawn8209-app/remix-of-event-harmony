@@ -323,6 +323,28 @@ export function useQuotes() {
     },
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: async ({ quoteId, archived }: { quoteId: string; archived: boolean }) => {
+      const { error } = await supabase
+        .from("quotes")
+        .update({ archived, archived_at: archived ? new Date().toISOString() : null } as any)
+        .eq("id", quoteId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      toast({
+        title: vars.archived ? "Quote archived" : "Quote restored",
+        description: vars.archived
+          ? "The quote is hidden from active lists but still stored."
+          : "The quote is back in your active list.",
+      });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update archive state", variant: "destructive" });
+    },
+  });
+
   return {
     quotes: quotesQuery.data || [],
     isLoading: quotesQuery.isLoading,
@@ -332,8 +354,11 @@ export function useQuotes() {
     updateQuoteStatus: (quoteId: string, status: string, declineReason?: string) =>
       updateStatusMutation.mutateAsync({ quoteId, status, declineReason }),
     deleteQuote: deleteQuoteMutation.mutateAsync,
+    archiveQuote: (quoteId: string) => archiveMutation.mutateAsync({ quoteId, archived: true }),
+    restoreQuote: (quoteId: string) => archiveMutation.mutateAsync({ quoteId, archived: false }),
     isCreating: createQuoteMutation.isPending,
     isUpdating: updateQuoteMutation.isPending,
     isDeleting: deleteQuoteMutation.isPending,
+    isArchiving: archiveMutation.isPending,
   };
 }
