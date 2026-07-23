@@ -189,9 +189,18 @@ function statusClass(status: string) {
 function QuotePipelineBoard({
   quotes,
   onSetStatus,
+  onArchive,
+  onRestore,
+  onDelete,
+  showArchived = false,
 }: {
   quotes: DatabaseQuote[];
-  onSetStatus: (quoteId: string, status: string) => Promise<void>;}) {
+  onSetStatus: (quoteId: string, status: string) => Promise<void>;
+  onArchive?: (quoteId: string) => Promise<void>;
+  onRestore?: (quoteId: string) => Promise<void>;
+  onDelete?: (quoteId: string) => Promise<void>;
+  showArchived?: boolean;
+}) {
   const { items: equipmentCatalog } = useEquipmentCatalog();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
