@@ -156,8 +156,8 @@ export default function Auth() {
         });
       } else {
         toast({
-          title: "Account Created!",
-          description: "Welcome to BEATKULTURE! Complete sign in to enter your dashboard.",
+          title: "Welcome to BEATKULTURE!",
+          description: "You're signed in — taking you to your dashboard.",
         });
       }
     } catch (error) {

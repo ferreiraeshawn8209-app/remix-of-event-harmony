@@ -1009,6 +1009,8 @@ export type Database = {
       }
       quotes: {
         Row: {
+          archived: boolean
+          archived_at: string | null
           balance: number | null
           balance_paid: boolean
           balance_paid_at: string | null
@@ -1061,6 +1063,8 @@ export type Database = {
           venue: string | null
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
           balance?: number | null
           balance_paid?: boolean
           balance_paid_at?: string | null
@@ -1113,6 +1117,8 @@ export type Database = {
           venue?: string | null
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
           balance?: number | null
           balance_paid?: boolean
           balance_paid_at?: string | null
@@ -1613,6 +1619,8 @@ export type Database = {
       lookup_quote_by_code: {
         Args: { _code: string; _email: string }
         Returns: {
+          archived: boolean
+          archived_at: string | null
           balance: number | null
           balance_paid: boolean
           balance_paid_at: string | null

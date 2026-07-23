@@ -59,6 +59,8 @@ export interface DatabaseQuote {
     reason: string;
     removed_at: string;
   }[];
+  archived?: boolean;
+  archived_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -95,6 +97,8 @@ export function useQuotes() {
         payment_structure: ((quote as any).payment_structure || "deposit") as "deposit" | "monthly_installments",
         payment_schedule: ((quote as any).payment_schedule as DatabaseQuote["payment_schedule"]) || [],
         client_removed_items: ((quote as any).client_removed_items as DatabaseQuote["client_removed_items"]) || [],
+        archived: Boolean((quote as any).archived),
+        archived_at: (quote as any).archived_at || null,
       })) as DatabaseQuote[];
     },
     enabled: !!profile,
@@ -319,6 +323,28 @@ export function useQuotes() {
     },
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: async ({ quoteId, archived }: { quoteId: string; archived: boolean }) => {
+      const { error } = await supabase
+        .from("quotes")
+        .update({ archived, archived_at: archived ? new Date().toISOString() : null } as any)
+        .eq("id", quoteId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      toast({
+        title: vars.archived ? "Quote archived" : "Quote restored",
+        description: vars.archived
+          ? "The quote is hidden from active lists but still stored."
+          : "The quote is back in your active list.",
+      });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update archive state", variant: "destructive" });
+    },
+  });
+
   return {
     quotes: quotesQuery.data || [],
     isLoading: quotesQuery.isLoading,
@@ -328,8 +354,11 @@ export function useQuotes() {
     updateQuoteStatus: (quoteId: string, status: string, declineReason?: string) =>
       updateStatusMutation.mutateAsync({ quoteId, status, declineReason }),
     deleteQuote: deleteQuoteMutation.mutateAsync,
+    archiveQuote: (quoteId: string) => archiveMutation.mutateAsync({ quoteId, archived: true }),
+    restoreQuote: (quoteId: string) => archiveMutation.mutateAsync({ quoteId, archived: false }),
     isCreating: createQuoteMutation.isPending,
     isUpdating: updateQuoteMutation.isPending,
     isDeleting: deleteQuoteMutation.isPending,
+    isArchiving: archiveMutation.isPending,
   };
 }

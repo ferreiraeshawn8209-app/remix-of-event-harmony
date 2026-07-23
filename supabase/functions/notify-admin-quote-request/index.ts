@@ -170,19 +170,14 @@ Deno.serve(async (req) => {
     let whatsappSent = false;
     let whatsappResponse: any = null;
     if (whatsappWebhookUrl) {
+      // Simple, privacy-safe WhatsApp alert — no client details in the message body.
       const plainMessage = [
-        "New BeatKulture quote request",
-        `Request ID: ${requestId}`,
-        `Client: ${clientName}`,
-        `Email: ${safeClientEmail}`,
-        clientPhone ? `Phone: ${clientPhone}` : "",
-        `Event: ${eventType}`,
-        eventDate ? `Date: ${eventDate}` : "",
-        venueName ? `Venue: ${venueName}` : "",
-        packageName ? `Package: ${packageName}` : "Package: Custom quote",
-      ]
-        .filter(Boolean)
-        .join("\n");
+        "🔔 BeatKulture Entertainment",
+        "",
+        "A new quote or booking request has been received.",
+        "",
+        "Please log in to the Admin Dashboard to review the request.",
+      ].join("\n");
 
       const whatsappRecipients = [...new Set([...payloadFallbackWhatsAppTo, ...fallbackWhatsAppNumbers])];
 
@@ -193,16 +188,6 @@ Deno.serve(async (req) => {
           type: "quote_request",
           to: whatsappRecipients,
           message: plainMessage,
-          request: {
-            requestId,
-            clientName,
-            clientEmail: safeClientEmail,
-            clientPhone,
-            eventType,
-            eventDate,
-            venueName,
-            packageName: packageName || null,
-          },
         }),
       });
 

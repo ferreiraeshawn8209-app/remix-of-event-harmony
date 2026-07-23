@@ -153,6 +153,7 @@ type AdminTab =
   | "overview"
   | "requests"
   | "quotes"
+  | "archived"
   | "new-quote"
   | "bookings"
   | "catalog"
@@ -166,6 +167,7 @@ const TAB_SET = new Set<AdminTab>([
   "overview",
   "requests",
   "quotes",
+  "archived",
   "new-quote",
   "bookings",
   "catalog",
@@ -187,9 +189,18 @@ function statusClass(status: string) {
 function QuotePipelineBoard({
   quotes,
   onSetStatus,
+  onArchive,
+  onRestore,
+  onDelete,
+  showArchived = false,
 }: {
   quotes: DatabaseQuote[];
-  onSetStatus: (quoteId: string, status: string) => Promise<void>;}) {
+  onSetStatus: (quoteId: string, status: string) => Promise<void>;
+  onArchive?: (quoteId: string) => Promise<void>;
+  onRestore?: (quoteId: string) => Promise<void>;
+  onDelete?: (quoteId: string) => Promise<void>;
+  showArchived?: boolean;
+}) {
   const { items: equipmentCatalog } = useEquipmentCatalog();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -222,11 +233,23 @@ function QuotePipelineBoard({
   };
 
   const bulkArchive = async () => {
-    if (selected.size === 0) return;
+    if (selected.size === 0 || !onArchive) return;
     setBulkLoading(true);
     try {
-      await Promise.all([...selected].map((id) => onSetStatus(id, "declined")));
+      await Promise.all([...selected].map((id) => onArchive(id)));
       toast({ title: "Bulk archive", description: `${selected.size} quote(s) archived.` });
+      setSelected(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const bulkRestore = async () => {
+    if (selected.size === 0 || !onRestore) return;
+    setBulkLoading(true);
+    try {
+      await Promise.all([...selected].map((id) => onRestore(id)));
+      toast({ title: "Restored", description: `${selected.size} quote(s) restored.` });
       setSelected(new Set());
     } finally {
       setBulkLoading(false);
@@ -290,9 +313,19 @@ function QuotePipelineBoard({
         {selected.size > 0 && (
           <>
             <Separator orientation="vertical" className="h-4" />
-            <Button size="sm" variant="outline" onClick={bulkArchive} disabled={bulkLoading}>
-              <Archive className="w-3.5 h-3.5 mr-1" /> Archive
-            </Button>
+            {showArchived ? (
+              onRestore && (
+                <Button size="sm" variant="outline" onClick={bulkRestore} disabled={bulkLoading}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Restore
+                </Button>
+              )
+            ) : (
+              onArchive && (
+                <Button size="sm" variant="outline" onClick={bulkArchive} disabled={bulkLoading}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Archive
+                </Button>
+              )
+            )}
             <Button size="sm" variant="outline" onClick={bulkExport} disabled={bulkLoading}>
               <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
             </Button>
@@ -356,13 +389,41 @@ function QuotePipelineBoard({
             </div>
             <Separator />
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "sent")}>Mark sent</Button>
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "accepted")}>Mark accepted</Button>
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "paid")}>Mark paid</Button>
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "declined")}>Mark declined</Button>
+              {!showArchived && (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "sent")}>Mark sent</Button>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "accepted")}>Mark accepted</Button>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "paid")}>Mark paid</Button>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "declined")}>Mark declined</Button>
+                </>
+              )}
               <Button size="sm" variant="ghost" asChild>
                 <a href={`/quote/${quote.id}`}>Open quote</a>
               </Button>
+              {!showArchived && onArchive && (
+                <Button size="sm" variant="outline" onClick={() => void onArchive(quote.id)}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Archive
+                </Button>
+              )}
+              {showArchived && onRestore && (
+                <Button size="sm" variant="outline" onClick={() => void onRestore(quote.id)}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Restore
+                </Button>
+              )}
+              {showArchived && onDelete && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => {
+                    if (window.confirm("Permanently delete this quote? This cannot be undone.")) {
+                      void onDelete(quote.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete permanently
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -375,7 +436,7 @@ export default function Admin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
-  const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, archiveQuote, restoreQuote, isDeleting } = useQuotes();
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
   const { dueCount } = useAlarms();
@@ -561,13 +622,11 @@ export default function Admin() {
 
 
 
-  const isArchivedStatus = (s?: string | null) => s === "declined" || s === "rejected";
-
-  // Active = everything not archived; Archived = declined/rejected
-  const activeQuotes = useMemo(() => quotes.filter(q => !isArchivedStatus(q.status)), [quotes]);
+  // Active = not archived; Archived = archived flag set by admin
+  const activeQuotes = useMemo(() => quotes.filter(q => !q.archived), [quotes]);
   const archivedQuotes = useMemo(
-    () => quotes.filter(q => isArchivedStatus(q.status))
-      .sort((a: any, b: any) => new Date(b.declined_at || b.updated_at || 0).getTime() - new Date(a.declined_at || a.updated_at || 0).getTime()),
+    () => quotes.filter(q => q.archived)
+      .sort((a: any, b: any) => new Date(b.archived_at || b.updated_at || 0).getTime() - new Date(a.archived_at || a.updated_at || 0).getTime()),
     [quotes],
   );
 
@@ -638,6 +697,7 @@ export default function Admin() {
             <TabsTrigger value="overview"><BarChart3 className="w-4 h-4 mr-1" />Overview</TabsTrigger>
             <TabsTrigger value="requests"><Bell className="w-4 h-4 mr-1" />Requests</TabsTrigger>
             <TabsTrigger value="quotes"><FileText className="w-4 h-4 mr-1" />Quotes</TabsTrigger>
+            <TabsTrigger value="archived"><Archive className="w-4 h-4 mr-1" />Archived{archivedQuotes.length > 0 ? ` (${archivedQuotes.length})` : ""}</TabsTrigger>
             <TabsTrigger value="new-quote"><Plus className="w-4 h-4 mr-1" />New Quote</TabsTrigger>
             <TabsTrigger value="bookings"><CalendarRange className="w-4 h-4 mr-1" />Bookings</TabsTrigger>
             <TabsTrigger value="catalog"><Package2 className="w-4 h-4 mr-1" />Catalog</TabsTrigger>
@@ -669,13 +729,25 @@ export default function Admin() {
 
           <TabsContent value="quotes">
             <QuotePipelineBoard
-              quotes={quotes}
+              quotes={activeQuotes}
               onSetStatus={async (quoteId, status) => {
                 await updateQuoteStatus(quoteId, status);
                 toast({ title: "Status updated", description: `Quote marked as ${status}.` });
               }}
+              onArchive={archiveQuote}
             />
           </TabsContent>
+
+          <TabsContent value="archived">
+            <QuotePipelineBoard
+              quotes={archivedQuotes}
+              showArchived
+              onSetStatus={async () => {}}
+              onRestore={restoreQuote}
+              onDelete={deleteQuote}
+            />
+          </TabsContent>
+
 
           <TabsContent value="new-quote" className="space-y-4">
             {pendingRequestMeta && (
