@@ -729,13 +729,25 @@ export default function Admin() {
 
           <TabsContent value="quotes">
             <QuotePipelineBoard
-              quotes={quotes}
+              quotes={activeQuotes}
               onSetStatus={async (quoteId, status) => {
                 await updateQuoteStatus(quoteId, status);
                 toast({ title: "Status updated", description: `Quote marked as ${status}.` });
               }}
+              onArchive={archiveQuote}
             />
           </TabsContent>
+
+          <TabsContent value="archived">
+            <QuotePipelineBoard
+              quotes={archivedQuotes}
+              showArchived
+              onSetStatus={async () => {}}
+              onRestore={restoreQuote}
+              onDelete={deleteQuote}
+            />
+          </TabsContent>
+
 
           <TabsContent value="new-quote" className="space-y-4">
             {pendingRequestMeta && (
