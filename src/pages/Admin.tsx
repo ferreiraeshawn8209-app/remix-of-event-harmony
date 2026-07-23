@@ -436,7 +436,7 @@ export default function Admin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, isAdmin, isLoading: authLoading, signOut } = useAuth();
-  const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, isDeleting } = useQuotes();
+  const { quotes, isLoading: quotesLoading, createQuote, updateQuoteStatus, deleteQuote, archiveQuote, restoreQuote, isDeleting } = useQuotes();
   const { packages } = usePackages();
   const { activeSpecials } = useSpecials();
   const { dueCount } = useAlarms();
