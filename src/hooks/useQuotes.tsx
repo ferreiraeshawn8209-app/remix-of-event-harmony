@@ -97,6 +97,8 @@ export function useQuotes() {
         payment_structure: ((quote as any).payment_structure || "deposit") as "deposit" | "monthly_installments",
         payment_schedule: ((quote as any).payment_schedule as DatabaseQuote["payment_schedule"]) || [],
         client_removed_items: ((quote as any).client_removed_items as DatabaseQuote["client_removed_items"]) || [],
+        archived: Boolean((quote as any).archived),
+        archived_at: (quote as any).archived_at || null,
       })) as DatabaseQuote[];
     },
     enabled: !!profile,
