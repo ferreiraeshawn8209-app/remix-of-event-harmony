@@ -697,6 +697,7 @@ export default function Admin() {
             <TabsTrigger value="overview"><BarChart3 className="w-4 h-4 mr-1" />Overview</TabsTrigger>
             <TabsTrigger value="requests"><Bell className="w-4 h-4 mr-1" />Requests</TabsTrigger>
             <TabsTrigger value="quotes"><FileText className="w-4 h-4 mr-1" />Quotes</TabsTrigger>
+            <TabsTrigger value="archived"><Archive className="w-4 h-4 mr-1" />Archived{archivedQuotes.length > 0 ? ` (${archivedQuotes.length})` : ""}</TabsTrigger>
             <TabsTrigger value="new-quote"><Plus className="w-4 h-4 mr-1" />New Quote</TabsTrigger>
             <TabsTrigger value="bookings"><CalendarRange className="w-4 h-4 mr-1" />Bookings</TabsTrigger>
             <TabsTrigger value="catalog"><Package2 className="w-4 h-4 mr-1" />Catalog</TabsTrigger>
