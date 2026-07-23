@@ -389,13 +389,41 @@ function QuotePipelineBoard({
             </div>
             <Separator />
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "sent")}>Mark sent</Button>
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "accepted")}>Mark accepted</Button>
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "paid")}>Mark paid</Button>
-              <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "declined")}>Mark declined</Button>
+              {!showArchived && (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "sent")}>Mark sent</Button>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "accepted")}>Mark accepted</Button>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "paid")}>Mark paid</Button>
+                  <Button size="sm" variant="outline" onClick={() => void onSetStatus(quote.id, "declined")}>Mark declined</Button>
+                </>
+              )}
               <Button size="sm" variant="ghost" asChild>
                 <a href={`/quote/${quote.id}`}>Open quote</a>
               </Button>
+              {!showArchived && onArchive && (
+                <Button size="sm" variant="outline" onClick={() => void onArchive(quote.id)}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Archive
+                </Button>
+              )}
+              {showArchived && onRestore && (
+                <Button size="sm" variant="outline" onClick={() => void onRestore(quote.id)}>
+                  <Archive className="w-3.5 h-3.5 mr-1" /> Restore
+                </Button>
+              )}
+              {showArchived && onDelete && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => {
+                    if (window.confirm("Permanently delete this quote? This cannot be undone.")) {
+                      void onDelete(quote.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete permanently
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
