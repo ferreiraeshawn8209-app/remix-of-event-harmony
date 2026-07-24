@@ -55,12 +55,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!resendApiKey) {
-      return new Response(JSON.stringify({ error: "RESEND_API_KEY is not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Email via Resend is optional — WhatsApp alert must still fire without it.
 
     const payload = await req.json();
     const requestId = String(payload?.requestId || "");
@@ -112,65 +107,13 @@ Deno.serve(async (req) => {
 
     recipientEmails = [...new Set(recipientEmails)];
 
-    if (recipientEmails.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, reason: "No admin recipient emails found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const packageLine = packageName
-      ? `<p><strong>Package:</strong> ${packageName}</p>`
-      : `<p><strong>Quote type:</strong> Custom quote request</p>`;
-    const eventDateLine = eventDate ? `<p><strong>Event date:</strong> ${eventDate}</p>` : "";
-    const venueLine = venueName ? `<p><strong>Venue:</strong> ${venueName}</p>` : "";
-    const clientPhoneLine = clientPhone ? `<p><strong>Contact:</strong> ${clientPhone}</p>` : "";
-    const safeClientEmail = clientEmail || "Not provided";
-
-    const subject = `New quote request: ${clientName} (${eventType})`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
-        <h2 style="margin: 0 0 12px;">BeatKulture Entertainment — New Quote Request</h2>
-        <p>A new quote request has been submitted and pushed to the admin portal.</p>
-        <p><strong>Request ID:</strong> ${requestId}</p>
-        <p><strong>Client:</strong> ${clientName}</p>
-        <p><strong>Client email:</strong> ${safeClientEmail}</p>
-        ${clientPhoneLine}
-        <p><strong>Event type:</strong> ${eventType}</p>
-        ${eventDateLine}
-        ${venueLine}
-        ${packageLine}
-        <p style="margin-top: 16px;">Open the admin portal to review and action this request.</p>
-      </div>
-    `;
-
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: recipientEmails,
-        subject,
-        html,
-      }),
-    });
-
-    if (!resendResponse.ok) {
-      const text = await resendResponse.text();
-      return new Response(JSON.stringify({ error: `Resend error: ${text}` }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const resendPayload = await resendResponse.json();
-
+    // === WhatsApp alert (fire first, independent of email) ===
     let whatsappSent = false;
     let whatsappResponse: any = null;
-    if (whatsappWebhookUrl) {
-      // Simple, privacy-safe WhatsApp alert — no client details in the message body.
+    let whatsappError: string | null = null;
+    const whatsappRecipients = [...new Set([...payloadFallbackWhatsAppTo, ...fallbackWhatsAppNumbers])];
+
+    if (whatsappWebhookUrl && whatsappRecipients.length > 0) {
       const plainMessage = [
         "🔔 BeatKulture Entertainment",
         "",
@@ -179,33 +122,104 @@ Deno.serve(async (req) => {
         "Please log in to the Admin Dashboard to review the request.",
       ].join("\n");
 
-      const whatsappRecipients = [...new Set([...payloadFallbackWhatsAppTo, ...fallbackWhatsAppNumbers])];
+      try {
+        const whatsappRes = await fetch(whatsappWebhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "quote_request",
+            to: whatsappRecipients,
+            message: plainMessage,
+          }),
+        });
 
-      const whatsappRes = await fetch(whatsappWebhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "quote_request",
-          to: whatsappRecipients,
-          message: plainMessage,
-        }),
-      });
-
-      if (whatsappRes.ok) {
-        whatsappSent = true;
         whatsappResponse = await whatsappRes.text();
-      } else {
-        const text = await whatsappRes.text();
-        console.error("WhatsApp webhook failed", text);
+        if (whatsappRes.ok) {
+          whatsappSent = true;
+        } else {
+          whatsappError = `WhatsApp webhook ${whatsappRes.status}: ${whatsappResponse}`;
+          console.error(whatsappError);
+        }
+      } catch (err) {
+        whatsappError = err instanceof Error ? err.message : "WhatsApp webhook fetch failed";
+        console.error("WhatsApp webhook exception", whatsappError);
       }
+    } else {
+      whatsappError = !whatsappWebhookUrl
+        ? "ADMIN_WHATSAPP_WEBHOOK_URL not configured"
+        : "No WhatsApp recipients configured";
+      console.warn(whatsappError);
+    }
+
+    // === Email via Resend (optional / best-effort) ===
+    let emailSent = 0;
+    let emailError: string | null = null;
+    let resendPayload: any = null;
+
+    if (resendApiKey && recipientEmails.length > 0) {
+      const packageLine = packageName
+        ? `<p><strong>Package:</strong> ${packageName}</p>`
+        : `<p><strong>Quote type:</strong> Custom quote request</p>`;
+      const eventDateLine = eventDate ? `<p><strong>Event date:</strong> ${eventDate}</p>` : "";
+      const venueLine = venueName ? `<p><strong>Venue:</strong> ${venueName}</p>` : "";
+      const clientPhoneLine = clientPhone ? `<p><strong>Contact:</strong> ${clientPhone}</p>` : "";
+      const safeClientEmail = clientEmail || "Not provided";
+
+      const subject = `New quote request: ${clientName} (${eventType})`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
+          <h2 style="margin: 0 0 12px;">BeatKulture Entertainment — New Quote Request</h2>
+          <p>A new quote request has been submitted and pushed to the admin portal.</p>
+          <p><strong>Request ID:</strong> ${requestId}</p>
+          <p><strong>Client:</strong> ${clientName}</p>
+          <p><strong>Client email:</strong> ${safeClientEmail}</p>
+          ${clientPhoneLine}
+          <p><strong>Event type:</strong> ${eventType}</p>
+          ${eventDateLine}
+          ${venueLine}
+          ${packageLine}
+          <p style="margin-top: 16px;">Open the admin portal to review and action this request.</p>
+        </div>
+      `;
+
+      try {
+        const resendResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ from: fromEmail, to: recipientEmails, subject, html }),
+        });
+
+        const text = await resendResponse.text();
+        try { resendPayload = JSON.parse(text); } catch { resendPayload = text; }
+
+        if (resendResponse.ok) {
+          emailSent = recipientEmails.length;
+        } else {
+          emailError = `Resend ${resendResponse.status}: ${text}`;
+          console.error(emailError);
+        }
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : "Resend fetch failed";
+        console.error("Resend exception", emailError);
+      }
+    } else if (!resendApiKey) {
+      emailError = "RESEND_API_KEY not configured";
+    } else {
+      emailError = "No admin recipient emails found";
     }
 
     return new Response(JSON.stringify({
-      sent: recipientEmails.length,
-      recipients: recipientEmails,
-      resend: resendPayload,
       whatsappSent,
+      whatsappRecipients,
       whatsappResponse,
+      whatsappError,
+      emailSent,
+      emailRecipients: recipientEmails,
+      emailError,
+      resend: resendPayload,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
