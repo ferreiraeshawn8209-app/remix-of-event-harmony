@@ -622,10 +622,10 @@ export default function Admin() {
 
 
 
-  // Active = not archived; Archived = archived flag set by admin
-  const activeQuotes = useMemo(() => quotes.filter(q => !q.archived), [quotes]);
+  // Active = not archived and not declined/rejected; Archived = archived flag OR declined/rejected status
+  const activeQuotes = useMemo(() => quotes.filter(q => !q.archived && q.status !== "declined" && q.status !== "rejected"), [quotes]);
   const archivedQuotes = useMemo(
-    () => quotes.filter(q => q.archived)
+    () => quotes.filter(q => q.archived || q.status === "declined" || q.status === "rejected")
       .sort((a: any, b: any) => new Date(b.archived_at || b.updated_at || 0).getTime() - new Date(a.archived_at || a.updated_at || 0).getTime()),
     [quotes],
   );
