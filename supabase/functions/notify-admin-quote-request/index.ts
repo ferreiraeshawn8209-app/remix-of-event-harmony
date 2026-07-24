@@ -55,12 +55,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!resendApiKey) {
-      return new Response(JSON.stringify({ error: "RESEND_API_KEY is not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Email via Resend is optional — WhatsApp alert must still fire without it.
 
     const payload = await req.json();
     const requestId = String(payload?.requestId || "");
