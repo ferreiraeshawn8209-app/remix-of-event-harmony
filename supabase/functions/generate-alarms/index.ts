@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       title: a.title,
       description: a.description,
       due_at: a.due_at,
-      stage: a.stage ?? 1,
+      stage: Math.max(1, Math.round(Number(a.stage)) || 1),
       quote_id: quote_id ?? null,
       quote_request_id: quote_request_id ?? null,
       client_name,
