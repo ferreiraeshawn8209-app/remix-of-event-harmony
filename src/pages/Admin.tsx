@@ -156,6 +156,7 @@ type AdminTab =
   | "archived"
   | "new-quote"
   | "bookings"
+  | "music-plans"
   | "catalog"
   | "media"
   | "notifications"
@@ -170,6 +171,7 @@ const TAB_SET = new Set<AdminTab>([
   "archived",
   "new-quote",
   "bookings",
+  "music-plans",
   "catalog",
   "media",
   "notifications",
