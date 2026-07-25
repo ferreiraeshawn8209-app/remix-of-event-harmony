@@ -788,6 +788,12 @@ export default function Admin() {
             <EventManager />
           </TabsContent>
 
+          <TabsContent value="music-plans" className="space-y-4">
+            <MusicPlansManager />
+          </TabsContent>
+
+
+
           <TabsContent value="catalog" className="space-y-4">
             <PackageManager />
             <EquipmentManager />
