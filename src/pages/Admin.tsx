@@ -58,6 +58,7 @@ import { RecommendedVenuesManager } from "@/components/admin/RecommendedVenuesMa
 import { WeddingExposManager } from "@/components/admin/WeddingExposManager";
 import { StaffManager } from "@/components/admin/StaffManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
+import { MusicPlansManager } from "@/components/admin/MusicPlansManager";
 import { FinancialsReport } from "@/components/admin/FinancialsReport";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
