@@ -456,6 +456,8 @@ export type Database = {
       event_plans: {
         Row: {
           additional_notes: string | null
+          admin_notes: string | null
+          admin_unlocked: boolean
           artists_to_avoid: string | null
           bouquet_toss_artist: string | null
           bouquet_toss_song: string | null
@@ -489,6 +491,8 @@ export type Database = {
           quote_id: string | null
           schedule_items: Json | null
           special_announcements: string | null
+          status: string
+          submitted_at: string | null
           timeline_notes: string | null
           updated_at: string
           uplighting_color: string | null
@@ -496,6 +500,8 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
+          admin_notes?: string | null
+          admin_unlocked?: boolean
           artists_to_avoid?: string | null
           bouquet_toss_artist?: string | null
           bouquet_toss_song?: string | null
@@ -529,6 +535,8 @@ export type Database = {
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
+          status?: string
+          submitted_at?: string | null
           timeline_notes?: string | null
           updated_at?: string
           uplighting_color?: string | null
@@ -536,6 +544,8 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
+          admin_notes?: string | null
+          admin_unlocked?: boolean
           artists_to_avoid?: string | null
           bouquet_toss_artist?: string | null
           bouquet_toss_song?: string | null
@@ -569,6 +579,8 @@ export type Database = {
           quote_id?: string | null
           schedule_items?: Json | null
           special_announcements?: string | null
+          status?: string
+          submitted_at?: string | null
           timeline_notes?: string | null
           updated_at?: string
           uplighting_color?: string | null
@@ -824,6 +836,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      plan_attachments: {
+        Row: {
+          client_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          plan_id: string | null
+          quote_id: string | null
+          size_bytes: number | null
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          plan_id?: string | null
+          quote_id?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          plan_id?: string | null
+          quote_id?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_attachments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_attachments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "event_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_attachments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
