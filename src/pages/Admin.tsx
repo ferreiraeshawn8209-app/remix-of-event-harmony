@@ -703,6 +703,7 @@ export default function Admin() {
             <TabsTrigger value="archived"><Archive className="w-4 h-4 mr-1" />Archived{archivedQuotes.length > 0 ? ` (${archivedQuotes.length})` : ""}</TabsTrigger>
             <TabsTrigger value="new-quote"><Plus className="w-4 h-4 mr-1" />New Quote</TabsTrigger>
             <TabsTrigger value="bookings"><CalendarRange className="w-4 h-4 mr-1" />Bookings</TabsTrigger>
+            <TabsTrigger value="music-plans"><Music className="w-4 h-4 mr-1" />Music Plans</TabsTrigger>
             <TabsTrigger value="catalog"><Package2 className="w-4 h-4 mr-1" />Catalog</TabsTrigger>
             <TabsTrigger value="media"><Radio className="w-4 h-4 mr-1" />Media</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-1" />Alerts</TabsTrigger>
