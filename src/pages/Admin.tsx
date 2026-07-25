@@ -58,6 +58,7 @@ import { RecommendedVenuesManager } from "@/components/admin/RecommendedVenuesMa
 import { WeddingExposManager } from "@/components/admin/WeddingExposManager";
 import { StaffManager } from "@/components/admin/StaffManager";
 import { BusinessSettingsManager } from "@/components/admin/BusinessSettingsManager";
+import { MusicPlansManager } from "@/components/admin/MusicPlansManager";
 import { FinancialsReport } from "@/components/admin/FinancialsReport";
 import { SupabaseEnvBadge } from "@/components/admin/SupabaseEnvBadge";
 import { PageBackground } from "@/components/PageBackground";
@@ -156,6 +157,7 @@ type AdminTab =
   | "archived"
   | "new-quote"
   | "bookings"
+  | "music-plans"
   | "catalog"
   | "media"
   | "notifications"
@@ -170,6 +172,7 @@ const TAB_SET = new Set<AdminTab>([
   "archived",
   "new-quote",
   "bookings",
+  "music-plans",
   "catalog",
   "media",
   "notifications",
@@ -700,6 +703,7 @@ export default function Admin() {
             <TabsTrigger value="archived"><Archive className="w-4 h-4 mr-1" />Archived{archivedQuotes.length > 0 ? ` (${archivedQuotes.length})` : ""}</TabsTrigger>
             <TabsTrigger value="new-quote"><Plus className="w-4 h-4 mr-1" />New Quote</TabsTrigger>
             <TabsTrigger value="bookings"><CalendarRange className="w-4 h-4 mr-1" />Bookings</TabsTrigger>
+            <TabsTrigger value="music-plans"><Music className="w-4 h-4 mr-1" />Music Plans</TabsTrigger>
             <TabsTrigger value="catalog"><Package2 className="w-4 h-4 mr-1" />Catalog</TabsTrigger>
             <TabsTrigger value="media"><Radio className="w-4 h-4 mr-1" />Media</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-1" />Alerts</TabsTrigger>
@@ -785,6 +789,12 @@ export default function Admin() {
             <CalendarBookings quotes={quotes} />
             <EventManager />
           </TabsContent>
+
+          <TabsContent value="music-plans" className="space-y-4">
+            <MusicPlansManager />
+          </TabsContent>
+
+
 
           <TabsContent value="catalog" className="space-y-4">
             <PackageManager />
