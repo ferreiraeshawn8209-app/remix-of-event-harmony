@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Flower2, Cake, Camera, MapPin, Mail, Car, Mic2, Sparkles,
-  PartyPopper, Gift, Utensils, Palette, ArrowRight, HeartHandshake,
+  PartyPopper, Gift, Utensils, Palette, ArrowRight, HeartHandshake, Shirt,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
