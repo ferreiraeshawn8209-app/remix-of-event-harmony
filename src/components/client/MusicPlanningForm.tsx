@@ -52,6 +52,8 @@ const DEFAULT_PLAN: MusicPlan = {
   mother_son_song: "", mother_son_artist: "", cake_cutting_song: "", cake_cutting_artist: "",
   bouquet_toss_song: "", bouquet_toss_artist: "", last_song: "", last_song_artist: "",
   mc_notes: "", timeline_notes: "", additional_notes: "",
+  color_scheme_primary: "", color_scheme_secondary: "", color_scheme_accent: "",
+  dress_code: "", theme_notes: "", decor_notes: "", uplighting_color: "",
 };
 
 interface Attachment {
