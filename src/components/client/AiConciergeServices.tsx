@@ -5,6 +5,7 @@ import {
   PartyPopper, Gift, Utensils, Palette, ArrowRight, HeartHandshake, Shirt,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface Service {
   key: string;
