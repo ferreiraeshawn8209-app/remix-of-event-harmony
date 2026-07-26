@@ -154,6 +154,68 @@ export default function QuoteDetail() {
             </Badge>
           </div>
 
+          {/* Client Accept Quote CTA */}
+          {!isAdmin && !["accepted", "paid", "declined", "cancelled"].includes(quote.status || "") && (
+            <Card variant="glow" className="mb-6 border-primary/40">
+              <CardContent className="py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="font-display text-lg font-bold gradient-text">Happy with your quote?</p>
+                  <p className="text-sm text-muted-foreground">Accept it to lock your booking. Your DJ will be notified immediately.</p>
+                </div>
+                <Button
+                  variant="hero"
+                  size="lg"
+                  disabled={accepting}
+                  onClick={async () => {
+                    if (!confirm("Accept this quote? Your DJ will be notified and the next step is your deposit.")) return;
+                    setAccepting(true);
+                    try {
+                      await updateQuote({
+                        quoteId: quote.id,
+                        quoteData: { status: "accepted", accepted_at: new Date().toISOString() } as any,
+                      });
+                      // Notify admin
+                      await supabase.from("admin_notifications").insert({
+                        type: "quote_accepted",
+                        title: "Quote Accepted 🎉",
+                        message: `${quote.client_name} (${quote.client_code || quote.email}) accepted their quote.`,
+                        quote_id: quote.id,
+                        client_code: quote.client_code,
+                        email: quote.email,
+                      } as any);
+                      // Fire WhatsApp notification (best-effort)
+                      supabase.functions.invoke("notify-admin-quote-request", {
+                        body: { source: "quote_accepted", quote_id: quote.id },
+                      }).catch(() => {});
+                      toast({ title: "Quote accepted!", description: "Your DJ has been notified. Next: pay your deposit." });
+                    } catch (e: any) {
+                      toast({ title: "Couldn't accept quote", description: e.message, variant: "destructive" });
+                    } finally {
+                      setAccepting(false);
+                    }
+                  }}
+                >
+                  {accepting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
+                  Accept Quote
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {["accepted", "paid"].includes(quote.status || "") && (
+            <Card variant="glass" className="mb-6 border-success/40">
+              <CardContent className="py-4 flex items-center gap-3">
+                <CheckCircle2 className="w-6 h-6 text-success" />
+                <div>
+                  <p className="font-semibold text-success">Quote accepted</p>
+                  <p className="text-xs text-muted-foreground">
+                    {quote.accepted_at ? `Accepted ${new Date(quote.accepted_at).toLocaleDateString()}` : "Booking confirmed"} — proceed to your deposit below.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Event Details */}
             <Card variant="glass">
