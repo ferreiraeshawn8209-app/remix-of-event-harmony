@@ -35,11 +35,12 @@ import { ClientQuoteTrimmer } from "@/components/client/ClientQuoteTrimmer";
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, profile } = useAuth();
+  const { user, isLoading: authLoading, profile, isAdmin } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuote } = useQuotes();
   const { items: catalogItems } = useEquipmentCatalog();
   const [quote, setQuote] = useState<DatabaseQuote | null>(null);
   const [markingPayment, setMarkingPayment] = useState(false);
+  const [accepting, setAccepting] = useState(false);
 
   const catalogForPdf: CatalogItemForPdf[] = catalogItems.map(i => ({
     id: i.item_key, name: i.name, price: i.price,
