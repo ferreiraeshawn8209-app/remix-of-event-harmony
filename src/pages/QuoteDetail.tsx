@@ -31,6 +31,7 @@ import { toast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { ClientQuoteTrimmer } from "@/components/client/ClientQuoteTrimmer";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function QuoteDetail() {
   const { id } = useParams<{ id: string }>();
