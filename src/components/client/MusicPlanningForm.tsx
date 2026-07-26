@@ -135,6 +135,9 @@ export function MusicPlanningForm({ profileId, clientName, email, quoteId }: Mus
           bouquet_toss_song: row.bouquet_toss_song || "", bouquet_toss_artist: row.bouquet_toss_artist || "",
           last_song: row.last_song || "", last_song_artist: row.last_song_artist || "",
           mc_notes: row.mc_notes || "", timeline_notes: row.timeline_notes || "", additional_notes: row.additional_notes || "",
+          color_scheme_primary: row.color_scheme_primary || "", color_scheme_secondary: row.color_scheme_secondary || "",
+          color_scheme_accent: row.color_scheme_accent || "", dress_code: row.dress_code || "",
+          theme_notes: row.theme_notes || "", decor_notes: row.decor_notes || "", uplighting_color: row.uplighting_color || "",
         });
         if (row.must_play_songs) {
           const songs = row.must_play_songs.split("\n").filter(Boolean);
