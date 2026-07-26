@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Flower2, Cake, Camera, MapPin, Mail, Car, Mic2, Sparkles,
-  PartyPopper, Gift, Utensils, Palette, ArrowRight, HeartHandshake,
+  PartyPopper, Gift, Utensils, Palette, ArrowRight, HeartHandshake, Shirt,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface Service {
   key: string;
@@ -158,6 +160,26 @@ export function AiConciergeServices() {
           </p>
         </div>
       </div>
+
+      {/* Featured: Wedding dress fitter — has its own AI studio page */}
+      <Link
+        to="/client/dress-fitter"
+        className="group relative block overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-r from-rose-400 via-fuchsia-500 to-purple-600 shadow-[0_0_28px_hsl(320_95%_60%/0.4)] hover:shadow-[0_0_44px_hsl(320_95%_60%/0.6)] transition-shadow"
+      >
+        <div className="rounded-[14px] bg-background/90 backdrop-blur p-3.5 flex items-center gap-3">
+          <span className="inline-flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-rose-400 to-purple-600 text-white shadow group-hover:scale-110 transition-transform">
+            <Shirt className="w-5 h-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold leading-tight flex items-center gap-1.5">
+              AI Wedding Dress Fitter
+              <Badge className="ml-1 bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-[9px] px-1.5 py-0 h-4">NEW</Badge>
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug">Upload your photo — try on styles or design a bespoke gown.</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+        </div>
+      </Link>
 
       {/* Service tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

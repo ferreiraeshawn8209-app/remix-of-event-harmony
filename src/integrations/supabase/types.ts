@@ -465,10 +465,15 @@ export type Database = {
           cake_cutting_song: string | null
           client_id: string
           client_name: string
+          color_scheme_accent: string | null
+          color_scheme_primary: string | null
+          color_scheme_secondary: string | null
           created_at: string
           created_by: string | null
+          decor_notes: string | null
           dietary_notes: string | null
           do_not_play_songs: string | null
+          dress_code: string | null
           email: string
           entrance_artist: string | null
           entrance_song: string | null
@@ -493,6 +498,7 @@ export type Database = {
           special_announcements: string | null
           status: string
           submitted_at: string | null
+          theme_notes: string | null
           timeline_notes: string | null
           updated_at: string
           uplighting_color: string | null
@@ -509,10 +515,15 @@ export type Database = {
           cake_cutting_song?: string | null
           client_id: string
           client_name: string
+          color_scheme_accent?: string | null
+          color_scheme_primary?: string | null
+          color_scheme_secondary?: string | null
           created_at?: string
           created_by?: string | null
+          decor_notes?: string | null
           dietary_notes?: string | null
           do_not_play_songs?: string | null
+          dress_code?: string | null
           email: string
           entrance_artist?: string | null
           entrance_song?: string | null
@@ -537,6 +548,7 @@ export type Database = {
           special_announcements?: string | null
           status?: string
           submitted_at?: string | null
+          theme_notes?: string | null
           timeline_notes?: string | null
           updated_at?: string
           uplighting_color?: string | null
@@ -553,10 +565,15 @@ export type Database = {
           cake_cutting_song?: string | null
           client_id?: string
           client_name?: string
+          color_scheme_accent?: string | null
+          color_scheme_primary?: string | null
+          color_scheme_secondary?: string | null
           created_at?: string
           created_by?: string | null
+          decor_notes?: string | null
           dietary_notes?: string | null
           do_not_play_songs?: string | null
+          dress_code?: string | null
           email?: string
           entrance_artist?: string | null
           entrance_song?: string | null
@@ -581,6 +598,7 @@ export type Database = {
           special_announcements?: string | null
           status?: string
           submitted_at?: string | null
+          theme_notes?: string | null
           timeline_notes?: string | null
           updated_at?: string
           uplighting_color?: string | null
@@ -1085,6 +1103,7 @@ export type Database = {
       }
       quotes: {
         Row: {
+          accepted_at: string | null
           archived: boolean
           archived_at: string | null
           balance: number | null
@@ -1139,6 +1158,7 @@ export type Database = {
           venue: string | null
         }
         Insert: {
+          accepted_at?: string | null
           archived?: boolean
           archived_at?: string | null
           balance?: number | null
@@ -1193,6 +1213,7 @@ export type Database = {
           venue?: string | null
         }
         Update: {
+          accepted_at?: string | null
           archived?: boolean
           archived_at?: string | null
           balance?: number | null
@@ -1695,6 +1716,7 @@ export type Database = {
       lookup_quote_by_code: {
         Args: { _code: string; _email: string }
         Returns: {
+          accepted_at: string | null
           archived: boolean
           archived_at: string | null
           balance: number | null

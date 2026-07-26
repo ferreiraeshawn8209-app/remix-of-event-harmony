@@ -37,6 +37,13 @@ interface MusicPlan {
   mc_notes: string;
   timeline_notes: string;
   additional_notes: string;
+  color_scheme_primary: string;
+  color_scheme_secondary: string;
+  color_scheme_accent: string;
+  dress_code: string;
+  theme_notes: string;
+  decor_notes: string;
+  uplighting_color: string;
 }
 
 const DEFAULT_PLAN: MusicPlan = {
@@ -45,6 +52,8 @@ const DEFAULT_PLAN: MusicPlan = {
   mother_son_song: "", mother_son_artist: "", cake_cutting_song: "", cake_cutting_artist: "",
   bouquet_toss_song: "", bouquet_toss_artist: "", last_song: "", last_song_artist: "",
   mc_notes: "", timeline_notes: "", additional_notes: "",
+  color_scheme_primary: "", color_scheme_secondary: "", color_scheme_accent: "",
+  dress_code: "", theme_notes: "", decor_notes: "", uplighting_color: "",
 };
 
 interface Attachment {
@@ -126,6 +135,9 @@ export function MusicPlanningForm({ profileId, clientName, email, quoteId }: Mus
           bouquet_toss_song: row.bouquet_toss_song || "", bouquet_toss_artist: row.bouquet_toss_artist || "",
           last_song: row.last_song || "", last_song_artist: row.last_song_artist || "",
           mc_notes: row.mc_notes || "", timeline_notes: row.timeline_notes || "", additional_notes: row.additional_notes || "",
+          color_scheme_primary: row.color_scheme_primary || "", color_scheme_secondary: row.color_scheme_secondary || "",
+          color_scheme_accent: row.color_scheme_accent || "", dress_code: row.dress_code || "",
+          theme_notes: row.theme_notes || "", decor_notes: row.decor_notes || "", uplighting_color: row.uplighting_color || "",
         });
         if (row.must_play_songs) {
           const songs = row.must_play_songs.split("\n").filter(Boolean);
@@ -355,6 +367,51 @@ export function MusicPlanningForm({ profileId, clientName, email, quoteId }: Mus
         <div className="space-y-2">
           <Label>Songs to avoid</Label>
           <Textarea disabled={locked} rows={2} value={plan.do_not_play_songs} onChange={(e) => update("do_not_play_songs", e.target.value)} placeholder="List any songs you do NOT want played..." />
+        </div>
+
+        <Separator />
+
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-foreground">🎨 Colour Scheme, Theme & Décor</p>
+          <p className="text-xs text-muted-foreground">Help us match uplighting and vibe to your event.</p>
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">Primary colour
+                <input disabled={locked} type="color" value={plan.color_scheme_primary || "#8b5cf6"} onChange={(e) => update("color_scheme_primary", e.target.value)} className="h-6 w-8 rounded border cursor-pointer" />
+              </Label>
+              <input disabled={locked} value={plan.color_scheme_primary} onChange={(e) => update("color_scheme_primary", e.target.value)} placeholder="e.g. Blush pink" className="w-full h-9 rounded-md border bg-background px-3 text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">Secondary
+                <input disabled={locked} type="color" value={plan.color_scheme_secondary || "#f59e0b"} onChange={(e) => update("color_scheme_secondary", e.target.value)} className="h-6 w-8 rounded border cursor-pointer" />
+              </Label>
+              <input disabled={locked} value={plan.color_scheme_secondary} onChange={(e) => update("color_scheme_secondary", e.target.value)} placeholder="e.g. Champagne gold" className="w-full h-9 rounded-md border bg-background px-3 text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">Accent
+                <input disabled={locked} type="color" value={plan.color_scheme_accent || "#ec4899"} onChange={(e) => update("color_scheme_accent", e.target.value)} className="h-6 w-8 rounded border cursor-pointer" />
+              </Label>
+              <input disabled={locked} value={plan.color_scheme_accent} onChange={(e) => update("color_scheme_accent", e.target.value)} placeholder="e.g. Emerald green" className="w-full h-9 rounded-md border bg-background px-3 text-sm" />
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Uplighting colour preference</Label>
+              <input disabled={locked} value={plan.uplighting_color} onChange={(e) => update("uplighting_color", e.target.value)} placeholder="e.g. Warm amber + purple wash" className="w-full h-9 rounded-md border bg-background px-3 text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label>Dress code</Label>
+              <input disabled={locked} value={plan.dress_code} onChange={(e) => update("dress_code", e.target.value)} placeholder="e.g. Black tie, semi-formal, all white" className="w-full h-9 rounded-md border bg-background px-3 text-sm" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Theme / vibe</Label>
+            <Textarea disabled={locked} rows={2} value={plan.theme_notes} onChange={(e) => update("theme_notes", e.target.value)} placeholder="e.g. Rustic garden, Great Gatsby, Afro-luxe..." />
+          </div>
+          <div className="space-y-2">
+            <Label>Décor notes</Label>
+            <Textarea disabled={locked} rows={2} value={plan.decor_notes} onChange={(e) => update("decor_notes", e.target.value)} placeholder="Anything special — florals, drapery, signage, props..." />
+          </div>
         </div>
 
         <Separator />
