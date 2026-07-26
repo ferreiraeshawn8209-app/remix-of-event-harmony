@@ -37,6 +37,13 @@ interface MusicPlan {
   mc_notes: string;
   timeline_notes: string;
   additional_notes: string;
+  color_scheme_primary: string;
+  color_scheme_secondary: string;
+  color_scheme_accent: string;
+  dress_code: string;
+  theme_notes: string;
+  decor_notes: string;
+  uplighting_color: string;
 }
 
 const DEFAULT_PLAN: MusicPlan = {
