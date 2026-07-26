@@ -210,7 +210,7 @@ export default function QuoteDetail() {
                 <div>
                   <p className="font-semibold text-success">Quote accepted</p>
                   <p className="text-xs text-muted-foreground">
-                    {quote.accepted_at ? `Accepted ${new Date(quote.accepted_at).toLocaleDateString()}` : "Booking confirmed"} — proceed to your deposit below.
+                    {(quote as any).accepted_at ? `Accepted ${new Date((quote as any).accepted_at).toLocaleDateString()}` : "Booking confirmed"} — proceed to your deposit below.
                   </p>
                 </div>
               </CardContent>
