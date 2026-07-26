@@ -18,6 +18,7 @@ import ClientPortal from "./pages/ClientPortal";
 import EventHub from "./pages/EventHub";
 import EventDayPage from "./pages/EventDayPage";
 import MeetTheTeam from "./pages/MeetTheTeam";
+import WeddingDressFitter from "./pages/WeddingDressFitter";
 import BackgroundAudio from "./components/BackgroundAudio";
 import WhatsAppFloatingChat from "./components/WhatsAppFloatingChat";
 import WeddingExpoTicker from "./components/WeddingExpoTicker";
