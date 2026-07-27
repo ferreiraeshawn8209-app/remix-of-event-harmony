@@ -309,20 +309,16 @@ export function MusicPlanningForm({ profileId, clientName, email, quoteId }: Mus
 
         {/* Uploads */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <Label className="flex items-center gap-1"><FileAudio className="w-4 h-4" />My uploads ({attachments.length})</Label>
-            <div>
-              <input id="plan-upload" type="file" multiple className="hidden"
-                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,application/pdf,image/*"
-                onChange={(e) => { onUpload(e.target.files); e.currentTarget.value = ""; }}
-                disabled={locked || uploading} />
-              <Button size="sm" variant="outline" asChild disabled={locked || uploading}>
-                <label htmlFor="plan-upload" className="cursor-pointer">
-                  {uploading ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Upload className="w-3.5 h-3.5 mr-1" />}
-                  Upload files
-                </label>
-              </Button>
-            </div>
+            <label htmlFor="plan-upload" className={`inline-flex items-center justify-center gap-1 h-9 px-3 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition ${locked || uploading ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}>
+              {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {uploading ? "Uploading…" : "Upload files"}
+            </label>
+            <input id="plan-upload" type="file" multiple className="hidden"
+              accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,application/pdf,image/*"
+              onChange={(e) => { onUpload(e.target.files); e.currentTarget.value = ""; }}
+              disabled={locked || uploading} />
           </div>
           <p className="text-xs text-muted-foreground">
             Attach music files (MP3/WAV), reference tracks, PDFs, or images. Files are stored on your profile and shared with your DJ.
