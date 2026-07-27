@@ -288,6 +288,56 @@ export type Database = {
           },
         ]
       }
+      competition_winners: {
+        Row: {
+          competition_id: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          message: string | null
+          month_label: string
+          photo_url: string | null
+          prize: string | null
+          sort_order: number
+          updated_at: string
+          winner_name: string
+        }
+        Insert: {
+          competition_id?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          message?: string | null
+          month_label: string
+          photo_url?: string | null
+          prize?: string | null
+          sort_order?: number
+          updated_at?: string
+          winner_name: string
+        }
+        Update: {
+          competition_id?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          message?: string | null
+          month_label?: string
+          photo_url?: string | null
+          prize?: string | null
+          sort_order?: number
+          updated_at?: string
+          winner_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_winners_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitions: {
         Row: {
           created_at: string
@@ -1633,6 +1683,48 @@ export type Database = {
           updated_at?: string
           venue?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      wedding_ideas: {
+        Row: {
+          author_name: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean
+          likes: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          likes?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          likes?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
