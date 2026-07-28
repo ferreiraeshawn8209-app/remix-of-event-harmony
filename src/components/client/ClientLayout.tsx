@@ -110,7 +110,7 @@ export default function ClientLayout({ title, subtitle, children, showBack }: Pr
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full relative">
-        <PageBackground page="client_portal" />
+        <PageBackground pageKey="bg_client_portal" />
         <ClientSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center gap-3 border-b border-primary/20 bg-background/70 backdrop-blur px-3 sticky top-0 z-30">
