@@ -175,15 +175,16 @@ export default function QuoteDetail() {
                         quoteId: quote.id,
                         quoteData: { status: "accepted", accepted_at: new Date().toISOString() } as any,
                       });
-                      // Notify admin
-                      await supabase.from("admin_notifications").insert({
+                      // Notify admin (best-effort — RLS may block direct insert for non-admins;
+                      // a DB trigger handles the in-app notification server-side)
+                      supabase.from("admin_notifications").insert({
                         type: "quote_accepted",
                         title: "Quote Accepted 🎉",
                         message: `${quote.client_name} (${quote.client_code || quote.email}) accepted their quote.`,
                         quote_id: quote.id,
                         client_code: quote.client_code,
                         email: quote.email,
-                      } as any);
+                      } as any).then(() => {}, () => {});
                       // Fire WhatsApp notification (best-effort)
                       supabase.functions.invoke("notify-admin-quote-request", {
                         body: { source: "quote_accepted", quote_id: quote.id },
