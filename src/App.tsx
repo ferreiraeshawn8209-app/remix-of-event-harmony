@@ -20,6 +20,14 @@ import EventDayPage from "./pages/EventDayPage";
 import MeetTheTeam from "./pages/MeetTheTeam";
 import WeddingDressFitter from "./pages/WeddingDressFitter";
 import WeddingIdeasPage from "./pages/WeddingIdeas";
+import ClientDashboard from "./pages/client/ClientDashboard";
+import ClientPayments from "./pages/client/ClientPayments";
+import ClientDocuments from "./pages/client/ClientDocuments";
+import ClientAiCompanion from "./pages/client/ClientAiCompanion";
+import ClientTools from "./pages/client/ClientTools";
+import ClientDownloads from "./pages/client/ClientDownloads";
+import ClientPlanner from "./pages/client/ClientPlanner";
+import ClientEventDetails from "./pages/client/ClientEventDetails";
 import BackgroundAudio from "./components/BackgroundAudio";
 import WhatsAppFloatingChat from "./components/WhatsAppFloatingChat";
 import WeddingExpoTicker from "./components/WeddingExpoTicker";
@@ -79,6 +87,14 @@ const App = () => (
             <Route path="/djs" element={<MeetTheTeam />} />
             <Route path="/client/dress-fitter" element={<WeddingDressFitter />} />
             <Route path="/client/ideas" element={<WeddingIdeasPage />} />
+            <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/client/payments" element={<ClientPayments />} />
+            <Route path="/client/documents" element={<ClientDocuments />} />
+            <Route path="/client/ai" element={<ClientAiCompanion />} />
+            <Route path="/client/tools" element={<ClientTools />} />
+            <Route path="/client/downloads" element={<ClientDownloads />} />
+            <Route path="/client/planner" element={<ClientPlanner />} />
+            <Route path="/client/event" element={<ClientEventDetails />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
