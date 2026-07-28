@@ -31,6 +31,7 @@ import { toast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { QuoteMessageThread } from "@/components/QuoteMessageThread";
 import { ClientQuoteTrimmer } from "@/components/client/ClientQuoteTrimmer";
+import { EarlySettlementDiscount } from "@/components/EarlySettlementDiscount";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function QuoteDetail() {
@@ -299,6 +300,9 @@ export default function QuoteDetail() {
             <ClientQuoteTrimmer quote={quote} />
           </div>
 
+          {/* Early Settlement Discount — 5% off if paid 30+ days before event */}
+          <EarlySettlementDiscount quote={quote as any} isAdmin={isAdmin} />
+
 
 
           {/* Pricing */}
@@ -352,6 +356,12 @@ export default function QuoteDetail() {
                 <div className="flex justify-between text-sm text-success">
                   <span>Discount ({quote.discount_percent}%)</span>
                   <span>-{formatCurrency(Number(quote.discount_amount))}</span>
+                </div>
+              )}
+              {Number((quote as any).early_settlement_amount || 0) > 0 && (
+                <div className="flex justify-between text-sm text-success">
+                  <span>Early Settlement Discount ({(quote as any).early_settlement_percent ?? 5}%)</span>
+                  <span>-{formatCurrency(Number((quote as any).early_settlement_amount))}</span>
                 </div>
               )}
 

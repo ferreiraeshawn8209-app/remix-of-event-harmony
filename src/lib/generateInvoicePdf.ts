@@ -298,6 +298,7 @@ function addTotals(doc: jsPDF, quote: DatabaseQuote, y: number) {
   addTotal("Subtotal", formatCurrency(Number(quote.subtotal)));
   if (Number(quote.travel_cost) > 0) addTotal(`Travel (${quote.travel_distance}km)`, formatCurrency(Number(quote.travel_cost)));
   if (Number(quote.discount_amount) > 0) addTotal(`Discount (${quote.discount_percent}%)`, `-${formatCurrency(Number(quote.discount_amount))}`, false, [34, 139, 34]);
+  if (Number((quote as any).early_settlement_amount || 0) > 0) addTotal(`Early Settlement Discount (${(quote as any).early_settlement_percent ?? 5}%)`, `-${formatCurrency(Number((quote as any).early_settlement_amount))}`, false, [34, 139, 34]);
 
   y += 2;
   doc.setDrawColor(40);

@@ -1177,6 +1177,10 @@ export type Database = {
           discount_percent: number | null
           dj_cost: number | null
           dj_name: string | null
+          early_settlement_amount: number
+          early_settlement_applied: boolean
+          early_settlement_applied_at: string | null
+          early_settlement_percent: number
           email: string
           end_time: string | null
           equipment: Json | null
@@ -1232,6 +1236,10 @@ export type Database = {
           discount_percent?: number | null
           dj_cost?: number | null
           dj_name?: string | null
+          early_settlement_amount?: number
+          early_settlement_applied?: boolean
+          early_settlement_applied_at?: string | null
+          early_settlement_percent?: number
           email: string
           end_time?: string | null
           equipment?: Json | null
@@ -1287,6 +1295,10 @@ export type Database = {
           discount_percent?: number | null
           dj_cost?: number | null
           dj_name?: string | null
+          early_settlement_amount?: number
+          early_settlement_applied?: boolean
+          early_settlement_applied_at?: string | null
+          early_settlement_percent?: number
           email?: string
           end_time?: string | null
           equipment?: Json | null
@@ -1832,6 +1844,10 @@ export type Database = {
           discount_percent: number | null
           dj_cost: number | null
           dj_name: string | null
+          early_settlement_amount: number
+          early_settlement_applied: boolean
+          early_settlement_applied_at: string | null
+          early_settlement_percent: number
           email: string
           end_time: string | null
           equipment: Json | null
