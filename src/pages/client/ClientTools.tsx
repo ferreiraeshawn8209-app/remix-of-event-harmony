@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import ClientLayout from "@/components/client/ClientLayout";
 import { RecommendedVenues } from "@/components/client/RecommendedVenues";
-import WeddingIdeasBoard from "@/components/WeddingIdeasBoard";
+import { WeddingIdeasBoard } from "@/components/WeddingIdeasBoard";
 import { ClientPhotoGallery } from "@/components/ClientPhotoGallery";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
