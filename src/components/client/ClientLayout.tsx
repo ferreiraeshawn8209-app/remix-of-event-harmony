@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import PageBackground from "@/components/PageBackground";
+import { PageBackground } from "@/components/PageBackground";
 
 const NAV = [
   { title: "Dashboard", url: "/client", icon: LayoutDashboard },
