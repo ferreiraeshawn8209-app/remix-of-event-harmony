@@ -2,7 +2,6 @@ import jsPDF from "jspdf";
 
 import { DatabaseQuote } from "@/hooks/useQuotes";
 import { EQUIPMENT_CATALOG, formatCurrency } from "@/lib/pricing";
-import { supabase } from "@/integrations/supabase/client";
 import { addTermsAndConditionsPages } from "@/lib/termsAndConditions";
 import { fetchBankingDetails } from "@/hooks/useBusinessSettings";
 import { fetchBrandingLogoUrl } from "@/hooks/useBranding";
