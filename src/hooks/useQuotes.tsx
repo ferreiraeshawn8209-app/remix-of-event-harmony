@@ -25,6 +25,9 @@ export interface DatabaseQuote {
   kids_hours: number;
   travel_distance: number;
   discount_percent: number;
+  event_days?: number;
+  multi_day_discount_percent?: number;
+  multi_day_discount_amount?: number;
   dj_cost: number;
   equipment_cost: number;
   kids_cost: number;
