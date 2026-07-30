@@ -40,6 +40,10 @@ export interface QuoteData {
   humanJukeboxHours: number;
   travelDistance: number;
   discountPercent: number;
+  /** Number of days the event runs (1 = single day). */
+  eventDays?: number;
+  /** Multi-day discount %, auto-suggested from eventDays but overridable. */
+  multiDayDiscountPercent?: number;
 }
 
 export interface Package {
@@ -58,6 +62,26 @@ export const TRAVEL_RATE_PER_KM = 7.5;
 export const FREE_TRAVEL_KM = 30;
 export const OVERTIME_MULTIPLIER = 1.5;
 export const DEPOSIT_PERCENT = 30;
+
+/** Suggested multi-day (lengthy booking) discount tiers. */
+export const MULTI_DAY_DISCOUNT_TIERS: { days: number; percent: number }[] = [
+  { days: 2, percent: 5 },
+  { days: 3, percent: 10 },
+  { days: 4, percent: 12.5 },
+  { days: 5, percent: 15 },
+  { days: 7, percent: 20 },
+];
+
+/** Returns the suggested multi-day discount % for a given number of days. */
+export function getSuggestedMultiDayDiscount(days: number): number {
+  let percent = 0;
+  for (const tier of MULTI_DAY_DISCOUNT_TIERS) {
+    if (days >= tier.days) percent = tier.percent;
+  }
+  return percent;
+}
+
+
 
 export const EQUIPMENT_CATALOG: EquipmentItem[] = [
   // Speakers
@@ -449,6 +473,10 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   subtotal: number;
   travelCost: number;
   discount: number;
+  multiDayDiscount: number;
+  multiDayDiscountPercent: number;
+  days: number;
+  hoursPerDay: number;
   total: number;
   deposit: number;
   balance: number;
@@ -461,16 +489,19 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   const depositPct = rates?.deposit_percent ?? DEPOSIT_PERCENT;
   const hjRate = rates?.human_jukebox_rate ?? 250;
 
-  const hours = calculateHours(data.startTime, data.endTime);
+  const days = Math.max(1, Math.round(Number(data.eventDays) || 1));
+  const hoursPerDay = calculateHours(data.startTime, data.endTime);
+  const hours = hoursPerDay * days;
 
   const djCost = hours * djRate;
 
   const equipmentList = catalog || EQUIPMENT_CATALOG;
-  let equipmentCost = 0;
+  let equipmentPerDay = 0;
   equipmentList.forEach(item => {
     const qty = data.equipment[item.id] || 0;
-    equipmentCost += qty * item.price;
+    equipmentPerDay += qty * item.price;
   });
+  const equipmentCost = equipmentPerDay * days;
 
   const customItemsCost = (data.customItems || []).reduce(
     (sum, item) => sum + item.price * item.qty, 0
@@ -480,8 +511,8 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
     (sum, item) => sum + item.price * item.qty, 0
   );
 
-  const kidsCost = data.kidsCorner ? data.kidsHours * kidsRate : 0;
-  const humanJukeboxCost = data.humanJukebox ? data.humanJukeboxHours * hjRate : 0;
+  const kidsCost = data.kidsCorner ? data.kidsHours * kidsRate * days : 0;
+  const humanJukeboxCost = data.humanJukebox ? data.humanJukeboxHours * hjRate * days : 0;
 
   // Subtotal of DISCOUNTABLE items (DJ + equipment + custom + kids + human jukebox)
   const subtotal = djCost + equipmentCost + customItemsCost + kidsCost + humanJukeboxCost;
@@ -489,8 +520,14 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   const extraKm = Math.max(0, data.travelDistance - freeKm);
   const travelCost = extraKm * travelRate;
 
+  const multiDayDiscountPercent =
+    days > 1
+      ? (data.multiDayDiscountPercent ?? getSuggestedMultiDayDiscount(days))
+      : 0;
+  const multiDayDiscount = subtotal * (multiDayDiscountPercent / 100);
+
   const discount = subtotal * (data.discountPercent / 100);
-  const total = subtotal + travelCost + extrasCost - discount;
+  const total = subtotal + travelCost + extrasCost - discount - multiDayDiscount;
   const deposit = total * (depositPct / 100);
 
   return {
@@ -503,6 +540,10 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
     subtotal,
     travelCost,
     discount,
+    multiDayDiscount,
+    multiDayDiscountPercent,
+    days,
+    hoursPerDay,
     total,
     deposit,
     balance: total - deposit,

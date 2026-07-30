@@ -358,6 +358,12 @@ export default function QuoteDetail() {
                   <span>-{formatCurrency(Number(quote.discount_amount))}</span>
                 </div>
               )}
+              {Number((quote as any).multi_day_discount_amount || 0) > 0 && (
+                <div className="flex justify-between text-sm text-success">
+                  <span>Multi-Day Discount ({(quote as any).multi_day_discount_percent}% · {(quote as any).event_days} days)</span>
+                  <span>-{formatCurrency(Number((quote as any).multi_day_discount_amount))}</span>
+                </div>
+              )}
               {Number((quote as any).early_settlement_amount || 0) > 0 && (
                 <div className="flex justify-between text-sm text-success">
                   <span>Early Settlement Discount ({(quote as any).early_settlement_percent ?? 5}%)</span>

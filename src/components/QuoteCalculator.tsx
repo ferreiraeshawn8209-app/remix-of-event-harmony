@@ -15,6 +15,7 @@ import {
   QuoteData, 
   calculateQuote, 
   formatCurrency,
+  getSuggestedMultiDayDiscount,
 } from "@/lib/pricing";
 import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2, X, Package, MapPin } from "lucide-react";
 import { calculateDistanceFromBase } from "@/lib/distanceCalculator";
@@ -207,6 +208,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       humanJukeboxHours: 0,
       travelDistance: 0,
       discountPercent: 0,
+      eventDays: 1,
     }
   );
 
@@ -323,6 +325,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         humanJukeboxHours: 0,
         travelDistance: 0,
         discountPercent: 0,
+        eventDays: 1,
       });
 
       navigate("/dashboard");
@@ -463,6 +466,46 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                     onChange={(e) => setQuoteData({ ...quoteData, endTime: e.target.value })}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="eventDays">Number of Days</Label>
+                  <Input
+                    id="eventDays"
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={quoteData.eventDays ?? 1}
+                    onChange={(e) => {
+                      const days = Math.max(1, Math.round(Number(e.target.value) || 1));
+                      setQuoteData({
+                        ...quoteData,
+                        eventDays: days,
+                        multiDayDiscountPercent: days > 1 ? getSuggestedMultiDayDiscount(days) : 0,
+                      });
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Multi-day bookings get an automatic discount (2 days 5%, 3 days 10%, 4 days 12.5%, 5+ days 15%, 7+ days 20%).
+                  </p>
+                </div>
+                {(quoteData.eventDays ?? 1) > 1 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="multiDayDiscount">Multi-Day Discount %</Label>
+                    <Input
+                      id="multiDayDiscount"
+                      type="number"
+                      min={0}
+                      max={50}
+                      step={0.5}
+                      value={quoteData.multiDayDiscountPercent ?? getSuggestedMultiDayDiscount(quoteData.eventDays ?? 1)}
+                      onChange={(e) =>
+                        setQuoteData({
+                          ...quoteData,
+                          multiDayDiscountPercent: Math.min(50, Math.max(0, Number(e.target.value) || 0)),
+                        })
+                      }
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Your DJ</Label>
                   <Select value={quoteData.djName} onValueChange={(v) => setQuoteData({ ...quoteData, djName: v })}>
@@ -876,6 +919,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
+                    {calculations.days > 1 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Booking Length</span>
+                        <span>{calculations.days} days × {calculations.hoursPerDay.toFixed(1)} hrs/day</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">DJ Service ({calculations.hours.toFixed(1)} hrs × {formatCurrency(serviceSettings.dj_hourly_rate)})</span>
                       <span>{formatCurrency(calculations.djCost)}</span>
@@ -926,6 +975,14 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                       <span>-{formatCurrency(calculations.discount)}</span>
                     </div>
                   )}
+
+                  {calculations.multiDayDiscount > 0 && (
+                    <div className="flex justify-between text-sm text-success">
+                      <span>Multi-Day Discount ({calculations.multiDayDiscountPercent}% · {calculations.days} days)</span>
+                      <span>-{formatCurrency(calculations.multiDayDiscount)}</span>
+                    </div>
+                  )}
+
 
                   {calculations.extrasCost > 0 && (
                     <div className="flex justify-between text-sm">

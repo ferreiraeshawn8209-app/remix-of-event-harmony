@@ -25,6 +25,9 @@ export interface DatabaseQuote {
   kids_hours: number;
   travel_distance: number;
   discount_percent: number;
+  event_days?: number;
+  multi_day_discount_percent?: number;
+  multi_day_discount_amount?: number;
   dj_cost: number;
   equipment_cost: number;
   kids_cost: number;
@@ -140,6 +143,9 @@ export function useQuotes() {
         human_jukebox_hours: (quoteData as any).humanJukeboxHours || 0,
         travel_distance: quoteData.travelDistance,
         discount_percent: quoteData.discountPercent,
+        event_days: calculations.days,
+        multi_day_discount_percent: calculations.multiDayDiscountPercent,
+        multi_day_discount_amount: calculations.multiDayDiscount,
         dj_cost: calculations.djCost,
         equipment_cost: calculations.equipmentCost,
         custom_items_cost: calculations.customItemsCost,
@@ -213,6 +219,9 @@ export function useQuotes() {
         updateData.deposit = calculations.deposit;
         updateData.balance = calculations.balance;
         updateData.hours = calculations.hours;
+        updateData.event_days = calculations.days;
+        updateData.multi_day_discount_percent = calculations.multiDayDiscountPercent;
+        updateData.multi_day_discount_amount = calculations.multiDayDiscount;
       }
 
       const { data, error } = await supabase

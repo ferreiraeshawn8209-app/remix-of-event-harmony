@@ -243,7 +243,15 @@ function addLineItems(
   };
 
   // DJ Service
-  addSimpleRow(`DJ Service (${quote.hours} hours)`, "1", formatCurrency(Number(quote.dj_cost)), true);
+  const evDays = Number((quote as any).event_days || 1);
+  addSimpleRow(
+    evDays > 1
+      ? `DJ Service (${quote.hours} hours over ${evDays} days)`
+      : `DJ Service (${quote.hours} hours)`,
+    "1",
+    formatCurrency(Number(quote.dj_cost)),
+    true,
+  );
 
   // Equipment
   const equipment = quote.equipment || {};
@@ -297,6 +305,7 @@ function addTotals(doc: jsPDF, quote: DatabaseQuote, y: number) {
   addTotal("Subtotal", formatCurrency(Number(quote.subtotal)));
   if (Number(quote.travel_cost) > 0) addTotal(`Travel (${quote.travel_distance}km)`, formatCurrency(Number(quote.travel_cost)));
   if (Number(quote.discount_amount) > 0) addTotal(`Discount (${quote.discount_percent}%)`, `-${formatCurrency(Number(quote.discount_amount))}`, false, [34, 139, 34]);
+  if (Number((quote as any).multi_day_discount_amount || 0) > 0) addTotal(`Multi-Day Discount (${(quote as any).multi_day_discount_percent}% - ${(quote as any).event_days} days)`, `-${formatCurrency(Number((quote as any).multi_day_discount_amount))}`, false, [34, 139, 34]);
   if (Number((quote as any).early_settlement_amount || 0) > 0) addTotal(`Early Settlement Discount (${(quote as any).early_settlement_percent ?? 5}%)`, `-${formatCurrency(Number((quote as any).early_settlement_amount))}`, false, [34, 139, 34]);
 
   y += 2;
