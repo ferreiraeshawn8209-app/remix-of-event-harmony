@@ -1186,6 +1186,7 @@ export type Database = {
           equipment: Json | null
           equipment_cost: number | null
           event_date: string | null
+          event_days: number
           event_type: string | null
           extras: Json
           extras_cost: number
@@ -1196,6 +1197,8 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          multi_day_discount_amount: number
+          multi_day_discount_percent: number
           package_id: string | null
           package_name: string | null
           payment_plan_installments: Json
@@ -1245,6 +1248,7 @@ export type Database = {
           equipment?: Json | null
           equipment_cost?: number | null
           event_date?: string | null
+          event_days?: number
           event_type?: string | null
           extras?: Json
           extras_cost?: number
@@ -1255,6 +1259,8 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          multi_day_discount_amount?: number
+          multi_day_discount_percent?: number
           package_id?: string | null
           package_name?: string | null
           payment_plan_installments?: Json
@@ -1304,6 +1310,7 @@ export type Database = {
           equipment?: Json | null
           equipment_cost?: number | null
           event_date?: string | null
+          event_days?: number
           event_type?: string | null
           extras?: Json
           extras_cost?: number
@@ -1314,6 +1321,8 @@ export type Database = {
           kids_corner?: boolean | null
           kids_cost?: number | null
           kids_hours?: number | null
+          multi_day_discount_amount?: number
+          multi_day_discount_percent?: number
           package_id?: string | null
           package_name?: string | null
           payment_plan_installments?: Json
@@ -1853,6 +1862,7 @@ export type Database = {
           equipment: Json | null
           equipment_cost: number | null
           event_date: string | null
+          event_days: number
           event_type: string | null
           extras: Json
           extras_cost: number
@@ -1863,6 +1873,8 @@ export type Database = {
           kids_corner: boolean | null
           kids_cost: number | null
           kids_hours: number | null
+          multi_day_discount_amount: number
+          multi_day_discount_percent: number
           package_id: string | null
           package_name: string | null
           payment_plan_installments: Json
