@@ -216,6 +216,9 @@ export function useQuotes() {
         updateData.deposit = calculations.deposit;
         updateData.balance = calculations.balance;
         updateData.hours = calculations.hours;
+        updateData.event_days = calculations.days;
+        updateData.multi_day_discount_percent = calculations.multiDayDiscountPercent;
+        updateData.multi_day_discount_amount = calculations.multiDayDiscount;
       }
 
       const { data, error } = await supabase
