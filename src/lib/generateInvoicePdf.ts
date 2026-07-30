@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { PDFDocument } from "pdf-lib";
+
 import { DatabaseQuote } from "@/hooks/useQuotes";
 import { EQUIPMENT_CATALOG, formatCurrency } from "@/lib/pricing";
 import { supabase } from "@/integrations/supabase/client";
