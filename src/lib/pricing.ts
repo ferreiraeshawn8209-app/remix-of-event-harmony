@@ -63,6 +63,26 @@ export const FREE_TRAVEL_KM = 30;
 export const OVERTIME_MULTIPLIER = 1.5;
 export const DEPOSIT_PERCENT = 30;
 
+/** Suggested multi-day (lengthy booking) discount tiers. */
+export const MULTI_DAY_DISCOUNT_TIERS: { days: number; percent: number }[] = [
+  { days: 2, percent: 5 },
+  { days: 3, percent: 10 },
+  { days: 4, percent: 12.5 },
+  { days: 5, percent: 15 },
+  { days: 7, percent: 20 },
+];
+
+/** Returns the suggested multi-day discount % for a given number of days. */
+export function getSuggestedMultiDayDiscount(days: number): number {
+  let percent = 0;
+  for (const tier of MULTI_DAY_DISCOUNT_TIERS) {
+    if (days >= tier.days) percent = tier.percent;
+  }
+  return percent;
+}
+
+
+
 export const EQUIPMENT_CATALOG: EquipmentItem[] = [
   // Speakers
   { 
