@@ -207,6 +207,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
       humanJukeboxHours: 0,
       travelDistance: 0,
       discountPercent: 0,
+      eventDays: 1,
     }
   );
 
@@ -323,6 +324,7 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
         humanJukeboxHours: 0,
         travelDistance: 0,
         discountPercent: 0,
+        eventDays: 1,
       });
 
       navigate("/dashboard");
