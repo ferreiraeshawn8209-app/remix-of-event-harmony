@@ -15,6 +15,7 @@ import {
   QuoteData, 
   calculateQuote, 
   formatCurrency,
+  getSuggestedMultiDayDiscount,
 } from "@/lib/pricing";
 import { Plus, Minus, FileText, Send, Lightbulb, Loader2, LogIn, Trash2, X, Package, MapPin } from "lucide-react";
 import { calculateDistanceFromBase } from "@/lib/distanceCalculator";
