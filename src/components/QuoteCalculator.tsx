@@ -919,6 +919,12 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
+                    {calculations.days > 1 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Booking Length</span>
+                        <span>{calculations.days} days × {calculations.hoursPerDay.toFixed(1)} hrs/day</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">DJ Service ({calculations.hours.toFixed(1)} hrs × {formatCurrency(serviceSettings.dj_hourly_rate)})</span>
                       <span>{formatCurrency(calculations.djCost)}</span>
