@@ -243,7 +243,15 @@ function addLineItems(
   };
 
   // DJ Service
-  addSimpleRow(`DJ Service (${quote.hours} hours)`, "1", formatCurrency(Number(quote.dj_cost)), true);
+  const evDays = Number((quote as any).event_days || 1);
+  addSimpleRow(
+    evDays > 1
+      ? `DJ Service (${quote.hours} hours over ${evDays} days)`
+      : `DJ Service (${quote.hours} hours)`,
+    "1",
+    formatCurrency(Number(quote.dj_cost)),
+    true,
+  );
 
   // Equipment
   const equipment = quote.equipment || {};
