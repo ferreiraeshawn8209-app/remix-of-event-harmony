@@ -976,6 +976,14 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                     </div>
                   )}
 
+                  {calculations.multiDayDiscount > 0 && (
+                    <div className="flex justify-between text-sm text-success">
+                      <span>Multi-Day Discount ({calculations.multiDayDiscountPercent}% · {calculations.days} days)</span>
+                      <span>-{formatCurrency(calculations.multiDayDiscount)}</span>
+                    </div>
+                  )}
+
+
                   {calculations.extrasCost > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Outsourced Extras <span className="text-[10px] text-amber-400">(no discount)</span></span>
