@@ -40,6 +40,10 @@ export interface QuoteData {
   humanJukeboxHours: number;
   travelDistance: number;
   discountPercent: number;
+  /** Number of days the event runs (1 = single day). */
+  eventDays?: number;
+  /** Multi-day discount %, auto-suggested from eventDays but overridable. */
+  multiDayDiscountPercent?: number;
 }
 
 export interface Package {
