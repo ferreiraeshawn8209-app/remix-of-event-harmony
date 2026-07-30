@@ -413,34 +413,11 @@ function addFooter(doc: jsPDF, extraLine?: string) {
   }
 }
 
-/** Try to load T&Cs PDF from storage and merge with main PDF */
+/** Deprecated: legacy uploaded T&Cs PDF is no longer appended to quotes/invoices. */
 async function mergeWithTermsPdf(mainPdfBytes: ArrayBuffer): Promise<Uint8Array> {
-  try {
-    // Try to download T&Cs PDF from storage
-    const { data, error } = await supabase.storage
-      .from("documents")
-      .download("terms-and-conditions.pdf");
-
-    if (error || !data) {
-      // No T&Cs uploaded — return main PDF as-is
-      return new Uint8Array(mainPdfBytes);
-    }
-
-    const tcBytes = await data.arrayBuffer();
-
-    // Merge using pdf-lib
-    const mainDoc = await PDFDocument.load(mainPdfBytes);
-    const tcDoc = await PDFDocument.load(tcBytes);
-    const copiedPages = await mainDoc.copyPages(tcDoc, tcDoc.getPageIndices());
-
-    copiedPages.forEach((page) => mainDoc.addPage(page));
-
-    return await mainDoc.save();
-  } catch {
-    // If merge fails, return original
-    return new Uint8Array(mainPdfBytes);
-  }
+  return new Uint8Array(mainPdfBytes);
 }
+
 
 function getClientFileName(quote: DatabaseQuote, type: "Quote" | "Invoice"): string {
   const safeName = quote.client_name.replace(/[^a-zA-Z0-9\s-]/g, "").replace(/\s+/g, "-");
