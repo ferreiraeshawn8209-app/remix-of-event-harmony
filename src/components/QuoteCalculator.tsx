@@ -466,6 +466,46 @@ export function QuoteCalculator({ isAdmin = false, initialData, editQuoteId, onS
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="eventDays">Number of Days</Label>
+                  <Input
+                    id="eventDays"
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={quoteData.eventDays ?? 1}
+                    onChange={(e) => {
+                      const days = Math.max(1, Math.round(Number(e.target.value) || 1));
+                      setQuoteData({
+                        ...quoteData,
+                        eventDays: days,
+                        multiDayDiscountPercent: days > 1 ? getSuggestedMultiDayDiscount(days) : 0,
+                      });
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Multi-day bookings get an automatic discount (2 days 5%, 3 days 10%, 4 days 12.5%, 5+ days 15%, 7+ days 20%).
+                  </p>
+                </div>
+                {(quoteData.eventDays ?? 1) > 1 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="multiDayDiscount">Multi-Day Discount %</Label>
+                    <Input
+                      id="multiDayDiscount"
+                      type="number"
+                      min={0}
+                      max={50}
+                      step={0.5}
+                      value={quoteData.multiDayDiscountPercent ?? getSuggestedMultiDayDiscount(quoteData.eventDays ?? 1)}
+                      onChange={(e) =>
+                        setQuoteData({
+                          ...quoteData,
+                          multiDayDiscountPercent: Math.min(50, Math.max(0, Number(e.target.value) || 0)),
+                        })
+                      }
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
                   <Label>Your DJ</Label>
                   <Select value={quoteData.djName} onValueChange={(v) => setQuoteData({ ...quoteData, djName: v })}>
                     <SelectTrigger>
