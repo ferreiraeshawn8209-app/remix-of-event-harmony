@@ -17,7 +17,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              Premium DJ services for all occasions. 26+ years of experience bringing 
+              Premium DJ services for all occasions. 27 years of experience bringing 
               unforgettable moments to weddings, corporate events, and celebrations across South Africa.
             </p>
             <div className="flex gap-3">
@@ -65,8 +65,8 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© 2025 BeatKulture (PTY) LTD. All rights reserved.</p>
-          <p>www.beatkulture.co.za</p>
+          <p>© {new Date().getFullYear()} BeatKulture Pty Limited. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-4"><a href="/refund-policy" className="hover:text-primary hover:underline">Refund &amp; Cancellation Policy</a><span>www.beatkulture.co.za</span></div>
         </div>
       </div>
     </footer>

@@ -34,6 +34,7 @@ import WeddingExpoTicker from "./components/WeddingExpoTicker";
 import JokePopup from "./components/JokePopup";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import RefundPolicy from "./pages/RefundPolicy";
 import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient({
@@ -71,6 +72,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/quote/:id" element={<QuoteDetail />} />
