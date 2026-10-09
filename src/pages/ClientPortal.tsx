@@ -896,7 +896,7 @@ export default function ClientPortal() {
           {isPaid && (
             <div className="grid sm:grid-cols-3 gap-3">
               <Button variant="outline" asChild>
-                <Link to={`/event-planner/${q.id}`}><Calendar className="w-4 h-4 mr-2" /> Event Planner</Link>
+                <Link to={`/event-planner/${q.id}`}><Calendar className="w-4 h-4 mr-2" /> Event Planning Packages</Link>
               </Button>
               <Card variant="glass" className="p-3 flex flex-col items-center gap-2">
                 <div className="bg-white p-2 rounded-md">
