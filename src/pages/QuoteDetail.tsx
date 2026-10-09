@@ -97,7 +97,7 @@ export default function QuoteDetail() {
   const equipment = quote.equipment || {};
   const equipmentEntries = Object.entries(equipment).filter(([_, qty]) => (qty as number) > 0);
   const isMonthlyInstallments = quote.payment_structure === "monthly_installments";
-  const depositLabel = isMonthlyInstallments ? "First Installment" : "30% Non-Refundable Deposit";
+  const depositLabel = isMonthlyInstallments ? "First Installment" : "30% Booking Deposit";
   const balanceLabel = isMonthlyInstallments ? "Remaining Installments" : "Remaining Balance";
 
   const statusColors: Record<string, string> = {
@@ -428,7 +428,7 @@ export default function QuoteDetail() {
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    ⚠️ A <strong>30% non-refundable deposit</strong> is required to secure your booking.
+                    ⚠️ A <strong>30% booking deposit (subject to the Refund & Cancellation Policy)</strong> is required to secure your booking.
                     The remaining balance of <strong>{formatCurrency(Number(quote.balance))}</strong> must be paid
                     in full <strong>before the scheduled performance begins</strong>. No performance will take place
                     without full payment confirmation.
