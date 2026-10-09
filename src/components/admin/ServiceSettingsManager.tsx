@@ -14,7 +14,7 @@ const SETTING_META: Record<string, { label: string; prefix?: string; suffix?: st
   travel_rate_per_km: { label: "Travel Rate per KM", prefix: "R", step: "0.5" },
   free_travel_km: { label: "Free Travel Distance", suffix: "km", step: "5" },
   overtime_multiplier: { label: "Overtime Multiplier", suffix: "×", step: "0.1" },
-  deposit_percent: { label: "Deposit Percentage", suffix: "%", step: "5" },
+  // Deposit is a fixed 30% business policy, not an editable rate.
 };
 
 export function ServiceSettingsManager() {

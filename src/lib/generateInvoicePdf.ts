@@ -318,7 +318,7 @@ function addTotals(doc: jsPDF, quote: DatabaseQuote, y: number) {
   doc.setFontSize(9);
   y += 2;
   const isMonthlyInstallments = quote.payment_structure === "monthly_installments";
-  addTotal(isMonthlyInstallments ? "First Installment" : "30% Non-Refundable Deposit", formatCurrency(Number(quote.deposit)), true, [0, 100, 200]);
+  addTotal(isMonthlyInstallments ? "First Installment" : "30% Booking Deposit", formatCurrency(Number(quote.deposit)), true, [0, 100, 200]);
   addTotal(isMonthlyInstallments ? "Remaining Installments" : "Remaining Balance", formatCurrency(Number(quote.balance)));
 
   return y;
@@ -372,7 +372,7 @@ function addPaymentStatus(doc: jsPDF, quote: DatabaseQuote, y: number) {
     doc.text(
       isMonthlyInstallments
         ? "Monthly installments apply. Final installment is due on event day."
-        : "A 30% non-refundable deposit secures your booking. No performance without full payment.",
+        : "A 30% booking deposit, subject to our cancellation policy secures your booking. No performance without full payment.",
       24,
       y + 16,
     );
@@ -401,7 +401,7 @@ function addPaymentTerms(doc: jsPDF, quote: DatabaseQuote, y: number) {
     doc.text("1. The first installment is required to confirm and secure your booking.", 24, y + 9);
     doc.text("2. Remaining installments are due monthly, with the final payment due on event day.", 24, y + 13.5);
   } else {
-    doc.text("1. A 30% non-refundable deposit is required to confirm and secure your booking.", 24, y + 9);
+    doc.text("1. A 30% booking deposit, subject to our cancellation policy is required to confirm and secure your booking.", 24, y + 9);
     doc.text("2. The remaining balance must be paid IN FULL before the scheduled performance begins.", 24, y + 13.5);
   }
   doc.text("3. No performance will take place without full payment confirmation.", 24, y + 18);

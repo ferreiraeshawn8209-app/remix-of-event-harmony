@@ -486,7 +486,8 @@ export function calculateQuote(data: QuoteData, catalog?: EquipmentItem[], rates
   const kidsRate = rates?.kids_corner_hourly_rate ?? KIDS_CORNER_HOURLY_RATE;
   const travelRate = rates?.travel_rate_per_km ?? TRAVEL_RATE_PER_KM;
   const freeKm = rates?.free_travel_km ?? FREE_TRAVEL_KM;
-  const depositPct = rates?.deposit_percent ?? DEPOSIT_PERCENT;
+  // Fixed standard for all newly calculated quotes; existing saved quotes remain unchanged.
+  const depositPct = DEPOSIT_PERCENT;
   const hjRate = rates?.human_jukebox_rate ?? 250;
 
   const days = Math.max(1, Math.round(Number(data.eventDays) || 1));

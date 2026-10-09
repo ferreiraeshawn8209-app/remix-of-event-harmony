@@ -845,7 +845,7 @@ export default function ClientPortal() {
               <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 text-xs space-y-1">
                 <p className="font-semibold text-sm text-primary">30% Deposit Required</p>
                 <p className="text-muted-foreground leading-relaxed">
-                  A <strong className="text-foreground">non-refundable 30% deposit</strong> ({formatCurrency(Number(q.deposit))}) secures your booking date.
+                  A <strong className="text-foreground">30% booking deposit, subject to our Refund & Cancellation Policy</strong> ({formatCurrency(Number(q.deposit))}) secures your booking date.
                   The <strong className="text-foreground">remaining balance</strong> ({formatCurrency(Number(q.balance))}) is payable
                   <strong className="text-foreground"> on or before the day of your event</strong>, prior to the DJ performing.
                   Accepted methods: EFT or cash. Quote validity: 7 days.

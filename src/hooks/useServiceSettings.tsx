@@ -39,11 +39,16 @@ export function useServiceSettings() {
           (result as any)[row.setting_key] = Number(row.setting_value);
         }
       });
+      // Keep the published 30% policy authoritative even if legacy database settings differ.
+      result.deposit_percent = DEFAULTS.deposit_percent;
       return result;
     },
   });
 
   const updateSetting = async (key: string, value: number) => {
+    if (key === "deposit_percent" && value !== DEFAULTS.deposit_percent) {
+      throw new Error("The booking deposit is fixed at 30%.");
+    }
     const { error } = await supabase
       .from("service_settings")
       .update({ setting_value: value })
