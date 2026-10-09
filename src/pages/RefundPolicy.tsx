@@ -5,7 +5,7 @@ const sections = [
   [
     "Booking Confirmation and Deposits",
     [
-      "A minimum deposit of 35% of the agreed booking value is required to secure DJ entertainment, sound, lighting or other event services, unless otherwise agreed in writing.",
+      "A minimum deposit of 30% of the agreed booking value is required to secure DJ entertainment, sound, lighting or other event services, unless otherwise agreed in writing.",
       "Clients may pay more than the minimum deposit or settle the full booking amount. Payment reserves the agreed event date and allows booking arrangements to begin."
     ]
   ],
