@@ -10,7 +10,7 @@ const TC_SECTIONS: TCSection[] = [
     title: "1. Booking & Deposit",
     clauses: [
       "1.1 A deposit equivalent to thirty percent (30%) of the total quoted fee is required to secure the booking.",
-      "1.2 The deposit is strictly non-refundable, irrespective of any subsequent cancellation by the Client, as such funds are allocated towards outsourced equipment hire, music preparation, and administrative costs.",
+      "1.2 On client cancellation, reasonable cancellation charges may apply to the deposit, taking into account services performed, supplier commitments and notice given. Any amount exceeding lawful charges will be refunded in accordance with South African consumer protection law.",
       "1.3 A booking shall be deemed provisional and not binding until such time as the deposit has been received in cleared funds by BeatKulture.",
     ],
   },
