@@ -69,7 +69,7 @@ const EVERGREEN: Tip[] = [
     id: "deposit",
     tag: "How Bookings Work",
     title: "No deposit, no booking.",
-    body: "A 30% non-refundable deposit (EFT or Cash) confirms your event. It validates for 7 days — pay to lock the date before anyone else grabs it.",
+    body: "A 30% booking deposit (EFT or Cash) confirms your event. It validates for 7 days — pay to lock the date before anyone else grabs it.",
   },
   {
     id: "corporate",
