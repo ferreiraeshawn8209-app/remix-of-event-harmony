@@ -36,20 +36,15 @@ export default function QuoteEdit() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuote } = useQuotes();
-  const [quote, setQuote] = useState<DatabaseQuote | null>(null);
+  // Derive the selected quote from the latest query result on every render.
+  // Avoid a blank first render and stale local state when returning to this route.
+  const quote = id ? quotes.find((q) => q.id === id) ?? null : null;
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (!quotesLoading && quotes.length > 0 && id) {
-      const found = quotes.find((q) => q.id === id);
-      setQuote(found || null);
-    }
-  }, [quotes, quotesLoading, id]);
 
   if (authLoading || quotesLoading) {
     return (
