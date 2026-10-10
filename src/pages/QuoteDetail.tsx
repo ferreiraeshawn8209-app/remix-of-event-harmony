@@ -40,7 +40,9 @@ export default function QuoteDetail() {
   const { user, isLoading: authLoading, profile, isAdmin } = useAuth();
   const { quotes, isLoading: quotesLoading, updateQuote } = useQuotes();
   const { items: catalogItems } = useEquipmentCatalog();
-  const [quote, setQuote] = useState<DatabaseQuote | null>(null);
+  // Derive the selected quote from the latest query result on every render.
+  // Avoid a blank first render and stale local state when returning to this route.
+  const quote = id ? quotes.find((q) => q.id === id) ?? null : null;
   const [markingPayment, setMarkingPayment] = useState(false);
   const [accepting, setAccepting] = useState(false);
 
@@ -54,13 +56,6 @@ export default function QuoteDetail() {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (!quotesLoading && quotes.length > 0 && id) {
-      const found = quotes.find((q) => q.id === id);
-      setQuote(found || null);
-    }
-  }, [quotes, quotesLoading, id]);
 
   if (authLoading || quotesLoading) {
     return (
