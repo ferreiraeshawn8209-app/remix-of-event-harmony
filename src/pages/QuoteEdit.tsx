@@ -35,7 +35,7 @@ export default function QuoteEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { quotes, isLoading: quotesLoading, updateQuote } = useQuotes();
+  const { quotes, isLoading: quotesLoading, error: quotesError, updateQuote } = useQuotes();
   // Derive the selected quote from the latest query result on every render.
   // Avoid a blank first render and stale local state when returning to this route.
   const quote = id ? quotes.find((q) => q.id === id) ?? null : null;
@@ -55,6 +55,10 @@ export default function QuoteEdit() {
   }
 
   if (!user) return null;
+
+  if (quotesError) {
+    return <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center"><h1 className="text-xl font-bold">Could not load your quotes</h1><p className="text-muted-foreground">{quotesError.message}</p><Button onClick={() => window.location.reload()}>Retry loading</Button><Button variant="outline" asChild><Link to="/dashboard">Back to dashboard</Link></Button></div>;
+  }
 
   if (!quotesLoading && !quote) {
     return (
