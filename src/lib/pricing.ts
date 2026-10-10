@@ -426,13 +426,9 @@ export const PARTY_PACKAGES: Package[] = [
 export const ALL_PACKAGES = [...WEDDING_PACKAGES, ...CORPORATE_PACKAGES, ...PARTY_PACKAGES];
 
 export const EVENT_TYPES = [
-  'Wedding',
-  'Birthday Party',
   'Corporate Event',
-  'Matric Dance',
-  'Anniversary',
-  'Graduation',
-  'Other'
+  'Private / Birthday Event',
+  'Wedding Event',
 ];
 
 export const DJ_LIST = [
