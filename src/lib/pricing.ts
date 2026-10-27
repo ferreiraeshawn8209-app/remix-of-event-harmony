@@ -56,9 +56,9 @@ export interface Package {
   popular?: boolean;
 }
 
-export const DJ_HOURLY_RATE = 800;
+export const DJ_HOURLY_RATE = 700;
 export const KIDS_CORNER_HOURLY_RATE = 500;
-export const TRAVEL_RATE_PER_KM = 7.5;
+export const TRAVEL_RATE_PER_KM = 11;
 export const FREE_TRAVEL_KM = 30;
 export const OVERTIME_MULTIPLIER = 1.5;
 export const DEPOSIT_PERCENT = 30;
